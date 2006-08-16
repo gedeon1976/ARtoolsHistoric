@@ -25,7 +25,7 @@
 #include "client.h"	
 #include "time.h"					
 //*********************************************************************************
-#define  RTPDataSize 	60000					//	size of RTP data read
+#define  RTPDataSize 	70000					//	size of RTP data read
 //************************************************************************************************************
 //	variables
 //********************************************************************
@@ -440,7 +440,17 @@ int rtsp_Init(char const *URL)
 	//iter.reset();
 	return 0;
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//	this function close a rtsp connection
+int rtsp_close()
+{
+	//	CLOSE RTSP CONNECTION
+	if(client!=NULL)
+	{
+	//	send TEARDOWN command
+		client->teardownMediaSession(*Session);
+	}
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //int rtsp_getFrame(unsigned char *image)
 int rtsp_getFrame()
@@ -605,34 +615,7 @@ int rtsp_loop()
 	return 0;	//	exit with sucess
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//		this function start to get n frames: the compressed frames
-//		this acts like a buffer to save tha last frame get it and to read and decode 
-//		one appropiate frame
 
-//		At start it can save n frames to be used like a buffer to let smooth the rate
-//		of showinf frames  and too to decrease the network jitter of packets
-//		here, this decouples the reception part of the showing part
-int rtsp_buffering(int n)
-{
-	double s;
-	for (int i=0; i<n;i++)	//	save n compressed frames
-	{
-		rtsp_getFrame();
-		InputBuffer.push_back(data_RTP);		//	save to the queue
-		
-		if (i>1)
-			{
-			dataFrame N = InputBuffer.at(i);
-			dataFrame N_1 = InputBuffer.at(i-1);
-			s = skew(N,N_1);
-			printf("skew : %06f\n",s);	
-			}
-		
-		//T.push(i);
-	}
-return 0;
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 int rtsp_decode(dataFrame data_RTP)
 {
@@ -653,7 +636,7 @@ int rtsp_decode(dataFrame data_RTP)
 			//static unsigned char image[]={pFrameRGB->data[0]};
 			//	save to a buffer
 			image = pFrameRGBA->data[0];	//	save RGB frame
-			//data_RTP.image = pFrameRGBA->data[0];
+			data_RTP.image = image;
 			//frameCounter++;
 			//printf("frame %d was decoded\n",frameCounter);
 			//	get the timestamp of the frame
@@ -669,7 +652,37 @@ int rtsp_decode(dataFrame data_RTP)
 	return 0;
 
 }
-// /////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//		this function start to get n frames: the compressed frames
+//		this acts like a buffer to save tha last frame get it and to read and decode 
+//		one appropiate frame
+
+//		At start it can save n frames to be used like a buffer to let smooth the rate
+//		of showinf frames  and too to decrease the network jitter of packets
+//		here, this decouples the reception part of the showing part
+int rtsp_buffering(int n)
+{
+	double s;
+	for (int i=0; i<n;i++)	//	save n compressed frames
+	{
+		rtsp_getFrame();
+		rtsp_decode(data_RTP);
+		InputBuffer.push_back(data_RTP);		//	save to the queue
+		
+		if (i>1)
+			{
+			dataFrame N = InputBuffer.at(i);
+			dataFrame N_1 = InputBuffer.at(i-1);
+			s = skew(N,N_1);
+			printf("skew : %06f\n",s);	
+			}
+		
+		//T.push(i);
+	}
+return 0;
+}
+// ///////////////////////////////////////////////////////
+                           //////////////////////////////////////////
 //	Getting data thread
 void* getData(void*)
 {
@@ -682,6 +695,7 @@ void* getData(void*)
 		//	LOCK THE RESOURCE
 		
 		cod = pthread_mutex_trylock(&mutexBuffer);
+                           
 		if (cod!=0)	
 			{
 				//printf("%s\n","Error locking get RTP data");
@@ -698,18 +712,23 @@ void* getData(void*)
 			{
 				FirstTime = -1;
 			}else{
-				sem_trywait(&sem);		//	wait semaphore
+				//sem_wait(&sem);		//	wait semaphore
+				
+				
 			}
 		
 			rtsp_getFrame();
 			rtsp_decode(data_RTP);
-			sem_post(&sem);
-			//s = skew(data_RTP,InputBuffer.back());
-			//InputBuffer.push_back(data_RTP);
-			//printf("skew: %06f\n",s);
+			//sem_post(&sem);
+			if(!InputBuffer.empty())
+				{
+				s= skew(data_RTP,InputBuffer.back());
+				printf("skew: %06f\n",s);
+				}
+			InputBuffer.push_back(data_RTP);
 			//counter++;
 			//T.push(counter);
-			//printf("writing %d\n",counter);
+			printf("writing %d\n",frameCounter);
 			//printf("FIFO size: %d\n",InputBuffer.size());
 		//
 		
@@ -720,7 +739,7 @@ void* getData(void*)
 
 		//	WAKE UP THE OTHER THREAD: SHOW DATA THREAD
 			cod = pthread_cond_signal(&cond[1]);
-			
+			//sem_post(&sem);
 			
 		}
 
@@ -740,6 +759,7 @@ void* getData(void*)
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	this works but not update the image continuosly
+
 void* ShowData(void* data)
 {
 	int cod;
@@ -760,33 +780,35 @@ void* ShowData(void* data)
 			//if(!T.empty())
 			//if(!IB.empty())
 
-			//if(!InputBuffer.empty())
-			//{
+			if(!InputBuffer.empty())
+			{
 				//int t = T.front();
+                           
 				//T.pop();
 				//printf("decoding: %d\n",t);
 			
-				//ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer
+				ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer
 				robot->image.setValue(SbVec2s(768,576),3,image);
 				//ReceivedFrame = IB.front();
 				//rtsp_decode(ReceivedFrame);
 				//	INCREASE SEMAPHORE: DATA IS DECODED AND READY TO SHOW
 				//ShowBuffer.push(data_RTP);		//	save decoded frame
 				printf("update image No: %ld: \n",frameCounter);
-				sem_post(&sem);				
-				//InputBuffer.pop_front();		//	delete compressed frame from FIFO buffer
+				//sem_post(&sem);				
+				InputBuffer.pop_front();		//	delete compressed frame from FIFO buffer
 				//IB.pop_front();
 				//printf("FIFO size: %d\n",InputBuffer.size());
 				//robot->image.setValue(SbVec2s(720,576),3,image);
 		
-		//	}
+			}
 	
 			//flagShow = 1;
 			//flagData =-1;
 
 		//cod = pthread_cond_signal(&cond[2]);
+		//sem_post(&sem);
 		}
-
+		
 		//	UNLOCK THE RESOURCE
 		cod = pthread_mutex_unlock(&mutexBuffer);
 	
@@ -795,7 +817,7 @@ void* ShowData(void* data)
 			
 			//if (cod!=0)	
 			//{printf("%s\n","Error signal condition in decode RTP data");}
-		//sem_post(&sem);
+		
 	}
 	return 0;
 }
@@ -808,7 +830,7 @@ void* updateImage(void* data)
 int cod;
 while(1)
 {
-	sem_trywait(&sem);
+	sem_wait(&sem);
 	
 	//	LOCK THE RESOURCE
 
@@ -821,8 +843,8 @@ while(1)
 
 		SoTexture2 *robot = (SoTexture2*)data;
 		robot->image.setValue(SbVec2s(768,576),3,image);
-		//printf("update image No %i\n",frameCounter);
-		sem_post(&sem);
+		printf("update image No %i\n",frameCounter);
+		//sem_post(&sem);
 	
 	}
 	//	UNLOCK THE RESOURCE
@@ -835,7 +857,7 @@ while(1)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	these thread open a rtp session for read data using 3 threads
 /*
-void* rtp_dataSession(void* data)
+void* rtp_dataSessi2on(void* data)
 {
 	SoTexture2 *robot = (SoTexture2*)data;
 	//while(1)
@@ -886,7 +908,7 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 	SoTexture2 *robot = (SoTexture2*)data;
 	
 	//	WAIT FOR SEMAPHORE
-	sem_trywait(&sem);	//	update image
+	sem_wait(&sem);	//	update image
 	
 	//pthread_mutex_trylock(&mutexBuffer);
 	
@@ -897,7 +919,7 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 	//DecodedFrame = ShowBuffer.front();			//	get image
 	//rtsp_decode(DecodedFrame);
 	
-
+	/*
 	if (frameCounter>=0)
 	{
 	image = DecodedFrame[frameCounter];
@@ -909,14 +931,14 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 	//}
 	frameCounter--;
 	}
-*/	
+}
+	*/
 	//pthread_mutex_unlock(&mutexBuffer);
 	//updates++;
 	//printf("timesensor calls: %d\n",updates);
 	//timeNow2();
 	//usleep(20);
-	//sem_post(&sem);	
-
+	//sem_post(&sem);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -988,8 +1010,8 @@ int main(int argc,char **argv)
 	//	connect to RTSP server
 
 	int status;
-	status= rtsp_Init(URL);//atoi(argv[2])					//	Init RTSP Client
-	//rtsp_buffering(1);				//	start buffering n frames
+	status= rtsp_Init(URL);//atoi(artsp_buffering(5);				//	start buffering n framesrgv[2])					//	Init RTSP Client
+	
 
 	//printf("FIFO size: %d\n", InputBuffer.size());
 	/*
@@ -1012,7 +1034,7 @@ int main(int argc,char **argv)
 	//SoDB::setRealTimeInterval(1/120.0);
 	SoSeparator * root = new SoSeparator;
     	root->ref();
-	/*
+	/*rtsp_buffering(5);				//	start buffering n frames
 	SoPerspectiveCamera *mycamera = new SoPerspectiveCamera;
 	SoDirectionalLight *light = new SoDirectionalLight;
 	root->addChild(mycamera);
@@ -1033,7 +1055,7 @@ int main(int argc,char **argv)
 	Origin->point.set1Value(1,SbVec3f(-pCodecCtx->width/2, -pCodecCtx->height/2, 0));
 	Origin->point.set1Value(0,SbVec3f(-pCodecCtx->width/2,  pCodecCtx->height/2, 0));
 	//	define the square's normal
-	SoNormal *normal = new SoNormal;
+	SoNormal *normal = new SoNormal;				//	start buffering n frames;
 	root->addChild(normal);
 	normal->vector.set1Value(0,SbVec3f(0,0,1));	//	normal to z	
 	
@@ -1045,13 +1067,14 @@ int main(int argc,char **argv)
 	TextCoord->point.set1Value(1,SbVec2f(0,1));
 	TextCoord->point.set1Value(2,SbVec2f(1,1));
 	TextCoord->point.set1Value(3,SbVec2f(1,0));
-
+rtsp_buffering(5);				//	start buffering n frames
 	// define normal and texture coordinate binding
 	
 	SoNormalBinding *nBind = new SoNormalBinding;
 	SoTextureCoordinateBinding *TextBind = new SoTextureCoordinateBinding;
 	root->addChild(nBind);	
 	root->addChild(TextBind);
+                           
 	nBind->value.setValue(SoNormalBinding::OVERALL);
 	TextBind->value.setValue(SoTextureCoordinateBinding::PER_VERTEX);
 
@@ -1064,6 +1087,7 @@ int main(int argc,char **argv)
 	//	timer sensor for show the data
 
 	//	START TO READ THE DATA
+                           
 
 	if(client==NULL)
 	{
@@ -1072,14 +1096,15 @@ int main(int argc,char **argv)
 
 	}
 	
-	//pthread_create(&camera[3],0,rtp_dataSession,0);
+	//pthread_create(&camera[3],0,rtp_dataSession,0)
+                           ;
 	
 	int fcounter =0;
 	if(Subsession->readSource()!=NULL)	//	valid data source
 	{
 		if(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
 			{
-			
+			rtsp_buffering(10);
 			pthread_create(&camera[0],0,ShowData,(SoTexture2*)robot);
 			pthread_create(&camera[1],0,getData,0);
 			//pthread_create(&camera[2],0,updateImage,(SoTexture2*)robot);
@@ -1087,7 +1112,7 @@ int main(int argc,char **argv)
 			
 		}
 	}
-	
+	//rtsp_buffering(5);				//	start buffering n frames
 	
 	//****************************************************************************
 	//	start threads to get and show the video stream	
@@ -1099,9 +1124,9 @@ int main(int argc,char **argv)
 
 	/*	
 	SoTimerSensor *timer = new SoTimerSensor(update,robot);
-	//atoi(argv[3]
+	//
 	timer->setBaseTime(SbTime::getTimeOfDay());
-	timer->setInterval(1.0/25.0);//fps	//	set interval 40 ms
+	timer->setInterval(1.0/atoi(argv[2]));//fps	//	set interval 40 ms
 	timer->schedule();				//	enable
         //root->addChild(new SoCube);
 	*/
