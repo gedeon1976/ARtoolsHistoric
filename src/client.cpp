@@ -108,12 +108,13 @@ static int flagData =  1;	//	flag to indicate data has been got
 //	structure for save the frames compresed and uncompressed
 typedef struct dataFrame{
 	
-	unsigned char *data;		
-	unsigned char *image;
-	int size;			
 	unsigned long timestamp;
-	struct timeval time;
-	long timeArrival;
+	unsigned char *data;		//	compressed data
+	unsigned char *image;		//	data decoded
+	int size;			
+	struct timeval time;		//	save the time with good resolution
+	long timeArrival;		//	time of arrival
+	long playoutTime;		//	time of render
 	int width;
 	int height;	
 };
@@ -127,6 +128,7 @@ struct timezone tz;
 dataFrame dataBuffer;
 dataFrame data_RTP;
 dataFrame ReceivedFrame;
+dataFrame Temp;
 unsigned char *DecodedFrame[100];
 //dataFrame InputBuffer[8];	//	to save input compressed frames 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,7 +209,7 @@ timeval timeNow() //
 	if (time==0)
 	{
 		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
-		//printf("time arrival of frame %d was:%li.%06li\n",frameCounter,t.tv_sec,t.tv_usec);
+		printf("time arrival of frame %d was:%li.%06li\n",frameCounter,t.tv_sec,t.tv_usec);
 		//printf("time was:%li.%06li\n",t.tv_sec,t.tv_usec);
 		//return t;
 	}else{
@@ -269,7 +271,7 @@ if(framesize>=maxRTPDataSize)
 	data_RTP.timestamp = Subsession->rtpSource()->curPacketRTPTimestamp();
  	data_RTP.time = timeNow();						//	time arrival
 	//actualRTPtimestamp = 
-	//printf("current RTP timestamp %lu\n",data_RTP.timestamp);
+	printf("current RTP timestamp %lu\n",data_RTP.timestamp);
 	//printf("Subsession ID: %s\n",Subsession->sessionId);
 	if (dataBuffer.data == NULL)
 	{ 
@@ -307,6 +309,7 @@ double skew(dataFrame N, dataFrame N_1)
 	//	differences between 2 frames
 	d1 = (N.time.tv_sec + (N.time.tv_usec/1000000.0)); 
 	d2 = (N_1.time.tv_sec + (N_1.time.tv_usec/1000000.0));
+
 	//printf("time arrival 1: %06f\n",d);	
 	//printf("time arrival 2: %06f\n",d2);
 	d = d1-d2;
@@ -352,7 +355,7 @@ int rtsp_Init(char const *URL)
 	//	RTSP PROTOCOL
 	
 	//	Send OPTIONS method
-	
+	unsigned long timestamp;
 	getOptions = client->sendOptionsCmd(URL,NULL,NULL,NULL);	//	connect to server
 	printf("OPTIONS are: %s\n",getOptions);				//	print the response
 		
@@ -361,7 +364,7 @@ int rtsp_Init(char const *URL)
 	getDescription = client->describeURL(URL);			//	get the Session description
 	printf("DESCRIBE is: \n%s\n",getDescription);			//	print this description
 
-	//	setup live libraries for send SETUP method
+	//	setup live libraries for send SETUP metunsigned long timestamp;hod
 	
 	Session = MediaSession::createNew(*env,getDescription);		//	create session
 	if (Session==NULL)
@@ -617,11 +620,11 @@ int rtsp_loop()
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-int rtsp_decode(dataFrame data_RTP)
+int rtsp_decode(dataFrame dataCompress)
 {
 	//	decode the video frame using libavcodec
 
-	decodeOK = avcodec_decode_video(pCodecCtx,pFrame,&frameFinished,data_RTP.data,data_RTP.size);
+	decodeOK = avcodec_decode_video(pCodecCtx,pFrame,&frameFinished,dataCompress.data,dataCompress.size);
 		
 	//if(decodeOK!=0)
 		//{printf("%s\n","error in decoding");}
@@ -635,8 +638,9 @@ int rtsp_decode(dataFrame data_RTP)
 			//pCodecCtx->width,pCodecCtx->height);
 			//static unsigned char image[]={pFrameRGB->data[0]};
 			//	save to a buffer
-			image = pFrameRGBA->data[0];	//	save RGB frame
-			data_RTP.image = image;
+			data_RTP.image = pFrameRGBA->data[0];	//	save RGB frame
+			//memcpy(data_RTP.image,image,1327104);
+			//Temp.image = image;
 			//frameCounter++;
 			//printf("frame %d was decoded\n",frameCounter);
 			//	get the timestamp of the frame
@@ -694,7 +698,7 @@ void* getData(void*)
 	
 		//	LOCK THE RESOURCE
 		
-		cod = pthread_mutex_trylock(&mutexBuffer);
+		cod = pthread_mutex_lock(&mutexBuffer);
                            
 		if (cod!=0)	
 			{
@@ -720,10 +724,14 @@ void* getData(void*)
 			rtsp_getFrame();
 			rtsp_decode(data_RTP);
 			//sem_post(&sem);
+			
 			if(!InputBuffer.empty())
 				{
-				s= skew(data_RTP,InputBuffer.back());
-				printf("skew: %06f\n",s);
+				dataFrame N = data_RTP;
+				dataFrame N_1 = InputBuffer.back();
+				s = skew(N,N_1);
+				printf("skew : %06f\n",s);
+				//s= skew(Temp,InputBuffer.back());
 				}
 			InputBuffer.push_back(data_RTP);
 			//counter++;
@@ -744,7 +752,7 @@ void* getData(void*)
 		}
 
 		cod = pthread_mutex_unlock(&mutexBuffer);
-		if (cod!=0)	
+		if (cod!=0)	unsigned long timestamp;
 			{printf("%s\n","Error unlocking get RTP data");}
 
 		
@@ -769,7 +777,7 @@ void* ShowData(void* data)
 	
 		//	LOCK THE RESOURCE
 
-		cod = pthread_mutex_trylock(&mutexBuffer);
+		cod = pthread_mutex_lock(&mutexBuffer);
 		if (cod!=0)	
 			{printf("%s\n","Error locking RTP decode data");}
 			//condition
@@ -777,7 +785,7 @@ void* ShowData(void* data)
 		else{
 			cod = pthread_cond_wait(&cond[1],&mutexBuffer);		//	go to sleep until we get some data
 										//	from the data thread
-			//if(!T.empty())
+			//if(!T.emptyunsigned long timestamp;())
 			//if(!IB.empty())
 
 			if(!InputBuffer.empty())
@@ -788,7 +796,7 @@ void* ShowData(void* data)
 				//printf("decoding: %d\n",t);
 			
 				ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer
-				robot->image.setValue(SbVec2s(768,576),3,image);
+				robot->image.setValue(SbVec2s(768,576),3,ReceivedFrame.image);
 				//ReceivedFrame = IB.front();
 				//rtsp_decode(ReceivedFrame);
 				//	INCREASE SEMAPHORE: DATA IS DECODED AND READY TO SHOW
