@@ -6,13 +6,13 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/ffmpeg/mathematics.h /usr/include/ffmpeg/rational.h \
   /usr/include/ffmpeg/integer.h /usr/include/ffmpeg/intfloat_readwrite.h \
   /usr/include/sys/types.h /usr/include/bits/types.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/include/stddef.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/include/stddef.h \
   /usr/include/bits/typesizes.h /usr/include/time.h /usr/include/endian.h \
   /usr/include/bits/endian.h /usr/include/sys/select.h \
   /usr/include/bits/select.h /usr/include/bits/sigset.h \
   /usr/include/bits/time.h /usr/include/sys/sysmacros.h \
   /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/include/stdarg.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/include/stdarg.h \
   /usr/include/ffmpeg/avformat.h /usr/include/xlocale.h \
   /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
   /usr/include/wchar.h /usr/include/gconv.h /usr/include/bits/stdio_lim.h \
@@ -28,8 +28,8 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   //home/portilla/Live/live/groupsock/include/NetCommon.h \
   /usr/include/sys/socket.h /usr/include/sys/uio.h \
   /usr/include/bits/uio.h /usr/include/bits/socket.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/include/limits.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/include/syslimits.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/include/limits.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/include/syslimits.h \
   /usr/include/limits.h /usr/include/bits/posix1_lim.h \
   /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
   /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
@@ -174,62 +174,61 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/share/qt3/include/qcstring.h /usr/share/qt3/include/qmemarray.h \
   /usr/share/qt3/include/qgarray.h /usr/share/qt3/include/qshared.h \
   /usr/share/qt3/include/qwinexport.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/string \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/c++config.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/os_defines.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stringfwd.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/char_traits.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cstring \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cstddef \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_algobase.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/climits \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cstdlib \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/iosfwd \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/c++locale.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cstdio \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/clocale \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/string \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/c++config.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/os_defines.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/cpu_defines.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stringfwd.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/char_traits.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cstring \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cstddef \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_algobase.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/climits \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cstdlib \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/iosfwd \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/c++locale.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cstdio \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/clocale \
   /usr/include/locale.h /usr/include/bits/locale.h \
   /usr/include/langinfo.h /usr/include/nl_types.h /usr/include/iconv.h \
   /usr/include/libintl.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/c++io.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/gthr.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/gthr-default.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/c++io.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/gthr.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/gthr-default.h \
   /usr/include/pthread.h /usr/include/sched.h /usr/include/signal.h \
   /usr/include/bits/initspin.h /usr/include/bits/sigthread.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cctype \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/postypes.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cwchar \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/ctime \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/functexcept.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/exception_defines.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_pair.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/cpp_type_traits.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_iterator_base_types.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_iterator_base_funcs.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/concept_check.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_iterator.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/debug/debug.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cassert \
-  /usr/include/assert.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/memory \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/allocator.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/c++allocator.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/ext/new_allocator.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/new \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/exception \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_construct.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_uninitialized.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_raw_storage_iter.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/limits \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_function.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/basic_string.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/atomicity.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/atomic_word.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/algorithm \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_algo.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_heap.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_tempbuf.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/basic_string.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cctype \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/postypes.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cwchar \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/ctime \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/functexcept.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/exception_defines.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_pair.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/cpp_type_traits.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_iterator_base_types.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_iterator_base_funcs.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/concept_check.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_iterator.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/debug/debug.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/memory \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/allocator.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/c++allocator.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/ext/new_allocator.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/new \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/exception \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_construct.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_uninitialized.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_raw_storage_iter.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/limits \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_function.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/basic_string.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/atomicity.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/atomic_word.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/algorithm \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_algo.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_heap.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_tempbuf.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/basic_string.tcc \
   /usr/share/qt3/include/qnamespace.h /usr/share/qt3/include/qevent.h \
   /usr/share/qt3/include/qregion.h /usr/share/qt3/include/qrect.h \
   /usr/share/qt3/include/qsize.h /usr/share/qt3/include/qpoint.h \
@@ -237,39 +236,39 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/share/qt3/include/qdatastream.h /usr/share/qt3/include/qiodevice.h \
   /usr/share/qt3/include/qpair.h /usr/share/qt3/include/qvaluelist.h \
   /usr/share/qt3/include/qtl.h /usr/share/qt3/include/qtextstream.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/iterator \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/ostream \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/ios \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/localefwd.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/ios_base.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/locale_classes.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/streambuf \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/streambuf.tcc \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/basic_ios.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/streambuf_iterator.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/locale_facets.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cwctype \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/iterator \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/ostream \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/ios \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/localefwd.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/ios_base.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/locale_classes.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/streambuf \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/streambuf.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/basic_ios.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/streambuf_iterator.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/locale_facets.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cwctype \
   /usr/include/wctype.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/ctype_base.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/ctype_inline.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/codecvt.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/time_members.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/messages_members.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/basic_ios.tcc \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/ostream.tcc \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/locale \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/locale_facets.tcc \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/typeinfo \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/istream \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/istream.tcc \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stream_iterator.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/list \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_list.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/list.tcc \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/map \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_tree.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_map.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_multimap.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/ctype_base.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/ctype_inline.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/codecvt.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/time_members.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/messages_members.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/basic_ios.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/ostream.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/locale \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/locale_facets.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/typeinfo \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/istream \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/istream.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stream_iterator.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/list \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_list.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/list.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/map \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_tree.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_map.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_multimap.h \
   /usr/include/Inventor/SbBasic.h /usr/include/Inventor/C/basic.h \
   /usr/include/Inventor/system/inttypes.h /usr/include/math.h \
   /usr/include/bits/huge_val.h /usr/include/bits/huge_valf.h \
@@ -286,9 +285,9 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/SbDPViewVolume.h /usr/include/Inventor/SbVec3d.h \
   /usr/include/Inventor/SbString.h /usr/include/Inventor/C/base/string.h \
   /usr/include/Inventor/lists/SbIntList.h \
-  /usr/include/Inventor/lists/SbPList.h /usr/include/Inventor/SbName.h \
-  /usr/include/Inventor/SoDB.h /usr/include/Inventor/SoType.h \
-  /usr/include/Inventor/SbDict.h \
+  /usr/include/Inventor/lists/SbPList.h /usr/include/assert.h \
+  /usr/include/Inventor/SbName.h /usr/include/Inventor/SoDB.h \
+  /usr/include/Inventor/SoType.h /usr/include/Inventor/SbDict.h \
   /usr/include/Inventor/sensors/SoSensorManager.h \
   /usr/include/Inventor/errors/SoDebugError.h \
   /usr/include/Inventor/errors/SoError.h \
@@ -399,15 +398,15 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/sensors/SoTimerQueueSensor.h \
   /usr/include/Inventor/nodes/SoCallback.h /usr/include/GL/gl.h \
   /usr/include/GL/glext.h /usr/include/semaphore.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/queue \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/deque \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_deque.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/deque.tcc \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/vector \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_vector.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_bvector.h \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/vector.tcc \
-  /usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_queue.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/queue \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/deque \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_deque.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/deque.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/vector \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_vector.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_bvector.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/vector.tcc \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_queue.h \
   /usr/include/sys/timex.h
 
 client.h:
@@ -444,7 +443,7 @@ client.h:
 
 /usr/include/bits/types.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/include/stddef.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/include/stddef.h:
 
 /usr/include/bits/typesizes.h:
 
@@ -468,7 +467,7 @@ client.h:
 
 /usr/include/bits/sched.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/include/stdarg.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/include/stdarg.h:
 
 /usr/include/ffmpeg/avformat.h:
 
@@ -520,9 +519,9 @@ client.h:
 
 /usr/include/bits/socket.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/include/limits.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/include/limits.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/include/syslimits.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/include/syslimits.h:
 
 /usr/include/limits.h:
 
@@ -866,33 +865,35 @@ client.h:
 
 /usr/share/qt3/include/qwinexport.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/string:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/string:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/c++config.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/c++config.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/os_defines.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/os_defines.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stringfwd.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/cpu_defines.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/char_traits.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stringfwd.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cstring:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/char_traits.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cstddef:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cstring:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_algobase.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cstddef:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/climits:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_algobase.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cstdlib:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/climits:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/iosfwd:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cstdlib:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/c++locale.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/iosfwd:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cstdio:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/c++locale.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/clocale:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cstdio:
+
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/clocale:
 
 /usr/include/locale.h:
 
@@ -906,11 +907,11 @@ client.h:
 
 /usr/include/libintl.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/c++io.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/c++io.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/gthr.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/gthr.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/gthr-default.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/gthr-default.h:
 
 /usr/include/pthread.h:
 
@@ -922,73 +923,69 @@ client.h:
 
 /usr/include/bits/sigthread.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cctype:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cctype:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/postypes.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/postypes.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cwchar:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cwchar:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/ctime:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/ctime:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/functexcept.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/functexcept.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/exception_defines.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/exception_defines.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_pair.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_pair.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/cpp_type_traits.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/cpp_type_traits.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_iterator_base_types.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_iterator_base_types.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_iterator_base_funcs.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_iterator_base_funcs.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/concept_check.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/concept_check.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_iterator.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_iterator.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/debug/debug.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/debug/debug.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cassert:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/memory:
 
-/usr/include/assert.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/allocator.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/memory:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/c++allocator.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/allocator.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/ext/new_allocator.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/c++allocator.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/new:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/ext/new_allocator.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/exception:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/new:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_construct.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/exception:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_uninitialized.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_construct.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_raw_storage_iter.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_uninitialized.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/limits:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_raw_storage_iter.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_function.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/limits:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/basic_string.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_function.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/atomicity.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/basic_string.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/atomic_word.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/atomicity.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/algorithm:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/atomic_word.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_algo.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/algorithm:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_heap.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_algo.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_tempbuf.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_heap.h:
-
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_tempbuf.h:
-
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/basic_string.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/basic_string.tcc:
 
 /usr/share/qt3/include/qnamespace.h:
 
@@ -1018,71 +1015,71 @@ client.h:
 
 /usr/share/qt3/include/qtextstream.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/iterator:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/iterator:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/ostream:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/ostream:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/ios:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/ios:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/localefwd.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/localefwd.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/ios_base.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/ios_base.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/locale_classes.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/locale_classes.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/streambuf:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/streambuf:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/streambuf.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/streambuf.tcc:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/basic_ios.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/basic_ios.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/streambuf_iterator.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/streambuf_iterator.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/locale_facets.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/locale_facets.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/cwctype:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/cwctype:
 
 /usr/include/wctype.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/ctype_base.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/ctype_base.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/ctype_inline.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/ctype_inline.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/codecvt.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/codecvt.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/time_members.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/time_members.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/i486-linux-gnu/bits/messages_members.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/i486-linux-gnu/bits/messages_members.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/basic_ios.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/basic_ios.tcc:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/ostream.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/ostream.tcc:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/locale:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/locale:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/locale_facets.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/locale_facets.tcc:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/typeinfo:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/typeinfo:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/istream:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/istream:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/istream.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/istream.tcc:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stream_iterator.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stream_iterator.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/list:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/list:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_list.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_list.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/list.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/list.tcc:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/map:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/map:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_tree.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_tree.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_map.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_map.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_multimap.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_multimap.h:
 
 /usr/include/Inventor/SbBasic.h:
 
@@ -1145,6 +1142,8 @@ client.h:
 /usr/include/Inventor/lists/SbIntList.h:
 
 /usr/include/Inventor/lists/SbPList.h:
+
+/usr/include/assert.h:
 
 /usr/include/Inventor/SbName.h:
 
@@ -1382,22 +1381,22 @@ client.h:
 
 /usr/include/semaphore.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/queue:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/queue:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/deque:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/deque:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_deque.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_deque.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/deque.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/deque.tcc:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/vector:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/vector:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_vector.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_vector.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_bvector.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_bvector.h:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/vector.tcc:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/vector.tcc:
 
-/usr/lib/gcc/i486-linux-gnu/4.0.4/../../../../include/c++/4.0.4/bits/stl_queue.h:
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_queue.h:
 
 /usr/include/sys/timex.h:

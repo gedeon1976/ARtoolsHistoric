@@ -16,5 +16,7 @@ client_LDADD = \
 	-L/home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -L/home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a \
 	-L/home/portilla/Live/live/groupsock/libgroupsock.a -L/home/portilla/Live/live/liveMedia/libliveMedia.a
 
+
+
 client_SOURCES = client.cpp
 noinst_HEADERS = client.h

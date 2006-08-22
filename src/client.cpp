@@ -116,7 +116,8 @@ typedef struct dataFrame{
 	long timeArrival;		//	time of arrival
 	long playoutTime;		//	time of render
 	int width;
-	int height;	
+	int height;
+	int index;	
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	time structures with microseconds resolution
@@ -157,8 +158,8 @@ int init_codecs(void)
 
 	pCodecCtx = avcodec_alloc_context();
 //	initialize width and height by now
-	pCodecCtx->width=768;
-	pCodecCtx->height=576;
+	pCodecCtx->width=768;//768
+	pCodecCtx->height=576;//576
 	pCodecCtx->bit_rate = 1000000;
 
 //	look for truncated bitstreams
@@ -183,7 +184,7 @@ int init_codecs(void)
 	return -1;	//	cannot allocate memory
 
 //	determine required buffer size for allocate buffer
-	numBytes = avpicture_get_size(PIX_FMT_RGB24,768,576);
+	numBytes = avpicture_get_size(PIX_FMT_RGB24,512,512);
 	buffer=new uint8_t[numBytes];	
 	printf(" size of frame in bytes : %d\n",numBytes);
 
@@ -192,7 +193,7 @@ int init_codecs(void)
 //	fps = (pFormatCtx->bit_rate/1000)*(pFormatCtx->duration) / numBytes;
 	//printf(" fps  : %f\n",fps);
 //	assign appropiate parts of buffer to image planes in pFrameRGB
-	avpicture_fill((AVPicture*)pFrameRGBA,buffer,PIX_FMT_RGB24,768,576);
+	avpicture_fill((AVPicture*)pFrameRGBA,buffer,PIX_FMT_RGB24,512,512);
 	return 0;
 
 }
@@ -234,7 +235,7 @@ int timeNow2()
 	{
 		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
 		//printf("time of timer was:%li.%06li\n",t.tv_sec,t.tv_usec);
-		printf("time was:%li.%06li\n",t.tv_sec,t.tv_usec);
+		//printf("time was:%li.%06li\n",t.tv_sec,t.tv_usec);
 		//return t;
 	}else{
 		printf("error was:%i\n",errno);
@@ -269,7 +270,8 @@ if(framesize>=maxRTPDataSize)
 	//memcpy(data_RTP.data, dataRTP, dataBuffer.size);
 										//	save timestamp
 	data_RTP.timestamp = Subsession->rtpSource()->curPacketRTPTimestamp();
- 	data_RTP.time = timeNow();						//	time arrival
+ 	data_RTP.time = timeNow();
+	data_RTP.index= frameCounter;						//	time arrival
 	//actualRTPtimestamp = 
 	//printf("current RTP timestamp %lu\n",data_RTP.timestamp);
 	//printf("Subsession ID: %s\n",Subsession->sessionId);
@@ -633,7 +635,7 @@ int rtsp_decode(dataFrame dataCompress)
 		if(frameFinished)
 		{
 		//	convert the image from his format to RGB
-			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,768,576);
+			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,512,512);
 					
 			//pCodecCtx->width,pCodecCtx->height);
 			//static unsigned char image[]={pFrameRGB->data[0]};
@@ -727,16 +729,19 @@ void* getData(void*)
 			
 			if(!InputBuffer.empty())
 				{
+				
+				
 				dataFrame N = data_RTP;
 				dataFrame N_1 = InputBuffer.back();
 				s = skew(N,N_1);
 				//printf("skew : %06f\n",s);
 				//s= skew(Temp,InputBuffer.back());
+				
 				}
 			InputBuffer.push_back(data_RTP);
 			//counter++;
 			//T.push(counter);
-			//printf("writing %d\n",frameCounter);
+			printf("writing %d\n",frameCounter);
 			//printf("FIFO size: %d\n",InputBuffer.size());
 		//
 		
@@ -857,7 +862,7 @@ while(1)
 	}
 	//	UNLOCK THE RESOURCE
 	cod = pthread_mutex_unlock(&mutexBuffer);
-	
+	512
 }
 	return 0;
 }
@@ -914,9 +919,9 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 	//	get the video frames
 	
 	SoTexture2 *robot = (SoTexture2*)data;
-	
-	//	WAIT FOR SEMAPHORE
 	sem_wait(&sem);	//	update image
+	//	WAIT FOR SEMAPHORE
+	
 	
 	//pthread_mutex_trylock(&mutexBuffer);
 	if(!InputBuffer.empty())
@@ -927,17 +932,19 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 			
 		ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer
 
-		robot->image.setValue(SbVec2s(768,576),3,ReceivedFrame.image);
+//sem_wait(&sem);	//	update image
+
+		robot->image.setValue(SbVec2s(512,512),3,ReceivedFrame.image);
 		//ReceivedFrame = IB.front();
 		//rtsp_decode(ReceivedFrame);
 		//	INCREASE SEMAPHORE: DATA IS DECODED AND READY TO SHOW
 		//ShowBuffer.push(data_RTP);		//	save decoded frame
-		printf("update image No: %ld: \n",frameCounter);
+		printf("update image No: %ld: \n",ReceivedFrame.index);
 		timeNow2();
 		//sem_post(&sem);				
 		InputBuffer.pop_front();		//	delete frame from the FIFO buffer
 		//IB.pop_front();
-		//printf("FIFO size: %d\n",InputBuffer.size());
+		printf("FIFO size: %d\n",InputBuffer.size());
 		
 		
 	}else
@@ -966,7 +973,7 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 }
 	*/
 	//pthread_mutex_unlock(&mutexBuffer);
-	//updates++;
+	//updates++;512
 	//printf("timesensor calls: %d\n",updates);
 	//timeNow2();
 	//usleep(20);
@@ -1036,7 +1043,7 @@ int main(int argc,char **argv)
 	if (cod!=0)						//	used with the thread getdata
 		{printf("%s\n","error starting condition");}
 
-	cod = pthread_cond_init(&cond[2],0);			//	start conditional variable 3
+	cod = pthread_cond_init(&cond[2],0);			//	start conditional varia512ble 3
 	if (cod!=0)						//	used with the thread getdata
 		{printf("%s\n","error starting condition");}
 
@@ -1086,10 +1093,10 @@ int main(int argc,char **argv)
 	SoCoordinate3 *Origin = new SoCoordinate3;
 	root->addChild(Origin);			//	set plane origin at (0,0,0)
 	
-	Origin->point.set1Value(3,SbVec3f( pCodecCtx->width/2, pCodecCtx->height/2, 0));
-	Origin->point.set1Value(2,SbVec3f( pCodecCtx->width/2, -pCodecCtx->height/2, 0));
-	Origin->point.set1Value(1,SbVec3f(-pCodecCtx->width/2, -pCodecCtx->height/2, 0));
-	Origin->point.set1Value(0,SbVec3f(-pCodecCtx->width/2,  pCodecCtx->height/2, 0));
+	Origin->point.set1Value(3,SbVec3f( 512/2,  512/2, 0));
+	Origin->point.set1Value(2,SbVec3f( 512/2, -512/2, 0));
+	Origin->point.set1Value(1,SbVec3f(-512/2, -512/2, 0));
+	Origin->point.set1Value(0,SbVec3f(-512/2,  512/2, 0));
 	//	define the square's normal
 	SoNormal *normal = new SoNormal;				//	start buffering n frames;
 	root->addChild(normal);
@@ -1141,7 +1148,7 @@ int main(int argc,char **argv)
 	{
 		if(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
 			{
-			rtsp_buffering(10);	//	start buffering n frames
+			rtsp_buffering(4);	//	start buffering n frames
 			//pthread_create(&camera[0],0,ShowData,(SoTexture2*)robot);
 			pthread_create(&camera[1],0,getData,0);
 			//pthread_create(&camera[2],0,updateImage,(SoTexture2*)robot);
@@ -1167,8 +1174,13 @@ int main(int argc,char **argv)
 	timer->setInterval(1.0/atoi(argv[2]));//fps	//	set interval 40 ms
 	timer->schedule();				//	enable
         //root->addChild(new SoCube);
-	
-	
+	/*
+	SoCube *cub = new SoCube;
+	cub->width.setValue(100.0);
+        cub->height.setValue(100.0);
+	cub->depth.setValue(100.0);
+	root->addChild(cub);
+	*/
      	SoTransform *myTrans = new SoTransform;
 	root->addChild(myTrans);
    	myTrans->translation.setValue(0.0,0.0,100.0);
