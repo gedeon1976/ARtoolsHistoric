@@ -358,8 +358,8 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/nodes/SoTransform.h \
   /usr/include/Inventor/nodes/SoTransformation.h \
   /usr/include/Inventor/nodes/SoSphere.h \
-  /usr/include/Inventor/nodes/SoSeparator.h \
   /usr/include/Inventor/nodes/SoGroup.h \
+  /usr/include/Inventor/nodes/SoSeparator.h \
   /usr/include/Inventor/nodes/SoTexture2.h \
   /usr/include/Inventor/fields/SoSFImage.h \
   /usr/include/Inventor/fields/SoSFString.h \
@@ -1297,9 +1297,9 @@ client.h:
 
 /usr/include/Inventor/nodes/SoSphere.h:
 
-/usr/include/Inventor/nodes/SoSeparator.h:
-
 /usr/include/Inventor/nodes/SoGroup.h:
+
+/usr/include/Inventor/nodes/SoSeparator.h:
 
 /usr/include/Inventor/nodes/SoTexture2.h:
 

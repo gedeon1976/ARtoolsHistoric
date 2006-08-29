@@ -3,7 +3,7 @@
 
 //	Author:		Henry Portilla
 //	Date:		june/2006
-//	modified:	july/2006
+//	modified:	august/2006
 //	Thanks
 
 //	Description:	This program use the live555 libraries for make a RTSP
@@ -23,127 +23,14 @@
 //	includes header files
 
 #include "client.h"	
-#include "time.h"					
-//*********************************************************************************
-#define  RTPDataSize 	70000					//	size of RTP data read
-//************************************************************************************************************
-//	variables
-//********************************************************************
-//	live variables
-int verbosityLevel=0;
-const char *name ="RTSP";
-portNumBits tunnelOverHTTPPortNum=0;
-UsageEnvironment *env; 						//	environment to manage the RTSP session
-RTSPClient *client;
-MediaSession *Session;						//	session parent
-MediaSubsession *Subsession;
-MediaSubsessionIterator *iter;					//	subsession iterator
-Timeval *timeArrival;	
-RTPSink *converter=0;						//	time control
 
-char const *URL0 ="rtsp://sonar:7070/cam0";			//	resources to access
-char const *URL1 ="rtsp://sonar:7070/cam1";
-char const *URL2 ="rtsp://sonar:7070/cam2";
-char const *URL3 ="rtsp://sonar:7070/cam3";
-int   RTPport = 0;						//	RTP port
-char *RTCPport= "54001";					//	RTCP port
-char *getOptions;						//	OPTIONS from server
-char *getDescription;						//	sdp description of rtsp presentation
-
-Boolean SetupResponse;
-Boolean SetupSend;
-Boolean conf;
-
-unsigned char *MP4H;
-char const *MP4Header;						//	mp4 VOP header?
-static int MP4Hsize;						//	size of mp4 header
-//static int MP4FrameSize;					//	size of frame
-unsigned int maxRTPDataSize = RTPDataSize;			//	length of RTP data to be read
-int   CSeq;							//	CSeq number
-int ReceptionBufferSize;					//	size of buffer reception
-//unsigned *DataReception;
-unsigned timestampFreq;						//	timestamp clock
-unsigned int SSRC;							//	SSRC identifier
-unsigned maxFrameSize;						//	RTP frame size
-unsigned actualCSeq;						//	actual sequence number
-unsigned long actualRTPtimestamp;				//	current actual timestamp
-unsigned fps;							//	frame rate
-static char	readOKFlag;					//	flag to indicate RTP reading data
-unsigned char *dataRTP;
-//	allocate buffer memory
-unsigned *DataReception  = new unsigned[2000000];		//	allocate bufer for frames from server
-static int frameCounter=0;					//	frame counter
-
-static int counter=10;
-static int updates=0;
-static int FirstTime = 0;
-static int FirstExec = 0;
-static int delay;
-//*********************************************************************
-//	libavcodec libraries
-AVFormatContext	*pFormatCtx;		//	to save the file and its data
-int		k,videoStream,decodeOK;	//	to access video stream within the file
-AVCodecContext	*pCodecCtx=NULL;	//	to get the info of codec used in the file
-AVCodec		*pCodec;		//	to get the codec to decode the file
-AVFrame		*pFrame;		//	to get raw frame of video in format YUV?
-AVFrame		*pFrameRGBA;		//	to convert the frame got to RGB format, native format for opengl
-AVPacket	packet;			//	to get packets within the file
-int		frameFinished;		//	flag to indicate that the fame has been read
-int		numBytes;		//	to get the number of bytes of each frame
-uint8_t		*buffer;		//	to save the data of each frame
-unsigned char	*image;			//	to save the RGB data to load in the texture
-unsigned char   *image2;		//	auxiliary image
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	pthread library
-/* mutex to syncronize the access to the data buffer */
-pthread_mutex_t mutexBuffer;
-
-pthread_t camera[3];		//	threads ID
-pthread_cond_t cond[3];		//	threads conditional variables
-sem_t sem;
-
-static int flagShow = -1;	//	flag to indicate shown data
-static int flagData =  1;	//	flag to indicate data has been got
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	structure for save the frames compresed and uncompressed
-typedef struct dataFrame{
-	
-	unsigned long timestamp;
-	unsigned char *data;		//	compressed data
-	unsigned char *image;		//	data decoded
-	int size;			
-	struct timeval time;		//	save the time with good resolution
-	long timeArrival;		//	time of arrival
-	long playoutTime;		//	time of render
-	int width;
-	int height;
-	int index;	
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	time structures with microseconds resolution
-struct timeval t,t1,t2;
-struct ntptimeval ntpTime;
-struct timezone tz;
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	buffers for saving frames
-dataFrame dataBuffer;
-dataFrame data_RTP;
-dataFrame ReceivedFrame;
-dataFrame Temp;
-unsigned char *DecodedFrame[100];
-//dataFrame InputBuffer[8];	//	to save input compressed frames 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	STL FIFOs
-//deque<dataFrame>IB;
-//queue<dataFrame>InputBuffer;		
-deque<dataFrame>InputBuffer;		//	input queue
-queue<dataFrame>ShowBuffer;		//	showing queue
-queue<unsigned char*>SB;
-queue<int>T;
+					
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	init libavcodec
-int init_codecs(void)
+int initCodecs()
 {
+	pCodecCtx=NULL;
+	
 //	initialize the codecs
 	av_register_all();
 
@@ -204,7 +91,7 @@ timeval timeNow() //
 {
 	//unsigned long RTPtime;
 	timeval t;
-	int time,time2;
+	int time;
 	//time = ntp_gettime(&ntpTime);
 	time = gettimeofday(&t,&tz);
 	if (time==0)
@@ -228,7 +115,7 @@ timeval timeNow() //
 int timeNow2()
 {
 	timeval t;
-	int time,time2;
+	int time;
 	//time = ntp_gettime(&ntpTime);
 	time = gettimeofday(&t,&tz);
 	if (time==0)
@@ -246,9 +133,11 @@ int timeNow2()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	function to execute after Reading data from RTP source
 //void *clientData, unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned durationInMicroseconds
-static void afterReading(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
+void afterReading(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
 				struct timeval presentationTime,unsigned /*durationInMicroseconds*/)
 {
+	
+
 	//	test size of frame
 if(framesize>=maxRTPDataSize)
 {
@@ -263,15 +152,15 @@ if(framesize>=maxRTPDataSize)
 	dataBuffer.size = framesize;
 	
 	//	we get the data // 
-	data_RTP.size =  MP4Hsize + dataBuffer.size;		//	save MP4Header
+	data_RTP.size =  MP4Hsize + dataBuffer.size;				//	save MP4Header
 	//	resize  buffer to save data
-   	memcpy(data_RTP.data,MP4H,MP4Hsize);			//	save frame in memory
+   	memcpy(data_RTP.data,MP4H,MP4Hsize);				//	save frame in memory
 	memmove(data_RTP.data + MP4Hsize, dataRTP, dataBuffer.size);
 	//memcpy(data_RTP.data, dataRTP, dataBuffer.size);
 										//	save timestamp
 	data_RTP.timestamp = Subsession->rtpSource()->curPacketRTPTimestamp();
  	data_RTP.time = timeNow();
-	data_RTP.index= frameCounter;						//	time arrival
+	data_RTP.index= frameCounter;					//	time arrival
 	//actualRTPtimestamp = 
 	//printf("current RTP timestamp %lu\n",data_RTP.timestamp);
 	//printf("Subsession ID: %s\n",Subsession->sessionId);
@@ -290,7 +179,7 @@ if(framesize>=maxRTPDataSize)
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	function to execute when the RTP is closed
-static void onClose(void *clientData)
+void onClose(void *clientData)
 {
 
 	readOKFlag = ~0;	//	set flag to new data
@@ -332,8 +221,31 @@ double skew(dataFrame N, dataFrame N_1)
 //		description:
 //			input: 	URL as "rtsp://sonar:7070/cam1"
 //			output: A subsession associated to the URL
-int rtsp_Init(char const *URL)
+int rtsp_Init(int camNumber)// 
  {
+	const char *name = "RTSP";
+	char const *URL;	//	to save address to access
+//	LIST OF CAMERAS TO ACCESS
+
+	switch(camNumber)	//	update image
+	{
+		case 0:
+			URL = URL0;
+			break;
+		case 1:
+			URL = URL1;
+			break;
+		case 2:
+			URL = URL2;
+			break;
+		case 3:
+			URL = URL3;
+			break;
+		default:
+			URL = URL0;
+			break;
+	}
+
 
 /////////////////	RTSP START	/////////////////
 
@@ -357,13 +269,13 @@ int rtsp_Init(char const *URL)
 	//	RTSP PROTOCOL
 	
 	//	Send OPTIONS method
-	unsigned long timestamp;
+	
 	getOptions = client->sendOptionsCmd(URL,NULL,NULL,NULL);	//	connect to server
 	printf("OPTIONS are: %s\n",getOptions);				//	print the response
 		
 	//	send DESCRIBE method
 	
-	getDescription = client->describeURL(URL);			//	get the Session description
+	getDescription = client->describeURL(URL);		//	get the Session description
 	printf("DESCRIBE is: \n%s\n",getDescription);			//	print this description
 
 	//	setup live libraries for send SETUP metunsigned long timestamp;hod
@@ -401,7 +313,7 @@ int rtsp_Init(char const *URL)
 		printf("Failed to initiate RTP subsession %s %s %s \n",Subsession->mediumName(),Subsession->codecName(),env->getResultMsg());
 		}else{
 		//	print info about RTP session type, codec,port number
-		printf("RTP %s/%s subsession initiated on port %d\n",Subsession->mediumName(),Subsession->codecName(),Subsession->clientPortNum());
+		printf("RTP %s/%s subsession  initiated on port %d\n",Subsession->mediumName(),Subsession->codecName(),Subsession->clientPortNum());
 		}
 		//	timestamp clock
 		timestampFreq = Subsession->rtpSource()->timestampFrequency();
@@ -425,7 +337,7 @@ int rtsp_Init(char const *URL)
 				return -1;
 			}
 		//	review status code
-		printf("Subsession ID: %s\n",Subsession->sessionId);
+		printf("Subsession  ID: %s\n",Subsession->sessionId);
 		//printf("URL %u\n",Subsession->rtpInfo.trackId);
 		printf("URL %u\n",Subsession->rtpChannelId);
 		//printf("SSRC ID: %u\n",Subsession->rtpSource()->lastReceivedSSRC());
@@ -447,179 +359,42 @@ int rtsp_Init(char const *URL)
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	this function close a rtsp connection
-int rtsp_close()
+int rtsp_Close()
 {
 	//	CLOSE RTSP CONNECTION
-	if(client!=NULL)
+	if(client !=NULL)
 	{
 	//	send TEARDOWN command
 		client->teardownMediaSession(*Session);
+		
 	}
+return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //int rtsp_getFrame(unsigned char *image)
 int rtsp_getFrame()
 {
 	
-	//printf("Subsession ID: %s\n",Subsession->sessionId);
-
-//	START TO READ THE DATA
-	/*
-	if(client==NULL)
-	{
-		printf("%s\n","client is not available");
-		return -1;
-
-	}
-	*/
-	//MediaSubsessionIterator iter(*Session);
-	//iter.reset();		//	reset subsessions
+	unsigned Var;
+	//cod = pthread_mutex_lock(&mutexFrame);
+	//	get the data from rtp //readSource
+	Subsession->readSource()->getNextFrame(dataRTP,maxRTPDataSize,
+								afterReading,(void*)Var,
+								onClose,(void*)Var);
+	//	wait until data is available, it allows for other task to be performed
+	//	while we wait data from rtp source					                                                        	
+	readOKFlag = 0;								                               //	schedule read                         	
+	TaskScheduler& scheduler = Subsession->readSource()->envir().taskScheduler();
+	scheduler.doEventLoop(&readOKFlag);
+	//printf("readOKFlag is: %i\n",readOKFlag );
+	//timeNow();
+	frameCounter++;
+	//usleep(delay);
+	//cod = pthread_mutex_unlock(&mutexFrame);
 	
-	//	start decoding frames
-	
-	//	update frame	
-	//frameCounter=0;
-	//if((Subsession=iter.next())!=NULL)		// while	check for correct subsession
-	//{
-	
-		//if (Subsession->readSource()==NULL) continue;	//	check source of data
-		/*
-		if (Subsession->readSource()==NULL)
-		{
-			printf("%s\n","Reading from RTP source was not possible"); 
-			return -1;
-		}
-		*/
-	//int fcounter =0;
-	//if(Subsession->readSource()!=NULL)	//	valid data source
-	//{
-	//	while(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
-	//	{
-			//	get the data from rtp //readSource
-			Subsession->readSource()->getNextFrame(dataRTP,maxRTPDataSize,
-								afterReading,DataReception,
-								onClose,DataReception);
-			//	wait until data is available, it allows for other task to be performed
-			//	while we wait data from rtp source					                                                        	
-			readOKFlag = 0;								                               //	schedule read                         	
-			TaskScheduler& scheduler = Subsession->readSource()->envir().taskScheduler();
-			scheduler.doEventLoop(&readOKFlag);
-			//printf("readOKFlag is: %i\n",readOKFlag );
-			//timeNow();
-			frameCounter++;
-			//usleep(delay);
-	/*
-			decodeOK = avcodec_decode_video(pCodecCtx,pFrame,&frameFinished,data_RTP.data,data_RTP.size);
-		
-			//if(decodeOK!=0)
-			//{printf("%s\n","error in decoding");}
-		//else{
-		//	if we get a frame then convert to RGB
-			if(frameFinished)
-			{
-			//	convert the image from his format to RGB
-				img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,768,576);
-					
-				//pCodecCtx->width,pCodecCtx->height);
-				//static unsigned char image[]={pFrameRGB->data[0]};
-				//	save to a buffer
-				//image = pFrameRGBA->data[0];	//	save RGB frame
-				//data_RTP.image = pFrameRGBA->data[0];
-				//frameCounter++;
-				DecodedFrame[frameCounter] = pFrameRGBA->data[0];
-				//ShowBuffer.push(data_RTP);
-				printf("frame %d was decoded\n",frameCounter);
-				//	get the timestamp of the frame
-				//break;
-			}
-			else{
-				//frameCounter++;	
-				printf("there was an error while decoding the frame %d\n",frameCounter);
-				//image = pFrame->data[0];
-			}
-			
-			//fcounter++;
-			if(frameCounter == 25)
-			{break;}
-			 
-		
-		}
-	
-	}
-	*/
-
-	//}
-	//	Now send PAUSE method
-	/*
-	if(client!=NULL)
-	{
-		if(client->pauseMediaSession(*Session)==0)
-		{
-			printf("%s\n","PAUSE command was not sent");
-			
-		}
-	}
-	*/
-	//	stop getting the frames
-	//Subsession->readSource()->stopGettingFrames();
-	//printf("SSRC ID: %u\n",Subsession->rtpSource()->lastReceivedSSRC());
-	
-	/*
-	
-
-	*/
 	return 0;	//	exit with sucess
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-//int rtsp_getFrame(unsigned char *image)
-int rtsp_loop()
-{
-	
-	//printf("Subsession ID: %s\n",Subsession->sessionId);
-
-//	START TO READ THE DATA
-
-	if(client==NULL)
-	{
-		printf("%s\n","client is not available");
-		return -1;
-
-	}
-	
-	//int fcounter =0;
-	if(Subsession->readSource()!=NULL)	//	valid data source
-	{
-		while(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
-		{
-	
-
-			 
-		}
-	}
-	
-	//}
-	//	Now send PAUSE method
-	/*
-	if(client!=NULL)
-	{
-		if(client->pauseMediaSession(*Session)==0)
-		{
-			printf("%s\n","PAUSE command was not sent");
-			
-		}
-	}
-	*/
-	//	stop getting the frames
-	//Subsession->readSource()->stopGettingFrames();
-	//printf("SSRC ID: %u\n",Subsession->rtpSource()->lastReceivedSSRC());
-	
-	/*
-	
-
-	*/
-	return 0;	//	exit with sucess
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 int rtsp_decode(dataFrame dataCompress)
@@ -650,7 +425,7 @@ int rtsp_decode(dataFrame dataCompress)
 		}
 		else{
 			//frameCounter++;	
-			printf("there was an error while decoding the frame %d\n",frameCounter);
+			printf("there was an error while decoding the frame %d in the camera\n",frameCounter);
 			//image = pFrame->data[0];
 		}
 		
@@ -666,7 +441,7 @@ int rtsp_decode(dataFrame dataCompress)
 //		At start it can save n frames to be used like a buffer to let smooth the rate
 //		of showinf frames  and too to decrease the network jitter of packets
 //		here, this decouples the reception part of the showing part
-int rtsp_buffering(int n)
+int rtsp_Buffering(int n)
 {
 	double s;
 	for (int i=0; i<n;i++)	//	save n compressed frames
@@ -690,9 +465,11 @@ return 0;
 // ///////////////////////////////////////////////////////
                            //////////////////////////////////////////
 //	Getting data thread
-void* getData(void*)
+void* rtsp_getData(void *)
 {
 	double s;
+	//int CAMERA;
+	//CAMERA = *(int*)arg;		//	cast to integer
 	int cod;
 	while(1)	//	threads is always in execution
 	{
@@ -708,12 +485,14 @@ void* getData(void*)
 			}
 		else{
 		//condition
-			//while (flagShow<0)
+			
 			//cod = pthread_cond_wait(&cond[0],&mutexBuffer);		//	goto sleep until condition
-			//assert(flagShow>0);
+			
 			//if (cod!=0)	
 			//{printf("%s\n","Error condition in get RTP data");}
 			//
+			
+			/*
 			if (FirstTime==0)
 			{
 				FirstTime = -1;
@@ -721,7 +500,7 @@ void* getData(void*)
 				//sem_wait(&sem);		//	wait semaphore
 				
 				
-			}
+			}*/
 		
 			rtsp_getFrame();
 			rtsp_decode(data_RTP);
@@ -741,7 +520,7 @@ void* getData(void*)
 			InputBuffer.push_back(data_RTP);
 			//counter++;
 			//T.push(counter);
-			printf("writing %d\n",frameCounter);
+			printf("writing frame %d from the camera \n",frameCounter);
 			//printf("FIFO size: %d\n",InputBuffer.size());
 		//
 		
@@ -868,49 +647,6 @@ while(1)
 }
 */
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-//	these thread open a rtp session for read data using 3 threads
-/*
-void* rtp_dataSessi2on(void* data)
-{
-	SoTexture2 *robot = (SoTexture2*)data;
-	//while(1)
-	//{
-	if (FirstExec==0)robot->image.setValue(SbVec2s(768,576),3,image);	//	update image
-	{
-		//	START TO READ THE DATA
-
-		if(client==NULL)
-		{
-			printf("%s\n","client is not available");
-			//return -1;
-
-		}
-	
-		if(Subsession->readSource()!=NULL)	//	valid data source
-		{
-			if(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
-			{
-				pthread_create(&camera[0],0,ShowData,0);
-				pthread_create(&camera[2],0,updateImage,(SoTexture2*)robot);			
-				pthread_create(&camera[1],0,getData,0);
-			
-			}
-		}
-
-	FirstExec=-1;		//	only create the threads the first time after ony read the data
-	
-	}else{
-
-	
-	
-	}
-
-
-	//}
-return 0;
-}
-*/
-////////////////////////////////////////////////////////////////////////////////////////////////////
 //	update function show the frame from cameras
 
 void update(void *data,SoSensor*)	//	this function updates the texture based on the frame got
@@ -918,7 +654,8 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 {
 	//	get the video frames
 	
-	SoTexture2 *robot = (SoTexture2*)data;
+	//int CAM = 1;
+	SoTexture2 *rightImage = (SoTexture2*)data;
 	sem_wait(&sem);	//	update image
 	//	WAIT FOR SEMAPHORE
 	
@@ -934,12 +671,12 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 
 //sem_wait(&sem);	//	update image
 
-		robot->image.setValue(SbVec2s(512,512),3,ReceivedFrame.image);
+		rightImage->image.setValue(SbVec2s(512,512),3,ReceivedFrame.image);
 		//ReceivedFrame = IB.front();
 		//rtsp_decode(ReceivedFrame);
 		//	INCREASE SEMAPHORE: DATA IS DECODED AND READY TO SHOW
 		//ShowBuffer.push(data_RTP);		//	save decoded frame
-		printf("update image No: %ld: \n",ReceivedFrame.index);
+		printf("update image No: %d: from camera \n",ReceivedFrame.index);
 		timeNow2();
 		//sem_post(&sem);				
 		InputBuffer.pop_front();		//	delete frame from the FIFO buffer
@@ -969,90 +706,114 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 	printf("frames reamining %d\n",frameCounter);
 	//}
 	frameCounter--;
-	}
-}
-	*/
+	}*/
+
+	
 	//pthread_mutex_unlock(&mutexBuffer);
 	//updates++;512
 	//printf("timesensor calls: %d\n",updates);
 	//timeNow2();
 	//usleep(20);
 	//sem_post(&sem);
-
+	
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //		MAIN PROGRAM
 int main(int argc,char **argv)
 {
 	
-	char const *URL;
+	int K,cod,status;
+	
 	//delay = atoi(argv[1]);
-	int cam = atoi(argv[1]);		// choose the camera to see
+	cam = atoi(argv[1]);		// choose the camera to see
+	//cam[1] = 3;//atoi(argv[2]);
 	//******************************************************************************************
-	//	list of camera to access
-
-	switch(cam)	//	update image
-	{
-		case 0:
-			URL = URL0;
-			break;
-		case 1:
-			URL = URL1;
-			break;
-		case 2:
-			URL = URL2;
-			break;
-		case 3:
-			URL = URL3;
-			break;
-		default:
-			URL = URL0;
-			break;
-	}
-	//**************************0*****************************************************************
+	
+	//******************************************************************************************
 	//	Allocation of  memory to save the compressed and uncompressed frames
-
-	dataRTP = new unsigned char[70000];			//      buffer for RTP data available
+	/*
+	for (K=0;K<2;K++)
+	{
+		CAMS[K].cam = K+2;
+		CAMS[K].dataRTP = new unsigned char[70000];		//      buffers for RTP data available
+		CAMS[K].data_RTP.data = new unsigned char[70000];
+		CAMS[K].frameCounter = 0;				//	start framecounters
+		CAMS[K].initCodecs();					//	init codecs
+		CAMS[K].ID = K;						//	Cameras ID
+	}
+	*/
+	
+	
+	dataRTP = new unsigned char[70000];			
+	//dataRTP = new unsigned char[70000];
+	
 	data_RTP.data = new unsigned char[70000];		//	uncompressed frames with MPEG4 Headers
+	//data_RTP.data = new unsigned char[70000];
 
+
+	//frameCounter[0]=0;					//	initiate frame counters for left and right cameras
+	//frameCounter[1]=0;
 
 	//******************************************************************************************
 	//	INIT THE VIDEO CODECS	
+
 	
-	if (init_codecs()==-1)					//	init libavcodec
+	if (initCodecs()==-1)					//	init libavcodec
+		{
+			printf("codecs for camera  was not initialized");	//	codec not initialized
+			return -1;
+		}
+	/*
+	for (K=0;K<2;K++)
 	{
-		printf("%s\n","codecs was not initialized");	//	codec not initialized
-		return -1;
-	}						
-	
+		if (init_codecs(K)==-1)					//	init libavcodec
+		{
+			printf("codecs for camera %d was not initialized",K);	//	codec not initialized
+			return -1;
+		}						
+	}
+	*/
 	//******************************************************************************************
 	//	Start threads and semaphores
 
-	sem_init(&sem,0,0);					//	start semaphore with a  value of 0 = blocked
+	//sem_init(&sem[0],0,0);					//	start semaphores with a  value of 0 = blocked
+	//sem_init(&sem[1],0,0);					//	don't forget destroy the threads
 	
-	int cod = pthread_mutex_init(&mutexBuffer,0);		//	start mutex exclusion of buffers
-	if (cod!=0)	
-		{printf("%s\n","Error initilization on mutex");}
 	
+	//for (K=0;K<2;K++)
+	//{
+		
+		sem_init(&sem,0,0);				//	start semaphores with a  value of 0 = blocked	
+		cod = pthread_mutex_init(&mutexBuffer,0);	//	start mutex exclusion of buffers
+		if (cod!=0)	
+			{printf(" Error initilization on mutex %d\n",K);}
+			
+		//cod = pthread_cond_init(&CAMS[K].cond,0);		//	start conditional variables 
+		//if (cod!=0)
+		//	{printf(" error starting condition %d\n",K);}
 
-	cod = pthread_cond_init(&cond[0],0);			//	start conditional variable 
-	if (cod!=0)
-		{printf("%s\n","error starting condition");}
+		status = rtsp_Init(cam);			//	Init RTSP Clients for left and right cameras
+		//status = CAMS[K].rtsp_Init(cam[1]);
 
+	//}
+
+	
+	/*
 	cod = pthread_cond_init(&cond[1],0);			//	start conditional variable 2
 	if (cod!=0)						//	used with the thread getdata
 		{printf("%s\n","error starting condition");}
-
-	cod = pthread_cond_init(&cond[2],0);			//	start conditional varia512ble 3
+	
+	cod = pthread_cond_init(&cond[2],0);			//	start conditional variable 3
 	if (cod!=0)						//	used with the thread getdata
 		{printf("%s\n","error starting condition");}
-
+	*/
+	
 	//*******************************************************************************************
 	//	connect to RTSP server
 
 
-	int status;
-	status= rtsp_Init(URL);//atoi(artsp_buffering(5);				//	start buffering n framesrgv[2])					//	Init RTSP Client
+	
 	
 
 	//printf("FIFO size: %d\n", InputBuffer.size());
@@ -1074,7 +835,7 @@ int main(int argc,char **argv)
 
 	//SoDB::init();
 	//SoDB::setRealTimeInterval(1/120.0);
-	SoSeparator * root = new SoSeparator;
+	SoSeparator *root = new SoSeparator;
     	root->ref();
 	/*rtsp_buffering(5);				//	start buffering n frames
 	SoPerspectiveCamera *mycamera = new SoPerspectiveCamera;
@@ -1083,29 +844,31 @@ int main(int argc,char **argv)
 	root->addChild(light);
 	*/	
 
-
-	SoTexture2  *robot = new SoTexture2;
-    	root->addChild(robot);		// add to shape
-    	robot->filename.setValue("");	// this set is for use an image from memory in place of a file */
 	//robot->image.setValue(SbVec2s(720,576),3,image);//pCodecCtx->height,pCodecCtx->width
 	//	make a plane background and associate a texture
 	//printf("imnage was %u\n",image[0]);
+
+	//	MAKE A PLANE FOR IMAGE 
+
+	SoGroup *plane = new SoGroup;
+	
 	SoCoordinate3 *Origin = new SoCoordinate3;
-	root->addChild(Origin);			//	set plane origin at (0,0,0)
+	plane->addChild(Origin);			//	set plane origin at (0,0,0)
 	
 	Origin->point.set1Value(3,SbVec3f( 512/2,  512/2, 0));
 	Origin->point.set1Value(2,SbVec3f( 512/2, -512/2, 0));
 	Origin->point.set1Value(1,SbVec3f(-512/2, -512/2, 0));
 	Origin->point.set1Value(0,SbVec3f(-512/2,  512/2, 0));
+	
 	//	define the square's normal
 	SoNormal *normal = new SoNormal;				//	start buffering n frames;
-	root->addChild(normal);
+	plane->addChild(normal);
 	normal->vector.set1Value(0,SbVec3f(0,0,1));	//	normal to z	
 	
 	//	define the texture coordinates
 
 	SoTextureCoordinate2 *TextCoord = new SoTextureCoordinate2;
-	root->addChild(TextCoord);
+	plane->addChild(TextCoord);
 	TextCoord->point.set1Value(0,SbVec2f(0,0));
 	TextCoord->point.set1Value(1,SbVec2f(0,1));
 	TextCoord->point.set1Value(2,SbVec2f(1,1));
@@ -1115,8 +878,8 @@ int main(int argc,char **argv)
 	
 	SoNormalBinding *nBind = new SoNormalBinding;
 	SoTextureCoordinateBinding *TextBind = new SoTextureCoordinateBinding;
-	root->addChild(nBind);	
-	root->addChild(TextBind);
+	plane->addChild(nBind);	
+	plane->addChild(TextBind);
 
                            
 	nBind->value.setValue(SoNormalBinding::OVERALL);
@@ -1125,39 +888,76 @@ int main(int argc,char **argv)
 	//	define a faceset
 
 	SoFaceSet *Face = new SoFaceSet;
-	root->addChild(Face);
+	plane->addChild(Face);
 	Face->numVertices.set1Value(0,4);
 
-	//	timer sensor for show the data
+	// MAKE LEFT AND RIGHT PLANES	
 
-	//	START TO READ THE DATA
+	//	LEFT PLANE
+	
+	SoSeparator *leftPlane = new SoSeparator;
+	
+	//	ADD THE IMAGE FROM THE FIRST CAMERA
+	SoTexture2  *leftImage = new SoTexture2;
+	leftImage->filename.setValue("");	// this set is for use an image from memory in place of a file */
+
+	SoTransform *leftTransform = new SoTransform;
+	leftTransform->translation.setValue(-512/2,0.0,0.0);
+	leftPlane->addChild(leftTransform);
+	leftPlane->addChild(leftImage);
+	leftPlane->addChild(plane);
+	
+	//	RIGHT PLANE
+
+	SoSeparator *rightPlane = new SoSeparator;
+
+	//	ADD THE IMAGE FROM THE SECOND CAMERA
+	SoTexture2 *rightImage = new SoTexture2;
+	rightImage->filename.setValue("");
+
+	SoTransform *rightTransform = new SoTransform;
+	rightTransform->translation.setValue(512/2,0.0,0.0);
+		
+	rightPlane->addChild(rightTransform);
+	rightPlane->addChild(rightImage);
+	rightPlane->addChild(plane);
+	
+	//	ADD THE TWO PLANES
+
+	root->addChild(leftPlane);		// 
+	root->addChild(rightPlane);
+
+	//	timer sensor for show the data
+	//pthread_create(&camera[3],0,rtp_dataSession,0);
+	//	START TO READ THE DATA FROM CAMERAS
                            
 
-	if(client==NULL)
-	{
-		printf("%s\n","client is not available");
-		return -1;
-
-	}
-	
-	//pthread_create(&camera[3],0,rtp_dataSession,0)
-                           ;
-	
-	int fcounter =0;
-	if(Subsession->readSource()!=NULL)	//	valid data source
-	{
-		if(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
+	//for (K=0;K<2;K++)
+	//{
+	//K=1;
+		if(client==NULL)
 			{
-			rtsp_buffering(4);	//	start buffering n frames
-			//pthread_create(&camera[0],0,ShowData,(SoTexture2*)robot);
-			pthread_create(&camera[1],0,getData,0);
-			//pthread_create(&camera[2],0,updateImage,(SoTexture2*)robot);
-			
-			
-		}
-	}
-	
+			printf(" client is not available\n");
+			return -1;
 
+			}
+	
+		if(Subsession->readSource()!=NULL)	//	valid data source
+		{
+			if(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
+				{
+				rtsp_Buffering(4);	//	start buffering n frames
+				//pthread_create(&camera[0],0,ShowData,(SoTexture2*)robot);
+				cod = pthread_create(&camera[0],0,rtsp_getData,0);
+				//pthread_create(&camera[2],0,updateImage,(SoTexture2*)robot);
+				if (cod!=0)
+					{printf("error creating thread No %d\n",K);}
+				else{
+					printf("creating thread No %d\n",K);
+					}
+				}
+		}
+	//}
 	
 	//****************************************************************************
 	//	start threads to get and show the video stream	
@@ -1167,14 +967,15 @@ int main(int argc,char **argv)
 	//****************************************************************************
 	//	setup timer sensor for recursive image updating 
 
-		
-	SoTimerSensor *timer = new SoTimerSensor(update,robot);
+			
+	SoTimerSensor *timer = new SoTimerSensor(update,rightImage);
 	//
-	timer->setBaseTime(SbTime::getTimeOfDay());
-	timer->setInterval(1.0/atoi(argv[2]));//fps	//	set interval 40 ms
+	timer->setBaseTime(SbTime::getTimeOfDay());//atoi(argv[3])
+	timer->setInterval(1.0/25.0);//fps	//	set interval 40 ms
 	timer->schedule();				//	enable
         //root->addChild(new SoCube);
 	/*
+
 	SoCube *cub = new SoCube;
 	cub->width.setValue(100.0);
         cub->height.setValue(100.0);
@@ -1183,7 +984,7 @@ int main(int argc,char **argv)
 	*/
      	SoTransform *myTrans = new SoTransform;
 	root->addChild(myTrans);
-   	myTrans->translation.setValue(0.0,0.0,100.0);
+   	myTrans->translation.setValue(0.0,0.0,200.0);
 	
 	
 	
@@ -1218,26 +1019,23 @@ int main(int argc,char **argv)
     	SoQt::show(mainwin);
     	// Loop until exit.
     	SoQt::mainLoop();
-	
-		
-	
+
 	//***************************************************************************
 	//			wait until the threads finish
 	
-	
 	pthread_join(camera[0],0);
-	pthread_join(camera[1],0);
-	pthread_join(camera[2],0);
+	//pthread_join(camera[0],0);
+	//pthread_join(camera[2],0);
 	//pthread_join(camera[3],0);
 	//****************************************************************************
 	// 			Clean up resources.				  
     	delete eviewer;
     	root->unref();
-	delete DataReception;
-	delete pFrame;
-	delete pFrameRGBA;
-	delete data_RTP.data;
 	delete dataRTP;
+	delete data_RTP.data;
+	
+
+	
 		
 return 0;
 }	
