@@ -24,7 +24,6 @@
 
 #include "client.h"	
 
-					
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	init libavcodec
 int initCodecs()
@@ -486,29 +485,12 @@ void* rtsp_getData(void *)
 		else{
 		//condition
 			
-			//cod = pthread_cond_wait(&cond[0],&mutexBuffer);		//	goto sleep until condition
-			
-			//if (cod!=0)	
-			//{printf("%s\n","Error condition in get RTP data");}
-			//
-			
-			/*
-			if (FirstTime==0)
-			{
-				FirstTime = -1;
-			}else{
-				//sem_wait(&sem);		//	wait semaphore
-				
-				
-			}*/
-		
 			rtsp_getFrame();
 			rtsp_decode(data_RTP);
 			//sem_post(&sem);
 			
 			if(!InputBuffer.empty())
 				{
-				
 				
 				dataFrame N = data_RTP;
 				dataFrame N_1 = InputBuffer.back();
@@ -522,12 +504,7 @@ void* rtsp_getData(void *)
 			//T.push(counter);
 			printf("writing frame %d from the camera \n",frameCounter);
 			//printf("FIFO size: %d\n",InputBuffer.size());
-		//
 		
-		//	UNLOCK THE RESOURCE
-	
-			//flagData = 1;
-			//flagShow = -1;
 
 		//	WAKE UP THE OTHER THREAD: SHOW DATA THREAD
 			//cod = pthread_cond_signal(&cond[1]);
@@ -540,113 +517,11 @@ void* rtsp_getData(void *)
 			{printf("%s\n","Error unlocking get RTP data");}
 
 		
-
-		
-		//if (cod!=0)	
-		//	{printf("%s\n","Error signal condition in decode RTP data");}
-		
 	}
 	return 0;
 
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	this works but not update the image continuosly
-/*
-void* ShowData(void* data)
-{
-	int cod;
-	SoTexture2 *robot = (SoTexture2*)data;
-	while(1)
-	{
-	
-		//	LOCK THE RESOURCE
 
-		cod = pthread_mutex_lock(&mutexBuffer);
-		if (cod!=0)	
-			{printf("%s\n","Error locking RTP decode data");}
-			//condition
-			//while (flagData<0)
-		else{
-			cod = pthread_cond_wait(&cond[1],&mutexBuffer);		//	go to sleep until we get some data
-										//	from the data thread
-			//if(!T.emptyunsigned long timestamp;())
-			//if(!IB.empty())
-
-			if(!InputBuffer.empty())
-			{
-				//int t = T.front();
-                           
-				//T.pop();
-				//printf("decoding: %d\n",t);
-			
-				ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer
-				robot->image.setValue(SbVec2s(768,576),3,ReceivedFrame.image);
-				//ReceivedFrame = IB.front();
-				//rtsp_decode(ReceivedFrame);
-				//	INCREASE SEMAPHORE: DATA IS DECODED AND READY TO SHOW
-				//ShowBuffer.push(data_RTP);		//	save decoded frame
-				printf("update image No: %ld: \n",frameCounter);
-				//sem_post(&sem);				
-				InputBuffer.pop_front();		//	delete compressed frame from FIFO buffer
-				//IB.pop_front();
-				//printf("FIFO size: %d\n",InputBuffer.size());
-				//robot->image.setValue(SbVec2s(720,576),3,image);
-		
-			}
-	
-			//flagShow = 1;
-			//flagData =-1;
-
-		//cod = pthread_cond_signal(&cond[2]);
-		//sem_post(&sem);
-		}
-		
-		//	UNLOCK THE RESOURCE
-		cod = pthread_mutex_unlock(&mutexBuffer);
-	
-		if (cod!=0)	
-			{printf("%s\n","Error unlocking RTP decode data");}
-			
-			//if (cod!=0)	
-			//{printf("%s\n","Error signal condition in decode RTP data");}
-		
-	}
-	return 0;
-}
-*/
-////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-void* updateImage(void* data)
-{
-
-int cod;
-while(1)
-{
-	sem_wait(&sem);
-	
-	//	LOCK THE RESOURCE
-
-	cod = pthread_mutex_trylock(&mutexBuffer);
-	if (cod!=0)	
-			{printf("%s\n","Error locking RTP decode data");}
-	else{
-	
-		//cod = pthread_cond_wait(&cond[2],&mutexBuffer);	
-
-		SoTexture2 *robot = (SoTexture2*)data;
-		robot->image.setValue(SbVec2s(768,576),3,image);
-		printf("update image No %i\n",frameCounter);
-		//sem_post(&sem);
-	
-	}
-	//	UNLOCK THE RESOURCE
-	cod = pthread_mutex_unlock(&mutexBuffer);
-	512
-}
-	return 0;
-}
-*/
-////////////////////////////////////////////////////////////////////////////////////////////////////
 //	update function show the frame from cameras
 
 void update(void *data,SoSensor*)	//	this function updates the texture based on the frame got
@@ -688,33 +563,7 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 	{
 		printf("empty buffer %d\n", InputBuffer.size());
 	}
-	
-	
-	//if(!ShowBuffer.empty())
-	//{
-	//DecodedFrame = ShowBuffer.front();			//	get image
-	//rtsp_decode(DecodedFrame);
-	
-	/*
-	if (frameCounter>=0)
-	{
-	image = DecodedFrame[frameCounter];
-	
-	//ShowBuffer.pop();					// 	delete readed element
-	
-	//printf("FIFO Size %i\n",ShowBuffer.size());
-	printf("frames reamining %d\n",frameCounter);
-	//}
-	frameCounter--;
-	}*/
 
-	
-	//pthread_mutex_unlock(&mutexBuffer);
-	//updates++;512
-	//printf("timesensor calls: %d\n",updates);
-	//timeNow2();
-	//usleep(20);
-	//sem_post(&sem);
 	
 }
 
@@ -728,22 +577,9 @@ int main(int argc,char **argv)
 	//delay = atoi(argv[1]);
 	cam = atoi(argv[1]);		// choose the camera to see
 	//cam[1] = 3;//atoi(argv[2]);
-	//******************************************************************************************
-	
+		
 	//******************************************************************************************
 	//	Allocation of  memory to save the compressed and uncompressed frames
-	/*
-	for (K=0;K<2;K++)
-	{
-		CAMS[K].cam = K+2;
-		CAMS[K].dataRTP = new unsigned char[70000];		//      buffers for RTP data available
-		CAMS[K].data_RTP.data = new unsigned char[70000];
-		CAMS[K].frameCounter = 0;				//	start framecounters
-		CAMS[K].initCodecs();					//	init codecs
-		CAMS[K].ID = K;						//	Cameras ID
-	}
-	*/
-	
 	
 	dataRTP = new unsigned char[70000];			
 	//dataRTP = new unsigned char[70000];
@@ -751,9 +587,6 @@ int main(int argc,char **argv)
 	data_RTP.data = new unsigned char[70000];		//	uncompressed frames with MPEG4 Headers
 	//data_RTP.data = new unsigned char[70000];
 
-
-	//frameCounter[0]=0;					//	initiate frame counters for left and right cameras
-	//frameCounter[1]=0;
 
 	//******************************************************************************************
 	//	INIT THE VIDEO CODECS	
@@ -764,68 +597,18 @@ int main(int argc,char **argv)
 			printf("codecs for camera  was not initialized");	//	codec not initialized
 			return -1;
 		}
-	/*
-	for (K=0;K<2;K++)
-	{
-		if (init_codecs(K)==-1)					//	init libavcodec
-		{
-			printf("codecs for camera %d was not initialized",K);	//	codec not initialized
-			return -1;
-		}						
-	}
-	*/
+	
 	//******************************************************************************************
 	//	Start threads and semaphores
 
-	//sem_init(&sem[0],0,0);					//	start semaphores with a  value of 0 = blocked
-	//sem_init(&sem[1],0,0);					//	don't forget destroy the threads
-	
-	
-	//for (K=0;K<2;K++)
-	//{
-		
 		sem_init(&sem,0,0);				//	start semaphores with a  value of 0 = blocked	
 		cod = pthread_mutex_init(&mutexBuffer,0);	//	start mutex exclusion of buffers
 		if (cod!=0)	
 			{printf(" Error initilization on mutex %d\n",K);}
-			
-		//cod = pthread_cond_init(&CAMS[K].cond,0);		//	start conditional variables 
-		//if (cod!=0)
-		//	{printf(" error starting condition %d\n",K);}
-
-		status = rtsp_Init(cam);			//	Init RTSP Clients for left and right cameras
-		//status = CAMS[K].rtsp_Init(cam[1]);
-
-	//}
-
-	
-	/*
-	cod = pthread_cond_init(&cond[1],0);			//	start conditional variable 2
-	if (cod!=0)						//	used with the thread getdata
-		{printf("%s\n","error starting condition");}
-	
-	cod = pthread_cond_init(&cond[2],0);			//	start conditional variable 3
-	if (cod!=0)						//	used with the thread getdata
-		{printf("%s\n","error starting condition");}
-	*/
-	
-	//*******************************************************************************************
+		
 	//	connect to RTSP server
-
-
+		status = rtsp_Init(cam);			//	Init RTSP Clients for left and right cameras
 	
-	
-
-	//printf("FIFO size: %d\n", InputBuffer.size());
-	/*
-	if (status!=-1)
-	{
-		rtsp_getFrame();	//	get the frame
-	}else{
-		printf("%s\n","Is not possible to initializate the client ");
-	}
-
-	*/
 	// ******************************************************************************************** 
 	//		Graphics Scene
 	
@@ -837,17 +620,7 @@ int main(int argc,char **argv)
 	//SoDB::setRealTimeInterval(1/120.0);
 	SoSeparator *root = new SoSeparator;
     	root->ref();
-	/*rtsp_buffering(5);				//	start buffering n frames
-	SoPerspectiveCamera *mycamera = new SoPerspectiveCamera;
-	SoDirectionalLight *light = new SoDirectionalLight;
-	root->addChild(mycamera);
-	root->addChild(light);
-	*/	
-
-	//robot->image.setValue(SbVec2s(720,576),3,image);//pCodecCtx->height,pCodecCtx->width
-	//	make a plane background and associate a texture
-	//printf("imnage was %u\n",image[0]);
-
+	
 	//	MAKE A PLANE FOR IMAGE 
 
 	SoGroup *plane = new SoGroup;
@@ -927,43 +700,32 @@ int main(int argc,char **argv)
 	root->addChild(leftPlane);		// 
 	root->addChild(rightPlane);
 
-	//	timer sensor for show the data
-	//pthread_create(&camera[3],0,rtp_dataSession,0);
 	//	START TO READ THE DATA FROM CAMERAS
                            
 
-	//for (K=0;K<2;K++)
-	//{
-	//K=1;
-		if(client==NULL)
-			{
-			printf(" client is not available\n");
-			return -1;
-
-			}
-	
-		if(Subsession->readSource()!=NULL)	//	valid data source
+	if(client==NULL)
 		{
-			if(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
-				{
-				rtsp_Buffering(4);	//	start buffering n frames
-				//pthread_create(&camera[0],0,ShowData,(SoTexture2*)robot);
-				cod = pthread_create(&camera[0],0,rtsp_getData,0);
-				//pthread_create(&camera[2],0,updateImage,(SoTexture2*)robot);
-				if (cod!=0)
-					{printf("error creating thread No %d\n",K);}
-				else{
-					printf("creating thread No %d\n",K);
-					}
-				}
+		printf(" client is not available\n");
+		return -1;
+
 		}
-	//}
 	
-	//****************************************************************************
-	//	start threads to get and show the video stream	
-	
-	
-	
+	if(Subsession->readSource()!=NULL)	//	valid data source
+		{
+		if(strcmp(Subsession->mediumName(),"video")==0)// before while  // if
+			{
+			rtsp_Buffering(4);	//	start buffering n frames
+			//pthread_create(&camera[0],0,ShowData,(SoTexture2*)robot);
+			cod = pthread_create(&camera[0],0,rtsp_getData,0);
+			//pthread_create(&camera[2],0,updateImage,(SoTexture2*)robot);
+			if (cod!=0)
+				{printf("error creating thread No %d\n",K);}
+			else{
+				printf("creating thread No %d\n",K);
+				}
+			}
+	}
+
 	//****************************************************************************
 	//	setup timer sensor for recursive image updating 
 
@@ -973,44 +735,11 @@ int main(int argc,char **argv)
 	timer->setBaseTime(SbTime::getTimeOfDay());//atoi(argv[3])
 	timer->setInterval(1.0/25.0);//fps	//	set interval 40 ms
 	timer->schedule();				//	enable
-        //root->addChild(new SoCube);
-	/*
 
-	SoCube *cub = new SoCube;
-	cub->width.setValue(100.0);
-        cub->height.setValue(100.0);
-	cub->depth.setValue(100.0);
-	root->addChild(cub);
-	*/
      	SoTransform *myTrans = new SoTransform;
 	root->addChild(myTrans);
    	myTrans->translation.setValue(0.0,0.0,200.0);
 	
-	
-	
-	//****************************************************************************
-	//	test for show the scene
-
-	/*
-	SoSceneManager  *sceneManager = new SoSceneManager;
-	sceneManager->activate();
-
-	//	camerasem_post(&sem);
-	mycamera->position.setValue(0,0,5);
-	SbVec3f lookAt(0,0,0);	
-	mycamera->pointAt(lookAt);
-	
-	sceneManager->setSceneGraph(root);
-	sceneManager->setWindowSize(SbVec2s(800,600));
-	sceneManager->setSize(SbVec2s(800,600));
-	sceneManager->setViewportRegion(SbViewportRegion(800,600));
-
-	//sceneManager->render();
-	SbViewportRegion region(800,600); 
-	SoGLRenderAction myRender(region);
-	myRender.apply(root);
-	*/
-	//robot->image.setValue(SbVec2s(768,576),3,image);
 	// Use one of the convenient SoQt viewer classes.
 	SoQtExaminerViewer * eviewer = new SoQtExaminerViewer(mainwin);
     	eviewer->setSceneGraph(root);
@@ -1033,9 +762,7 @@ int main(int argc,char **argv)
     	root->unref();
 	delete dataRTP;
 	delete data_RTP.data;
-	
 
-	
 		
 return 0;
 }	
