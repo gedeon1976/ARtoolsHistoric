@@ -3,6 +3,7 @@
 
 //	Author:		Henry Portilla
 //	Date:		june/2006
+//	Modified:	sept/06
 
 //	Thanks:		
 
@@ -25,8 +26,8 @@
 #include "RTSPClient.hh"				//	RTSP client class
 #include "Media.hh"
 #include "MediaSession.hh"				//	RTP session management
-#include "DelayQueue.hh"				//	time management
-#include "RTPSink.hh"					//	to convert to timestanp
+//#include "DelayQueue.hh"				//	time management
+//#include "RTPSink.hh"					//	to convert to timestanp
 //********************************************************************************
 //	include coin libraries
 #include <Inventor/Qt/SoQt.h>
@@ -73,105 +74,11 @@
 //	special linux libraries
 #include <sys/timex.h>					//	ntp time
 #include "time.h"
-//*********************************************************************************
-enum views
-{
-	L=0,R=1						//	define views L = left, R = right
-};
 //*********************************************************************************		
 #define  RTPDataSize 	70000				//	size of RTP data read
 using namespace std;
 
-
-
-/**	These class create a interface to get data from a camera through RTSP + RTP protocols
-	based on Live555 libraries
-*/
-//class cliente
-//{
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//		 			**VARIABLES**
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	live variables
-//public:
-
-int verbosityLevel=0;
-//const char *name;
-portNumBits tunnelOverHTTPPortNum=0;
-
-UsageEnvironment *env; 						//	environment to manage the RTSP session
-RTSPClient *client;
-MediaSession *Session;						//	session parent
-MediaSubsession *Subsession;
-MediaSubsessionIterator *iter;
-
-//int   RTPport = 0;						//	RTP port
-//char *RTCPport= "54001";					//	RTCP port
-char *getOptions;						//	OPTIONS from server
-char *getDescription;						//	SDP description of rtsp presentation
-
-Boolean SetupResponse;
-Boolean SetupSend;
-Boolean conf;
-
-char const *URL0 ="rtsp://sonar:7070/cam0";			//	resources to access
-char const *URL1 ="rtsp://sonar:7070/cam1";
-char const *URL2 ="rtsp://sonar:7070/cam2";
-char const *URL3 ="rtsp://sonar:7070/cam3";
-
-//views LEFT=L;							//	define left and righ views
-//views RIGHT=R;
-
-unsigned char *MP4H;
-char const *MP4Header;						//	mp4 VOP header?
-static int MP4Hsize;						//	size of mp4 header
-unsigned char *dataRTP;						//	allocate buffer memory
-//static int MP4FrameSize;					//	size of frame
-unsigned int maxRTPDataSize = RTPDataSize;			//	length of RTP data to be read
-unsigned timestampFreq;						//	timestamp clock
-unsigned int SSRC;						//	SSRC identifier
-unsigned maxFrameSize;						//	RTP frame size
-unsigned actualCSeq;						//	actual sequence number
-unsigned long actualRTPtimestamp;				//	current actual timestamp
-unsigned fps;							//	frame rate
-static char readOKFlag;					//	flag to indicate RTP reading data
-
-//unsigned *DataReception  = new unsigned[2000000];		//	allocate bufer for frames from server
-static int frameCounter;					//	frame counter
-static int cam;							//	cameras to read
-int ID;								//	camera ID
-
-//static int FirstTime = 0;
-//static int FirstExec = 0;
-static int delay;
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//	libavcodec libraries
-AVFormatContext	*pFormatCtx;		//	to save the file and its data
-int		decodeOK;	//	to access video stream within the file
-AVCodecContext	*pCodecCtx;		//	to get the info of codec used in the file
-AVCodec		*pCodec;		//	to get the codec to decode the file
-AVFrame		*pFrame;		//	to get raw frame of video in format YUV?
-AVFrame		*pFrameRGBA;		//	to convert the frame got to RGB format, native format for opengl
-AVPacket	packet;			//	to get packets within the file
-int		frameFinished;		//	flag to indicate that the fame has been read
-int		numBytes;		//	to get the number of bytes of each frame
-uint8_t		*buffer;		//	to save the data of each frame
-unsigned char	*image;			//	to save the RGB data to load in the texture
-unsigned char   *image2;		//	auxiliary image
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	pthread library
-/* mutex to syncronize the access to the data buffer */
-pthread_mutex_t mutexBuffer;
-pthread_t camera[3];			//	threads ID
-pthread_cond_t cond[3];			//	threads conditional variables
-sem_t sem;				//	semaphores
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//	time structures with microseconds resolution
-struct timeval t,t1,t2;
-struct ntptimeval ntpTime;
-struct timezone tz;
-//	structure for save the frames compresed and uncompressed
+//	MAIN DATA STRUCTURES
 struct dataFrame{
 	
 	unsigned long timestamp;
@@ -185,51 +92,168 @@ struct dataFrame{
 	int height;
 	int index;			//	save number of the acquired frame
 };
+typedef dataFrame Frame;		//	define main frames
+
+/**	These class create a interface to get data from a camera through RTSP + RTP protocols
+	based on Live555 libraries
+*/
+
+class STREAM
+{
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//		 			**VARIABLES**
+////////////////////////////////////////////////////////////////////////////////////////////////////
+private:
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//	LIVE555 libraries
+
+int verbosityLevel;						//	these variables are use for create client
+const char *name;
+portNumBits tunnelOverHTTPPortNum;				
+
+UsageEnvironment *env; 						//	environment to manage the RTSP session
+RTSPClient *client;
+MediaSession *Session;						//	session parent
+MediaSubsession *Subsession;
+MediaSubsessionIterator *iter;
+
+
+//int   RTPport = 0;						//	RTP port
+//char *RTCPport= "54001";					//	RTCP port
+char *getOptions;						//	OPTIONS from server
+char *getDescription;						//	SDP description of rtsp presentation
+
+Boolean SetupResponse;
+Boolean SetupSend;
+Boolean conf;
+
+char const *URL;
+/*
+char const *URL0;						//	resources to access
+char const *URL1;
+char const *URL2;
+char const *URL3;
+*/
+unsigned char *MP4H;
+char const *MP4Header;						//	mp4 VOP header?
+int MP4Hsize;							//	size of mp4 header
+unsigned char *dataRTP;						//	allocate buffer memory
+//static int MP4FrameSize;					//	size of frame
+unsigned int maxRTPDataSize;					//	length of RTP data to be read
+unsigned timestampFreq;						//	timestamp clock
+unsigned int SSRC;						//	SSRC identifier
+unsigned maxFrameSize;						//	RTP frame size
+unsigned actualCSeq;					 	//	actual sequence number
+unsigned long actualRTPtimestamp;				//	current actual timestamp
+unsigned fps;							//	frame rate
+static char readOKFlag;//static					//	flag to indicate RTP reading data
+int frameCounter;						//	frame counter
+int cam;							//	cameras to read
+int ID;								//	camera ID
+int delay;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//	LIBAVCODEC libraries
+
+AVFormatContext	*pFormatCtx;		//	to save the file and its data
+int		decodeOK;		//	to access video stream within the file
+AVCodecContext	*pCodecCtx;		//	to get the info of codec used in the file
+AVCodec		*pCodec;		//	to get thfriend e codec to decode the file
+AVFrame		*pFrame;		//	to get raw frame of video in format YUV?
+AVFrame		*pFrameCrop;		//	to cut an image
+AVFrame		*pFrameRGBA;		//	to convert the frame got to RGB format, native format for opengl
+AVPacket	packet;			//	to get packets within the file
+int		frameFinished;		//	flag to indicate that the fame has been read
+int		numBytes;		//	to get the number of bytes of each frame
+uint8_t		*buffer;		//	to save the data of each frame
+unsigned char	*image;			//	to save the RGB data to load in the texture
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//	PTHREAD library
+
+pthread_mutex_t mutexBuffer;		//	mutex to syncronize the access to the data buffer 
+sem_t sem;				//	semaphores
+pthread_t camera;			//	threads ID
+//pthread_cond_t cond;			//	threads conditional variables
+
+/////////////////////////////////////////////////////////friend ///////////////////////////////////////////
+//	TIME STRUCTURES with microseconds resolution
+struct timeval t,t1,t2;
+struct ntptimeval ntpTime;
+struct timezone tz;
+
+//	STRUCTURES FOR FRAMES  : save the compresed and uncompressed frames 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	buffers for saving frames
-dataFrame dataBuffer;
-dataFrame data_RTP;
-dataFrame ReceivedFrame;
-dataFrame Temp;
+Frame dataBuffer;
+Frame data_RTP;
+Frame ReceivedFrame;
+Frame Temp;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	STL FIFOs
-deque<dataFrame>InputBuffer;		//	input queue
-queue<dataFrame>ShowBuffer;		//	showing queue
+deque<Frame>InputBuffer;		//	input FIFO queue, here used as the main buffer
+//queue<dataFrame>ShowBuffer;	
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 					METHODS
-/*
-public:
-//	constructor
-cliente()
-{
-}
-//	destructor
-~cliente()
-{
-}
 
-int initCodecs();			/// 	Init libavcodec library used to decode the stream of data
-int rtsp_Init(int CamNumber);		///	Init the connection with a RTSP server, besides these sends the different RTSP commands
-						///	to configure the transmision
-int rtsp_Close();			///	Close the current RTSP connection 
-int rtsp_getFrame();			///	Get a frame from the RTSP video server (here Spook is used)
-int rtsp_decode(dataFrame dataCompress);
-						///	Decodes a compressed frame and convert to RGB format
-int rtsp_Buffering(int n);		///	Buffer for get n frames at Start of reception, used to smooth the appareance of frames
-void* rtsp_getData(void *arg);			///	Create a thread to get data from the RTSP Server
+int initCodecs();			// 	Init libavcodec library used to decode the stream of data
+int rtsp_Init();			//	Init the connection with a RTSP server, besides these sends the different RTSP commands
+					//	to configure the transmision
+int rtsp_Close();			//	Close the current RTSP connection 
+int rtsp_getFrame();			//	Get a frame from the RTSP video server (here Spook www.litech.org program is used)
+int rtsp_decode(Frame dataCompress);
+					//	Decodes a compressed frame and convert to RGB format
+int rtsp_Buffering(int n);		//	Buffer for get n frames at Start of reception, used to smooth the appareance of frames
 
-timeval timeNow();			///	To save time of arrival of the frames
-int timeNow2();				///	Show the actual time using getoftimeday
-double skew(dataFrame N, dataFrame N_1);///	Calculates skew between sender and receiver
 
+static timeval timeNow();		//	To save time of arrival of the frames
+int timeNow2();				//	Show the actual time using getoftimeday with microseconds resolution
+double skew(Frame N, Frame N_1);	//	Calculates skew between sender and receiver, See Colin Perkins Book on RTP for meaning
+
+					//	these two function are used to save the frame in a structure
+					//	these are use so because the use afterReading is an static function
+					//	and the way to access the non static data is instancing an object
+					//	assigning their this pointer to the actual object, by that the use of
+					//	temp object
+void SaveFrame(void* clienData, unsigned framesize);
+void ProcessFrame(void *clientData, unsigned framesize);
+//THESE function are used with live555 GetNextFrame function
+//************************************************************************************************
 static void afterReading(void *clientData,unsigned framesize,unsigned numTruncatedBytes,
-				struct timeval presentationTime,unsigned durationInMicroseconds);		
-					///	to save data of the last frame obtained
+				struct timeval presentationTime,unsigned durationInMicroseconds);	
+					//	to save data of the last frame obtained
 static void onClose(void *clientData);
 
+//************************************************************************************************
+
+int create_Thread();			//	create a thread
+void rtsp_getData();			//	thread function
+void init_Semaphore(int i);		//	init the semaphore
+int init_mutex();			//	init the mutex
+int lock_mutex();			//	lock the mutex
+int unlock_mutex();			//	unlock the mutex
+
+public:
+static void *temp;			//	Aux object to allow calls from static methods here
+//	constructor
+STREAM();
+
+//	destructor
+~STREAM();
+
+//unsigned char*
+static unsigned char* callImage();
+unsigned char* getImage();		//	get the last frame available from the FIFO Buffer
+int Init_Session(char const *URL);	//	Setup the connection 
+static void *Entry_Point(void*);	//	to make thread function, Create a thread to get data from the RTSP Server
+
+void set_Semaphore();			//	set the class semaphore
+//int down_Semaphore();			//	decrease the semaphore
+void wait_Semaphore();			//	wait for semaphore 
 };
-*/
+
 
 
 

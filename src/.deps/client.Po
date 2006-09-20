@@ -164,8 +164,6 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /home/portilla/Live/live/liveMedia/include/RTSPClient.hh \
   /home/portilla/Live/live/liveMedia/include/Media.hh \
   /home/portilla/Live/live/liveMedia/include/MediaSession.hh \
-  /home/portilla/Live/live/BasicUsageEnvironment/include/DelayQueue.hh \
-  /home/portilla/Live/live/liveMedia/include/RTPSink.hh \
   /usr/include/Inventor/Qt/SoQt.h /usr/include/Inventor/Qt/SoQtBasic.h \
   /usr/share/qt3/include/qobject.h /usr/share/qt3/include/qobjectdefs.h \
   /usr/share/qt3/include/qglobal.h /usr/share/qt3/include/qconfig.h \
@@ -830,10 +828,6 @@ client.h:
 /home/portilla/Live/live/liveMedia/include/Media.hh:
 
 /home/portilla/Live/live/liveMedia/include/MediaSession.hh:
-
-/home/portilla/Live/live/BasicUsageEnvironment/include/DelayQueue.hh:
-
-/home/portilla/Live/live/liveMedia/include/RTPSink.hh:
 
 /usr/include/Inventor/Qt/SoQt.h:
 
