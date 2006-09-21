@@ -152,7 +152,7 @@ int frameCounter;						//	frame counter
 int cam;							//	cameras to read
 int ID;								//	camera ID
 int delay;
-
+static int ID1;
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //	LIBAVCODEC libraries
 
@@ -171,7 +171,7 @@ unsigned char	*image;			//	to save the RGB data to load in the texture
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	PTHREAD library
 
-pthread_mutex_t mutexBuffer;		//	mutex to syncronize the access to the data buffer 
+pthread_mutex_t mutexBuffer,mutexFrame;	//	mutex to syncronize the access to the data buffer 
 sem_t sem;				//	semaphores
 pthread_t camera;			//	threads ID
 //pthread_cond_t cond;			//	threads conditional variables
@@ -235,6 +235,13 @@ int init_mutex();			//	init the mutex
 int lock_mutex();			//	lock the mutex
 int unlock_mutex();			//	unlock the mutex
 
+static int members;			//	number of cameras
+void bind_object();		//	assign correct object
+//void set_Frameflag();
+//void clear_Frameflag();
+int get_ID();
+void set_ID();
+
 public:
 static void *temp;			//	Aux object to allow calls from static methods here
 //	constructor
@@ -246,7 +253,8 @@ STREAM();
 //unsigned char*
 static unsigned char* callImage();
 unsigned char* getImage();		//	get the last frame available from the FIFO Buffer
-int Init_Session(char const *URL);	//	Setup the connection 
+
+int Init_Session(char const *URL,int ID);//	Setup the connection 
 static void *Entry_Point(void*);	//	to make thread function, Create a thread to get data from the RTSP Server
 
 void set_Semaphore();			//	set the class semaphore
