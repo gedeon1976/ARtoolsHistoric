@@ -91,8 +91,18 @@ struct dataFrame{
 	int width;			
 	int height;
 	int index;			//	save number of the acquired frame
+	AVFrame *pFrame;		//	to export a frame
 };
+struct ExportFrame{
+
+	AVFrame *pData;
+	int index;
+	int h;
+	int w;
+};
+
 typedef dataFrame Frame;		//	define main frames
+typedef ExportFrame Export_Frame;		//	export to Ingrid Program
 
 /**	These class create a interface to get data from a camera through RTSP + RTP protocols
 	based on Live555 libraries
@@ -236,7 +246,7 @@ int lock_mutex();			//	lock the mutex
 int unlock_mutex();			//	unlock the mutex
 
 static int members;			//	number of cameras
-void bind_object();		//	assign correct object
+void bind_object();			//	assign correct object
 //void set_Frameflag();
 //void clear_Frameflag();
 int get_ID();
@@ -251,8 +261,8 @@ STREAM();
 ~STREAM();
 
 //unsigned char*
-static unsigned char* callImage();
-unsigned char* getImage();		//	get the last frame available from the FIFO Buffer
+static Export_Frame callImage();
+Export_Frame getImage();		//	get the last frame available from the FIFO Buffer
 
 int Init_Session(char const *URL,int ID);//	Setup the connection 
 static void *Entry_Point(void*);	//	to make thread function, Create a thread to get data from the RTSP Server

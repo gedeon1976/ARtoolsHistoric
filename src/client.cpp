@@ -548,7 +548,7 @@ int STREAM::rtsp_decode(Frame dataCompress)
 			//pCodecCtx->width,pCodecCtx->height);
 			//	save to a buffer
 			data_RTP.image = pFrameRGBA->data[0];	//	save RGB frame
-						
+			data_RTP.pFrame = pFrameRGBA;		//	save frame to export
 			//printf("frame %d was decoded\n",frameCounter);
 			//	get the timestamp of the frame
 			//break;
@@ -556,6 +556,7 @@ int STREAM::rtsp_decode(Frame dataCompress)
 		else{
 			//frameCounter++;	
 			printf("there was an error while decoding the frame %d in the camera %d\n",frameCounter,ID);
+			data_RTP.pFrame = pFrameRGBA;
 			//image = pFrame->data[0];
 		}
 		
@@ -708,16 +709,23 @@ int STREAM::Init_Session(char const *URLcam, int id)
 return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-unsigned char* STREAM::getImage()//dataFrame
+Export_Frame STREAM::getImage()//dataFrame
 {
 	//sem_wait(&sem);					
 	wait_Semaphore();				//	update image
 	unsigned char* ActualFrame;
+	Export_Frame I_Frame;
 	if(!InputBuffer.empty())			//	check if buffer is not empty
 	{
 					
 		ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer
-		ActualFrame = ReceivedFrame.image; 		
+		//ActualFrame = ReceivedFrame.image;
+		//assert(ReceivedFrame.pFrame);
+		//if (ReceivedFrame.pFrame)
+		I_Frame.pData = ReceivedFrame.pFrame;	//	save image
+		I_Frame.h=512;
+		I_Frame.w=512;
+ 		
 		InputBuffer.pop_front();		//	delete frame from the FIFO buffer
 		
 		//printf("FIFO size: %d\n",InputBuffer.size());
@@ -728,13 +736,15 @@ unsigned char* STREAM::getImage()//dataFrame
 		printf("empty buffer %d\n", InputBuffer.size());
 	}	
 
-	return ReceivedFrame.image;				//	return the last frame 	
+	//return ReceivedFrame.image;				//	return the last frame
+	return I_Frame; 	
 	
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-unsigned char* STREAM::callImage()
+Export_Frame STREAM::callImage()
 {
-	unsigned char *t5;
+	//unsigned char *t5;
+	Export_Frame t5;
 	STREAM *ps = (STREAM*)temp;
 	t5 = ps->getImage();
 	return t5;
@@ -749,13 +759,14 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 	//	get the video frames
 	
 	//int CAM = 1;
-	unsigned char *Fr;
+	//unsigned char *Fr;
+	Export_Frame Fr;
 	SoTexture2 *leftImage = (SoTexture2*)data;
 	//temp1 =(void*)&camara1;
 	
 	//	WAIT FOR SEMAPHORE
 		Fr = STREAM::callImage();		//	better return a structure
-		leftImage->image.setValue(SbVec2s(512,512),3,Fr);
+		leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);
 		
 		//printf("update image No: %d: from camera \n",ReceivedFrame.index);
 		//timeNow2();
@@ -770,8 +781,8 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 
 int main(int argc,char **argv)
 {
-	unsigned char *t,*t2;
-	const char *cam =  argv[1];		//	
+	unsigned char *t,*t2;//"rtsp://sonar:7070/cam3";
+	const char *cam =argv[1];		//	
 							
 	
 	STREAM camara1;				//  	create an stream object
