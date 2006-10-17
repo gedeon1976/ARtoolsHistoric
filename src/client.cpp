@@ -26,10 +26,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	initialization of static data members
 
-char STREAM::readOKFlag=0;
-void *STREAM::temp=0;
+//char STREAM::readOKFlag=0;
+//void *STREAM::temp=0;
 int members=0;
 int ID1=0;
+TFunctor *C1,*C2;
+
 //int  STREAM::MP4Hsize=0;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Constructor 
@@ -48,6 +50,12 @@ ID=0;
 	
 dataRTP = new unsigned char[70000];			// 	compressed frame
 data_RTP.data = new unsigned char[70000];		//	uncompressed frames with MPEG4 Headers
+
+//functor
+//closeFunctor<STREAM> funcClose(this, &STREAM::onClose);
+//TFunctorClose* vtable = &funcClose;
+
+//onC = Zclose;
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,12 +83,12 @@ int STREAM::get_ID()		//	get ID of object
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void STREAM::bind_object()
+STREAM* STREAM::bind_object()
 {
 	int ID;
 	ID = get_ID();
-	temp=(void*)this;		//	asssign correct object
-
+ 	temp=(void*)this;		//	asssign correct object
+	return this;
 }	
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -247,11 +255,11 @@ void STREAM::wait_Semaphore()
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void STREAM::ProcessFrame(void *clientData, unsigned framesize)
+void STREAM::ProcessFrame(unsigned framesize)
 {
 	
-
-	dataBuffer.data = (unsigned char*)clientData;
+try{
+	//dataBuffer.data = (unsigned char*)clientData;
 	dataBuffer.size = framesize;
 	
 	//	we get the data // 
@@ -276,7 +284,11 @@ void STREAM::ProcessFrame(void *clientData, unsigned framesize)
 	//	printf("Data size: %i\n",dataBuffer.size);
 		//printf("%i\n",strlen(dataBuffer.data));
 	}
-
+}
+catch(...)
+{
+	printf("%s","there was an error accessing memory\n");	
+}
 		
 }
 
@@ -288,17 +300,20 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 {
 	
 	//temp = this;
-	//temp->ProcessFrame(clientData,framesize);
+	//->ProcessFrame(clientData,framesize);
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	FUNCTION AFTER READING DATA FROM REMOTE SERVER THROUGH RTP protocol
 //void *clientData, unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned durationInMicroseconds
-void STREAM::afterReading(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
+ void STREAM::afterR(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
 				struct timeval presentationTime,unsigned /*durationInMicroseconds*/)
 {
 	
+	//STREAM *ps = (STREAM*)clientData;
+	//ps = ps->
+	bind_object();
 	unsigned int maxSize = 70000;			//	max size of the got frame
 	//test size of frame
 	if(framesize>=maxSize)				//	maxRTPDataSize
@@ -307,22 +322,31 @@ void STREAM::afterReading(void *clientData,unsigned framesize,unsigned /*numTrun
 	}else{
 	       //printf("Data read is: %d\n",framesize);
 		
-		STREAM *ps= (STREAM*)temp;		// 	Auxiliar object to make reference to the actual 
+		
+		//ps->ProcessFrame(framesize);
+		ProcessFrame(framesize);
+		readOKFlag = ~0;
+		//ps->readOKFlag = ~0;			//	set flag to new data   before ~0
+		//STREAM *ps= (STREAM*)temp;		// 	Auxiliar object to make reference to the actual 
 							//	being used
-		ps->ProcessFrame(clientData,framesize);
+		//ps->ProcessFrame(clientData,framesize);
 		//printf("%s\n","OK");
 		
 	       }
-		
-	readOKFlag = ~0;				//	set flag to new data   before ~0
+	readOKFlag = ~0;	
+	//ps->readOKFlag=~0;
 	      // delete Data;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	function to execute when the RTP is closed
-void STREAM::onClose(void *clientData)
-{
 
-	readOKFlag = ~0;	//	set flag to new data
+void STREAM::onClose(void* clientData)
+{
+	//STREAM *ps =(STREAM*)clientData;
+	//ps->readOKFlag = ~0;	//	set flag to new data
+	readOKFlag=~0;
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -361,12 +385,12 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 //		description:
 //			input: 	URL as "rtsp://sonar:7070/cam1"
 //			output: A subsession associated to the URL
-int STREAM::rtsp_Init()// int camNumber
+ int STREAM::rtsp_Init()// int camNumber
  {
 	//const char *name = "RTSP";					//	name of client in live555 libraries
 	
 	
-	bind_object();
+	//bind_object();
 	
 	//	check for correct value of URL address 
 
@@ -498,20 +522,76 @@ int STREAM::rtsp_Close()
 return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// This function will be used as callback function in rtsp_getnextFrame
+// because their signature is like the signature required by the live555 library
+void Zclose(void* clientData)
+{
+	STREAM *ps = (STREAM*)clientData;
+	
+	//ps->readOKFlag = ~0;	//	set flag to new data
+	//readOKFlag=~0;
+
+	closeFunctor<STREAM> *close = new closeFunctor<STREAM>;
+	close->setClass(ps);
+	close->setMethod(&STREAM::onClose);
+	TFunctorClose *A = close;
+	A->method(clientData);
+
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// This function will be used as callback function in rtsp_getnextFrame
+// because their signature is like the signature required by the live555 library
+void Zread(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
+				struct timeval presentationTime,unsigned /*durationInMicroseconds*/)
+{
+
+	unsigned a,b;
+	STREAM *ps = (STREAM*)clientData;
+	//	pointer to member function
+	void (STREAM::*pmf)(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
+				struct timeval presentationTime,unsigned /*durationInMicroseconds*/);
+
+	pmf = &STREAM::afterR;
+
+	(ps->*pmf)(clientData,framesize, a, presentationTime, b);
+
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 //int rtsp_getFrame(unsigned char *image)
 int STREAM::rtsp_getFrame()
 {
 	
+try{
+	unsigned Var,Var2;
+	
+	//myfunctor<STREAM> close(this,STREAM::onClose);
+	//STREAM *ps =(STREAM*)this;
+	//TFunctor* Q = new myfunctor<STREAM> close(ps,&STREAM::onClose);
+	/*
+	
+*/
+	
+	//typedef void (STREAM::*fpt)(void* clientData);
+	//fpt _fp2m;
+	//_fp2m = &STREAM::onClose;
 
-	unsigned Var;
+	//onC = A->method;
+	onRead = Zread;
+	onClosing = Zclose;
 	//	get the data from rtp //readSource
 	Subsession->readSource()->getNextFrame(dataRTP,maxRTPDataSize,
-								afterReading,(void*)Var,
-								onClose,(void*)Var);
+								onRead,(void*)this,
+								onClosing ,(void*)Var2);		//	call Functor
+
 	//	wait until data is available, it allows for other task to be performed
 	//	while we wait data from rtp source					                                                        	
 	//	HERE WE GET THE FRAME FROM REMOTE SOURCE
-
+	
 	readOKFlag = 0;						 //	schedule read                         	
 	TaskScheduler& scheduler = Subsession->readSource()->envir().taskScheduler();//&
 	scheduler.doEventLoop(&readOKFlag);
@@ -519,7 +599,11 @@ int STREAM::rtsp_getFrame()
 	//timeNow();
 	frameCounter++;					//	increase frame counter
 	//usleep(delay);
-	
+}
+catch(...)
+{
+	cout<<"error reading frame";
+}	
 	
 	
 	return 0;	//	exit with sucess
@@ -530,7 +614,7 @@ int STREAM::rtsp_getFrame()
 int STREAM::rtsp_decode(Frame dataCompress)
 {
 	//	decode the video frame using libavcodec
-
+try{
 	decodeOK = avcodec_decode_video(pCodecCtx,pFrame,&frameFinished,dataCompress.data,dataCompress.size);
 		
 	//if(decodeOK!=0)
@@ -541,10 +625,14 @@ int STREAM::rtsp_decode(Frame dataCompress)
 		{
 		//	cut the left side of the image, so 720-512 = 208 
 		//	cut the top side of the image,	nothing by that 0
-			img_crop((AVPicture*)pFrameCrop,(AVPicture*)pFrame,pCodecCtx->pix_fmt,0,208);
+			if (ID==0)		//	flag for cut image
+			{
+				img_crop((AVPicture*)pFrameCrop,(AVPicture*)pFrame,pCodecCtx->pix_fmt,0,208);
+				img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,512,512);
+			}else{
 		//	convert the image from his format to RGB
-			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,512,512);
-					
+			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,512,512);
+			}			
 			//pCodecCtx->width,pCodecCtx->height);
 			//	save to a buffer
 			data_RTP.image = pFrameRGBA->data[0];	//	save RGB frame
@@ -557,9 +645,14 @@ int STREAM::rtsp_decode(Frame dataCompress)
 			//frameCounter++;	
 			printf("there was an error while decoding the frame %d in the camera %d\n",frameCounter,ID);
 			data_RTP.pFrame = pFrameRGBA;
-			//image = pFrame->data[0];
+			throw pFrameRGBA;
 		}
-		
+	//}
+}
+catch(...)
+{	
+	cout<<"frame are not available\n";
+}		
 	//}
 	return 0;
 
@@ -620,7 +713,7 @@ void STREAM::rtsp_getData()
 		                           
 		if (cod!=0)	
 			{
-				//printf("%s\n","Error locking get RTP data");
+				printf("%s\n","Error locking get RTP data");
 			}
 		else{
 		//conditaugustion
@@ -642,7 +735,7 @@ void STREAM::rtsp_getData()
 			InputBuffer.push_back(data_RTP);
 			//counter++;
 			//T.push(counter);
-			//printf("writing frame %d from the camera %d \n",frameCounter,ID);
+			printf("writing frame %d from the camera %d \n",frameCounter,ID);
 			//printf("FIFO size: %d\n",InputBuffer.size());
 		
 
@@ -743,17 +836,17 @@ Export_Frame STREAM::getImage()//dataFrame
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 Export_Frame STREAM::callImage()
 {
-	//unsigned char *t5;
+/*	//unsigned char *t5;
 	Export_Frame t5;
 	STREAM *ps = (STREAM*)temp;
 	t5 = ps->getImage();
-	return t5;
+	return t5;*/
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	update function show the frame from cameras
 
-void update(void *data,SoSensor*)	//	this function updates the texture based on the frame got
+void updateR(void *data,SoSensor*)	//	this function updates the texture based on the frame got
 					//	from the video stream
 {
 	//	get the video frames
@@ -761,16 +854,55 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 	//int CAM = 1;
 	//unsigned char *Fr;
 	Export_Frame Fr;
-	SoTexture2 *leftImage = (SoTexture2*)data;
-	//temp1 =(void*)&camara1;
+try{
+	
+	SoTexture2 *rightImage = (SoTexture2*)data;
 	
 	//	WAIT FOR SEMAPHORE
-		Fr = STREAM::callImage();		//	better return a structure
-		leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);
+		//Fr = STREAM::callImage();		//	better return a structure
+		Fr= C2->Execute();
+		rightImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);
 		
 		//printf("update image No: %d: from camera \n",ReceivedFrame.index);
 		//timeNow2();
+	}
+catch(...)
+{
+	cout<<"error not viewer";
+}	
+	
+
+	
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	update function show the frame from cameras
+
+void updateL(void *data,SoSensor*)	//	this function updates the texture based on the frame got
+					//	from the video stream
+{
+	//	get the video frames
+	
+	//int CAM = 1;
+	//unsigned char *Fr;
+	Export_Frame Fr;
+try{
+	SoTexture2 *leftImage = (SoTexture2*)data;
+	
+	
+	//	WAIT FOR SEMAPHORE
+	
+		//Fr = STREAM::callImage();		//	better return a structure
+		Fr=C1->Execute();
+		leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);
 		
+		
+		//printf("update image No: %d: from camera \n",ReceivedFrame.index);
+		//timeNow2();
+	}
+catch(...)
+{
+	cout<<"error not viewer";
+}	
 	
 
 	
@@ -782,19 +914,27 @@ void update(void *data,SoSensor*)	//	this function updates the texture based on 
 int main(int argc,char **argv)
 {
 	unsigned char *t,*t2;//"rtsp://sonar:7070/cam3";
-	const char *cam =argv[1];		//	
-							
-	
+	//
+	//	
+	const char *camL ="rtsp://sonar:7070/cam3";//argv[1];		//	
+	const char *camR ="rtsp://sonar:7070/cam1";//argv[2];						
+
 	STREAM camara1;				//  	create an stream object
-	camara1.Init_Session(cam,0);		//	start connection with cam
+	
+	//	functor object
+
+	//TFunctor *C1;
+	myfunctor<STREAM> D1(&camara1,&STREAM::getImage);
+	C1 =&D1;
+	camara1.Init_Session(camL,0);		//	start connection with cam
 						//	the zero is used as an internal Identifier
 						//	for the camera 
-		
 	//t = camara1.getImage();
 	
-	
-	//STREAM camara2;
-	//camara2.Init_Session(cam,1);
+	STREAM camara2;
+	myfunctor<STREAM> D2(&camara2,&STREAM::getImage);
+	C2 =&D2;
+	camara2.Init_Session(camR,1);
 
 	//t2 = camara2.getImage();
 	
@@ -894,12 +1034,22 @@ int main(int argc,char **argv)
 	//****************************************************************************
 	//	setup timer sensor for recursive image updating 
 
-			
-	SoTimerSensor *timer = new SoTimerSensor(update,leftImage);
+	SoTimerSensor *timerL = new SoTimerSensor(updateL,leftImage);
+	timerL->setBaseTime(SbTime::getTimeOfDay()); 	//	useconds resolution
+	timerL->setInterval(1.0/25.0);//	 	//	interval 40 ms
+	timerL->schedule();				//	enable timer		
+
+	
+	SoTimerSensor *timerR = new SoTimerSensor(updateR,rightImage);//
 	//
-	timer->setBaseTime(SbTime::getTimeOfDay());//atoi(argv[3])
-	timer->setInterval(1.0/25.0);//fps	//	set interval 40 ms
-	timer->schedule();				//	enable
+	timerR->setBaseTime(SbTime::getTimeOfDay());	//atoi(argv[3])
+	timerR->setInterval(1.0/25.0);//fps	//	set interval 40 ms
+	timerR->schedule();	
+
+
+
+
+			//	enable
 
      	SoTransform *myTrans = new SoTransform;
 	root->addChild(myTrans);
@@ -932,6 +1082,7 @@ int main(int argc,char **argv)
 
 		
 return 0;
+
 }	
 
 

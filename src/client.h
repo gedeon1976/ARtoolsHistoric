@@ -70,6 +70,7 @@
 #include <semaphore.h>
 #include <queue>					//	FIFO parametric structure
 #include <deque>					//	double FIFO parametric structure
+#include <iostream>
 //*********************************************************************************
 //	special linux libraries
 #include <sys/timex.h>					//	ntp time
@@ -77,6 +78,9 @@
 //*********************************************************************************		
 #define  RTPDataSize 	70000				//	size of RTP data read
 using namespace std;
+
+
+
 
 //	MAIN DATA STRUCTURES
 struct dataFrame{
@@ -101,12 +105,130 @@ struct ExportFrame{
 	int w;
 };
 
-typedef dataFrame Frame;		//	define main frames
+typedef dataFrame Frame;			//	define main frames
 typedef ExportFrame Export_Frame;		//	export to Ingrid Program
 
-/**	These class create a interface to get data from a camera through RTSP + RTP protocols
-	based on Live555 libraries
+typedef void (Close)(void *clientData);		//	callback functions
+typedef void (afterReading)(void *clientData,unsigned framesize,unsigned numTruncatedBytes,
+				struct timeval presentationTime,unsigned durationInMicroseconds);	
+
+///////////////////////////////////////////////////////////////////////////
+//	
+class TFunctor				//	abstract class
+{
+public:
+					//	function to call function member ProcessFrame
+virtual Export_Frame Execute()=0;	
+//TFunctor();
+//virtual ~TFunctor();
+};
+
+
+template<class TStream> 
+class myfunctor :public TFunctor
+{
+private:
+
+Export_Frame (TStream::*method)();//    method to call like static
+						  //	this is a pointer to a member function						
+TStream* clase;					  //	pointer to object
+//method m;
+
+public:
+//	constructor
+myfunctor(TStream* _p2object,Export_Frame (TStream::*m)())
+{
+	clase = _p2object;
+	method = m;
+}
+virtual ~myfunctor()
+{
+}
+
+//	override ProcessFrame function
+virtual Export_Frame Execute()
+{
+	Export_Frame t;
+	//(clase->*m)(clientData);	//->* what kind of call conevntion?
+	t= (*clase.*method)();				//.* calling from stack
+	return t;
+}
+
+
+
+};
+///////////////////////////////////////////////////////////////////////
+//	callback functions in C++
+class TFunctorClose			//	abstract class
+{
+public:
+//typedef void (onclose)(void* clientData);
+virtual void operator()(void* clientData)=0;	//	function to call using () operator
+virtual void method(void* clientData)=0;	//	method to call
+//TFunctorClose();
+//virtual ~TFunctorClose();
+
+};
+
+
+template<class TStream> 
+class closeFunctor:public TFunctorClose	//	derived class
+{
+public:
+typedef void (TStream::*Constant_method)(void* clientData);
+
+private:
+TStream* T;				//	save class
+Constant_method  method_k;		//	save method to access from the early class
+
+//void (TStream::*fpt)(void*);		//	pointer to member function
+//TStream *p2object;			//	pointer to object
+
+public:
+
+//	constructor
+closeFunctor(){
+	T = 0;
+	method_k=0;
+}
+virtual ~closeFunctor(){}
+//	methods
+void setClass(TStream* IncomeClass)	//	assign kind of class to use
+{
+	T = IncomeClass;
+}
+
+void setMethod(Constant_method method_to_call)
+{
+	method_k =method_to_call;
+}
+
+//protected:
+void method(void* clientData)
+{
+	(T->*method_k)(clientData);
+}
+
+void operator()(void* clientData)
+{
+	(T->*method_k)(clientData);
+}
+
+/*
+closeFunctor(TStream* _p2object, void(TStream::*_fpt)(void*))
+{
+	p2object = _p2object;
+	fpt = _fpt;
+}
+virtual void operator()(void* clientData)
+{
+	(*p2object.*fpt)(clientData);
+}
 */
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class STREAM
 {
@@ -157,7 +279,7 @@ unsigned maxFrameSize;						//	RTP frame size
 unsigned actualCSeq;					 	//	actual sequence number
 unsigned long actualRTPtimestamp;				//	current actual timestamp
 unsigned fps;							//	frame rate
-static char readOKFlag;//static					//	flag to indicate RTP reading data
+char readOKFlag;//static					//	flag to indicate RTP reading data
 int frameCounter;						//	frame counter
 int cam;							//	cameras to read
 int ID;								//	camera ID
@@ -228,13 +350,21 @@ double skew(Frame N, Frame N_1);	//	Calculates skew between sender and receiver,
 					//	assigning their this pointer to the actual object, by that the use of
 					//	temp object
 void SaveFrame(void* clienData, unsigned framesize);
-void ProcessFrame(void *clientData, unsigned framesize);
+void ProcessFrame(unsigned framesize);//void *clientData
 //THESE function are used with live555 GetNextFrame function
 //************************************************************************************************
-static void afterReading(void *clientData,unsigned framesize,unsigned numTruncatedBytes,
-				struct timeval presentationTime,unsigned durationInMicroseconds);	
+//	before afterReading
+
 					//	to save data of the last frame obtained
-static void onClose(void *clientData);
+//static void onClose(void *clientData);
+//void onClose(void *clientData);
+//afterReading* afterR(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
+//				struct timeval presentationTime,unsigned /*durationInMicroseconds*/);
+
+//	pointer to function
+Close* onClosing;				// on close	
+afterReading* onRead;		 	// after read the frame	
+//closeFunctor<STREAM> funcClose;
 
 //************************************************************************************************
 
@@ -246,14 +376,15 @@ int lock_mutex();			//	lock the mutex
 int unlock_mutex();			//	unlock the mutex
 
 static int members;			//	number of cameras
-void bind_object();			//	assign correct object
+STREAM *bind_object();			//	assign correct object
 //void set_Frameflag();
 //void clear_Frameflag();
 int get_ID();
 void set_ID();
 
 public:
-static void *temp;			//	Aux object to allow calls from static methods here
+//static void *temp;			//	Aux object to allow calls from static methods here
+void *temp;
 //	constructor
 STREAM();
 
@@ -270,9 +401,12 @@ static void *Entry_Point(void*);	//	to make thread function, Create a thread to 
 void set_Semaphore();			//	set the class semaphore
 //int down_Semaphore();			//	decrease the semaphore
 void wait_Semaphore();			//	wait for semaphore 
+
+//	
+void onClose(void *clientData);		//	on close after reading frame
+void afterR(void *clientData,unsigned framesize,unsigned numTruncatedBytes,
+				struct timeval presentationTime,unsigned durationInMicroseconds);	
 };
-
-
 
 
 #endif

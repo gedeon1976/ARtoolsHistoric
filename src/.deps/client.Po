@@ -5,6 +5,8 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/bits/wchar.h /usr/include/bits/wordsize.h \
   /usr/include/ffmpeg/mathematics.h /usr/include/ffmpeg/rational.h \
   /usr/include/ffmpeg/integer.h /usr/include/ffmpeg/intfloat_readwrite.h \
+  /usr/include/ffmpeg/log.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/include/stdarg.h \
   /usr/include/sys/types.h /usr/include/bits/types.h \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/include/stddef.h \
   /usr/include/bits/typesizes.h /usr/include/time.h /usr/include/endian.h \
@@ -12,7 +14,6 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/bits/select.h /usr/include/bits/sigset.h \
   /usr/include/bits/time.h /usr/include/sys/sysmacros.h \
   /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h \
-  /usr/lib/gcc/i486-linux-gnu/4.1.2/include/stdarg.h \
   /usr/include/ffmpeg/avformat.h /usr/include/xlocale.h \
   /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
   /usr/include/wchar.h /usr/include/gconv.h /usr/include/bits/stdio_lim.h \
@@ -405,6 +406,7 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_bvector.h \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/vector.tcc \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_queue.h \
+  /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/iostream \
   /usr/include/sys/timex.h
 
 client.h:
@@ -437,6 +439,10 @@ client.h:
 
 /usr/include/ffmpeg/intfloat_readwrite.h:
 
+/usr/include/ffmpeg/log.h:
+
+/usr/lib/gcc/i486-linux-gnu/4.1.2/include/stdarg.h:
+
 /usr/include/sys/types.h:
 
 /usr/include/bits/types.h:
@@ -464,8 +470,6 @@ client.h:
 /usr/include/bits/pthreadtypes.h:
 
 /usr/include/bits/sched.h:
-
-/usr/lib/gcc/i486-linux-gnu/4.1.2/include/stdarg.h:
 
 /usr/include/ffmpeg/avformat.h:
 
@@ -1392,5 +1396,7 @@ client.h:
 /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/vector.tcc:
 
 /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_queue.h:
+
+/usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/iostream:
 
 /usr/include/sys/timex.h:
