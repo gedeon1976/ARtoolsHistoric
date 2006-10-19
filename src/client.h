@@ -79,7 +79,7 @@
 #define  RTPDataSize 	70000				//	size of RTP data read
 using namespace std;
 
-
+enum IMAGE {CUT_IMAGE=0,NORMAL_IMAGE=1};
 
 
 //	MAIN DATA STRUCTURES
@@ -117,10 +117,14 @@ typedef void (afterReading)(void *clientData,unsigned framesize,unsigned numTrun
 class TFunctor				//	abstract class
 {
 public:
+
+//TFunctor();
+virtual ~TFunctor()
+{
+}
 					//	function to call function member ProcessFrame
 virtual Export_Frame Execute()=0;	
-//TFunctor();
-//virtual ~TFunctor();
+
 };
 
 
@@ -129,9 +133,9 @@ class myfunctor :public TFunctor
 {
 private:
 
-Export_Frame (TStream::*method)();//    method to call like static
-						  //	this is a pointer to a member function						
-TStream* clase;					  //	pointer to object
+Export_Frame (TStream::*method)();		//    method to call 
+						//    this is a pointer to a member function						
+TStream* clase;					//    pointer to object
 //method m;
 
 public:
@@ -141,7 +145,7 @@ myfunctor(TStream* _p2object,Export_Frame (TStream::*m)())
 	clase = _p2object;
 	method = m;
 }
-virtual ~myfunctor()
+~myfunctor()
 {
 }
 
@@ -149,8 +153,7 @@ virtual ~myfunctor()
 virtual Export_Frame Execute()
 {
 	Export_Frame t;
-	//(clase->*m)(clientData);	//->* what kind of call conevntion?
-	t= (*clase.*method)();				//.* calling from stack
+	t= (*clase.*method)();			//secure way for calling the corresponding method
 	return t;
 }
 
@@ -166,7 +169,8 @@ public:
 virtual void operator()(void* clientData)=0;	//	function to call using () operator
 virtual void method(void* clientData)=0;	//	method to call
 //TFunctorClose();
-//virtual ~TFunctorClose();
+virtual ~TFunctorClose()
+{ }
 
 };
 
@@ -191,7 +195,7 @@ closeFunctor(){
 	T = 0;
 	method_k=0;
 }
-virtual ~closeFunctor(){}
+~closeFunctor(){}
 //	methods
 void setClass(TStream* IncomeClass)	//	assign kind of class to use
 {
@@ -214,22 +218,11 @@ void operator()(void* clientData)
 	(T->*method_k)(clientData);
 }
 
-/*
-closeFunctor(TStream* _p2object, void(TStream::*_fpt)(void*))
-{
-	p2object = _p2object;
-	fpt = _fpt;
-}
-virtual void operator()(void* clientData)
-{
-	(*p2object.*fpt)(clientData);
-}
-*/
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//************** THIS IS THE MAIN CLASS FOR ACCESS THE STREAM FROM AN URL ADDRESS ******************
 class STREAM
 {
 
@@ -353,19 +346,9 @@ void SaveFrame(void* clienData, unsigned framesize);
 void ProcessFrame(unsigned framesize);//void *clientData
 //THESE function are used with live555 GetNextFrame function
 //************************************************************************************************
-//	before afterReading
-
-					//	to save data of the last frame obtained
-//static void onClose(void *clientData);
-//void onClose(void *clientData);
-//afterReading* afterR(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
-//				struct timeval presentationTime,unsigned /*durationInMicroseconds*/);
-
 //	pointer to function
-Close* onClosing;				// on close	
-afterReading* onRead;		 	// after read the frame	
-//closeFunctor<STREAM> funcClose;
-
+Close* onClosing;			// on close function pointer	
+afterReading* onRead;		 	// function pointer for process the frame after its capture 	
 //************************************************************************************************
 
 int create_Thread();			//	create a thread
@@ -375,15 +358,14 @@ int init_mutex();			//	init the mutex
 int lock_mutex();			//	lock the mutex
 int unlock_mutex();			//	unlock the mutex
 
-static int members;			//	number of cameras
+//static int members;			//	number of cameras
 STREAM *bind_object();			//	assign correct object
-//void set_Frameflag();
-//void clear_Frameflag();
+
 int get_ID();
 void set_ID();
 
 public:
-//static void *temp;			//	Aux object to allow calls from static methods here
+
 void *temp;
 //	constructor
 STREAM();
@@ -391,8 +373,6 @@ STREAM();
 //	destructor
 ~STREAM();
 
-//unsigned char*
-static Export_Frame callImage();
 Export_Frame getImage();		//	get the last frame available from the FIFO Buffer
 
 int Init_Session(char const *URL,int ID);//	Setup the connection 

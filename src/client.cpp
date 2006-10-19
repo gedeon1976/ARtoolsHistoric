@@ -30,7 +30,7 @@
 //void *STREAM::temp=0;
 int members=0;
 int ID1=0;
-TFunctor *C1,*C2;
+TFunctor *C1,*C2;					//	pointers to abstract class
 
 //int  STREAM::MP4Hsize=0;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,12 +50,6 @@ ID=0;
 	
 dataRTP = new unsigned char[70000];			// 	compressed frame
 data_RTP.data = new unsigned char[70000];		//	uncompressed frames with MPEG4 Headers
-
-//functor
-//closeFunctor<STREAM> funcClose(this, &STREAM::onClose);
-//TFunctorClose* vtable = &funcClose;
-
-//onC = Zclose;
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +107,7 @@ int STREAM::initCodecs()
 //	initialize width and height by now
 	pCodecCtx->width=720;//768
 	pCodecCtx->height=576;//576
-	pCodecCtx->bit_rate = 1000000;
+	pCodecCtx->bit_rate = 1000000;	//	bit rate?
 
 //	look for truncated bitstreams
 
@@ -137,7 +131,7 @@ int STREAM::initCodecs()
 	return -1;	//	cannot allocate memory
 
 //	determine required buffer size for allocate buffer
-	numBytes = avpicture_get_size(PIX_FMT_RGB24,512,512);
+	numBytes = avpicture_get_size(PIX_FMT_RGB24,512,512);//RGB24
 	buffer=new uint8_t[numBytes];	
 	printf(" size of frame in bytes : %d\n",numBytes);
 
@@ -146,7 +140,7 @@ int STREAM::initCodecs()
 //	fps = (pFormatCtx->bit_rate/1000)*(pFormatCtx->duration) / numBytes;
 	//printf(" fps  : %f\n",fps);
 //	assign appropiate parts of buffer to image planes in pFrameRGB
-	avpicture_fill((AVPicture*)pFrameRGBA,buffer,PIX_FMT_RGB24,512,512);
+	avpicture_fill((AVPicture*)pFrameRGBA,buffer,PIX_FMT_RGB24,512,512);//RGB32
 	return 0;
 
 }
@@ -201,8 +195,11 @@ int STREAM::init_mutex()
 	if (cod!=0)	
 		{
 		printf(" Error initilization on mutex \n");
-		return 0;
+		return -1;
 		}
+	else{
+		return 0;
+	}
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -522,42 +519,42 @@ int STREAM::rtsp_Close()
 return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// This function will be used as callback function in rtsp_getnextFrame
+// This function will be used as callback function in rtsp_getNextFrame
 // because their signature is like the signature required by the live555 library
 void Zclose(void* clientData)
 {
 	STREAM *ps = (STREAM*)clientData;
 	
-	//ps->readOKFlag = ~0;	//	set flag to new data
-	//readOKFlag=~0;
-
 	closeFunctor<STREAM> *close = new closeFunctor<STREAM>;
 	close->setClass(ps);
 	close->setMethod(&STREAM::onClose);
 	TFunctorClose *A = close;
 	A->method(clientData);
 
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// This function will be used as callback function in rtsp_getnextFrame
+// This function will be used as callback function in rtsp_getNextFrame
 // because their signature is like the signature required by the live555 library
 void Zread(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
 				struct timeval presentationTime,unsigned /*durationInMicroseconds*/)
 {
-
+try{
 	unsigned a,b;
 	STREAM *ps = (STREAM*)clientData;
 	//	pointer to member function
 	void (STREAM::*pmf)(void *clientData,unsigned framesize,unsigned /*numTruncatedBytes*/,
 				struct timeval presentationTime,unsigned /*durationInMicroseconds*/);
-
+	//	assign the member function to call
 	pmf = &STREAM::afterR;
-
+	//	call the member function with parameters
 	(ps->*pmf)(clientData,framesize, a, presentationTime, b);
+}
+catch(...)
+{
+	cout<<"error on reading frame"<<endl;
 
-
+}
 }
 
 
@@ -567,28 +564,22 @@ int STREAM::rtsp_getFrame()
 {
 	
 try{
-	unsigned Var,Var2;
+	//unsigned Var,Var2;
 	
-	//myfunctor<STREAM> close(this,STREAM::onClose);
-	//STREAM *ps =(STREAM*)this;
-	//TFunctor* Q = new myfunctor<STREAM> close(ps,&STREAM::onClose);
-	/*
-	
-*/
-	
-	//typedef void (STREAM::*fpt)(void* clientData);
-	//fpt _fp2m;
-	//_fp2m = &STREAM::onClose;
+	onRead = Zread;			//	assign functions to the pointers
+	onClosing = Zclose;		//	to be used as callbacks functions
 
-	//onC = A->method;
-	onRead = Zread;
-	onClosing = Zclose;
-	//	get the data from rtp //readSource
+	//	get the data from rtp source
+
+	//	IMPORTANT: the this pointer is very important because is passed as the afterGettingData parameter
+	//	if not used in this form the program will not work!
+
+	//	the data is saved in the dataRTP buffer
 	Subsession->readSource()->getNextFrame(dataRTP,maxRTPDataSize,
-								onRead,(void*)this,
-								onClosing ,(void*)Var2);		//	call Functor
+								onRead,(void*)this,	
+								onClosing ,(void*)this);//this		
 
-	//	wait until data is available, it allows for other task to be performed
+	//	wait until the data is available, it allows for other task to be performed
 	//	while we wait data from rtp source					                                                        	
 	//	HERE WE GET THE FRAME FROM REMOTE SOURCE
 	
@@ -627,12 +618,13 @@ try{
 		//	cut the top side of the image,	nothing by that 0
 			if (ID==0)		//	flag for cut image
 			{
-				img_crop((AVPicture*)pFrameCrop,(AVPicture*)pFrame,pCodecCtx->pix_fmt,0,208);
-				img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,512,512);
+				img_crop((AVPicture*)pFrameCrop,(AVPicture*)pFrame,pCodecCtx->pix_fmt,0,200);//208
+				img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,512,512);//RGB24
 			}else{
 		//	convert the image from his format to RGB
-			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,512,512);
-			}			
+			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,512,512);//RGB24
+			}	
+		
 			//pCodecCtx->width,pCodecCtx->height);
 			//	save to a buffer
 			data_RTP.image = pFrameRGBA->data[0];	//	save RGB frame
@@ -690,9 +682,15 @@ return 0;
 //	static function
 void *STREAM::Entry_Point(void *pthis)
 {
+try{
 	STREAM *pS = (STREAM*)pthis;	//	convert to class Stream to allow correct thread work
 	pS->rtsp_getData();
 	return 0;
+}
+catch(...)
+{
+	printf("%s"," Something wrong with the thread ");
+}
 }
 
 
@@ -703,7 +701,7 @@ void STREAM::rtsp_getData()
 	int cod;
 	double s;
 
-			
+try{			
 	while(1)	//	threads is always in execution
 	{
 		//usleep(delay);	//	delay
@@ -752,13 +750,17 @@ void STREAM::rtsp_getData()
 		
 	}
 	//return 0;
-	
+}
+catch(...)
+{
+	cout<<"error obtaining frames"<<endl;
+}	
 	
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-//	his function get an image from remote server
+//	this function get an image from remote server
 int STREAM::Init_Session(char const *URLcam, int id)
 {
 	int status;
@@ -805,19 +807,16 @@ return 0;
 Export_Frame STREAM::getImage()//dataFrame
 {
 	//sem_wait(&sem);					
-	wait_Semaphore();				//	update image
-	unsigned char* ActualFrame;
+	wait_Semaphore();				//	wait for semaphore set
+							
 	Export_Frame I_Frame;
 	if(!InputBuffer.empty())			//	check if buffer is not empty
 	{
 					
 		ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer
-		//ActualFrame = ReceivedFrame.image;
-		//assert(ReceivedFrame.pFrame);
-		//if (ReceivedFrame.pFrame)
 		I_Frame.pData = ReceivedFrame.pFrame;	//	save image
-		I_Frame.h=512;
-		I_Frame.w=512;
+		I_Frame.h=512;				//	width of image
+		I_Frame.w=512;				//	height of image
  		
 		InputBuffer.pop_front();		//	delete frame from the FIFO buffer
 		
@@ -834,45 +833,28 @@ Export_Frame STREAM::getImage()//dataFrame
 	
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-Export_Frame STREAM::callImage()
-{
-/*	//unsigned char *t5;
-	Export_Frame t5;
-	STREAM *ps = (STREAM*)temp;
-	t5 = ps->getImage();
-	return t5;*/
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 //	update function show the frame from cameras
 
 void updateR(void *data,SoSensor*)	//	this function updates the texture based on the frame got
 					//	from the video stream
 {
-	//	get the video frames
-	
-	//int CAM = 1;
-	//unsigned char *Fr;
-	Export_Frame Fr;
+	Export_Frame Fr;		//	struct for save the frame
 try{
 	
 	SoTexture2 *rightImage = (SoTexture2*)data;
 	
-	//	WAIT FOR SEMAPHORE
-		//Fr = STREAM::callImage();		//	better return a structure
-		Fr= C2->Execute();
-		rightImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);
-		
-		//printf("update image No: %d: from camera \n",ReceivedFrame.index);
-		//timeNow2();
+	//  return a structure
+	Fr= C2->Execute();		//	call getImage() using a functor	
+	rightImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB, 4 = RGBA
+	
+	//printf("update image No: %d: from camera \n",ReceivedFrame.index);
+	//timeNow2();
 	}
 catch(...)
 {
 	cout<<"error not viewer";
 }	
-	
 
-	
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	update function show the frame from cameras
@@ -881,63 +863,57 @@ void updateL(void *data,SoSensor*)	//	this function updates the texture based on
 					//	from the video stream
 {
 	//	get the video frames
-	
-	//int CAM = 1;
-	//unsigned char *Fr;
-	Export_Frame Fr;
+	Export_Frame Fr;		//	struct for save the frame
 try{
 	SoTexture2 *leftImage = (SoTexture2*)data;
 	
-	
-	//	WAIT FOR SEMAPHORE
-	
-		//Fr = STREAM::callImage();		//	better return a structure
-		Fr=C1->Execute();
-		leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);
+	// return a structure that contain the image, size, width and height
+	Fr=C1->Execute();	//	call getImage() using a functor	
+	leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB 4 = RGBA
 		
-		
-		//printf("update image No: %d: from camera \n",ReceivedFrame.index);
-		//timeNow2();
+	//printf("update image No: %d: from camera \n",ReceivedFrame.index);
+	//timeNow2();
 	}
 catch(...)
 {
 	cout<<"error not viewer";
 }	
 	
-
-	
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //		MAIN PROGRAM
-//			use: .\client rtsp://sonar:7070/cam1
+//		user input: .\client rtsp://sonar:7070/cam1 rtsp://sonar:7070/cam2
 
 int main(int argc,char **argv)
 {
-	unsigned char *t,*t2;//"rtsp://sonar:7070/cam3";
-	//
-	//	
+try{	
+	IMAGE set_format;					/*	set the format to use in the image
+									there are 2 formats:
+									CUT_IMAGE 
+									where the left part of the image
+									is cutted, and
+									NORMAL_IMAGE 
+									where the image kept the original size
+								*/	
 	const char *camL ="rtsp://sonar:7070/cam3";//argv[1];		//	
 	const char *camR ="rtsp://sonar:7070/cam1";//argv[2];						
 
-	STREAM camara1;				//  	create an stream object
+	STREAM camara1;						//  	create an stream object
 	
-	//	functor object
-
-	//TFunctor *C1;
-	myfunctor<STREAM> D1(&camara1,&STREAM::getImage);
-	C1 =&D1;
-	camara1.Init_Session(camL,0);		//	start connection with cam
-						//	the zero is used as an internal Identifier
-						//	for the camera 
-	//t = camara1.getImage();
-	
+	myfunctor<STREAM> D1(&camara1,&STREAM::getImage);	//	this is a functor, some as a pointer to 
+								//	a member function, here points to the
+								//	getImage function of camara1 object
+	C1 =&D1;						//	C1 is a abstract class base for myfunctor class
+	set_format=CUT_IMAGE;					//	with a virtual method to overload
+	camara1.Init_Session(camL,set_format);			//	start connection with url
+								//	set the format of the image
+								//	for the camera 
 	STREAM camara2;
-	myfunctor<STREAM> D2(&camara2,&STREAM::getImage);
+	myfunctor<STREAM> D2(&camara2,&STREAM::getImage);	//	do the same for the right camera
 	C2 =&D2;
-	camara2.Init_Session(camR,1);
-
-	//t2 = camara2.getImage();
-	
+	set_format=NORMAL_IMAGE;
+	camara2.Init_Session(camR,set_format);
+		
 	// ******************************************************************************************** 
 	//		Graphics Scene
 	
@@ -945,8 +921,6 @@ int main(int argc,char **argv)
     	// libraries). Returns a top-level / shell Qt window to use.
     	 QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
 
-	//SoDB::init();
-	//SoDB::setRealTimeInterval(1/120.0);
 	SoSeparator *root = new SoSeparator;
     	root->ref();
 	
@@ -1002,10 +976,10 @@ int main(int argc,char **argv)
 	//	ADD THE IMAGE FROM THE FIRST CAMERA
 	SoTexture2  *leftImage = new SoTexture2;
 	leftImage->filename.setValue("");	// this set is for use an image from memory in place of a file */
-	//leftImage->image.setValue(SbVec2s(512,512),3,t);
+	
 
 	SoTransform *leftTransform = new SoTransform;
-	leftTransform->translation.setValue(-512/2,0.0,0.0);
+	leftTransform->translation.setValue(-256,0.0,0.0);
 	leftPlane->addChild(leftTransform);
 	leftPlane->addChild(leftImage);
 	leftPlane->addChild(plane);
@@ -1017,10 +991,10 @@ int main(int argc,char **argv)
 	//	ADD THE IMAGE FROM THE SECOND CAMERA
 	SoTexture2 *rightImage = new SoTexture2;
 	rightImage->filename.setValue("");
-	//rightImage->image.setValue(SbVec2s(512,512),3,t2);
+	
 
 	SoTransform *rightTransform = new SoTransform;
-	rightTransform->translation.setValue(512/2,0.0,0.0);
+	rightTransform->translation.setValue(256,0.0,0.0);
 		
 	rightPlane->addChild(rightTransform);
 	rightPlane->addChild(rightImage);
@@ -1036,24 +1010,34 @@ int main(int argc,char **argv)
 
 	SoTimerSensor *timerL = new SoTimerSensor(updateL,leftImage);
 	timerL->setBaseTime(SbTime::getTimeOfDay()); 	//	useconds resolution
-	timerL->setInterval(1.0/25.0);//	 	//	interval 40 ms
+	timerL->setInterval(1.0/25.0);//	 	//	interval 40 ms = 25fps
 	timerL->schedule();				//	enable timer		
 
 	
 	SoTimerSensor *timerR = new SoTimerSensor(updateR,rightImage);//
 	//
-	timerR->setBaseTime(SbTime::getTimeOfDay());	//atoi(argv[3])
-	timerR->setInterval(1.0/25.0);//fps	//	set interval 40 ms
-	timerR->schedule();	
+	timerR->setBaseTime(SbTime::getTimeOfDay());	//	useconds resolution
+	timerR->setInterval(1.0/25.0);			//	set interval 40 ms = 25fps
+	timerR->schedule();				//	enable timer
 
+	//****************************************************************************
 
+	/*
+	SoTransform *t1 = new SoTransform;
+	t1->translation.setValue(-128,0,0);
+	root->addChild(t1);
+	
 
-
-			//	enable
-
+	SoCube *cube = new SoCube;
+	cube->width = 200;
+	cube->height = 200;
+	root->addChild(cube);
+	*/
      	SoTransform *myTrans = new SoTransform;
 	root->addChild(myTrans);
    	myTrans->translation.setValue(0.0,0.0,200.0);
+
+	
 	
 	// Use one of the convenient SoQt viewer classes.
 	SoQtExaminerViewer * eviewer = new SoQtExaminerViewer(mainwin);
@@ -1063,26 +1047,16 @@ int main(int argc,char **argv)
     	SoQt::show(mainwin);
     	// Loop until exit.
     	SoQt::mainLoop();
-
-
-	
-
-	//***************************************************************************
-	//			wait until the threads finish
-	
-	//pthread_join(camera[0],0);
-	//pthread_join(camera[0],0);
-	//pthread_join(camera[2],0);
-	//pthread_join(camera[3],0);
-	//****************************************************************************
 	// 			Clean up resources.				  
     	delete eviewer;
     	root->unref();
-	
-
 		
 return 0;
-
+}
+catch(...)
+{
+	cout<<"error"<<endl;
+}
 }	
 
 
