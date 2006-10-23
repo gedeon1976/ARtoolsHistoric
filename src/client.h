@@ -33,6 +33,7 @@
 #include <Inventor/Qt/SoQt.h>
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
 #include <Inventor/SoDB.h>				//	classes to see the graphic scene
+#include <Inventor/fields/SoSFFloat.h>			// 	contains a float point value
 #include <Inventor/SoSceneManager.h>
 #include <Inventor/nodes/SoPerspectiveCamera.h>
 #include <Inventor/nodes/SoDirectionalLight.h>
@@ -40,6 +41,9 @@
 #include <Inventor/SbViewportRegion.h>
 
 #include <Inventor/SbTime.h>				//	timer
+#include <Inventor/nodes/SoFont.h>			//	fonts
+#include <Inventor/nodes/SoText2.h>			//	texts
+#include <Inventor/nodes/SoAsciiText.h>			//	ascii text node used for fps texts
 #include <Inventor/nodes/SoBaseColor.h>
 #include <Inventor/nodes/SoCube.h>
 #include <Inventor/nodes/SoTransform.h>
@@ -108,9 +112,13 @@ struct ExportFrame{
 typedef dataFrame Frame;			//	define main frames
 typedef ExportFrame Export_Frame;		//	export to Ingrid Program
 
-typedef void (Close)(void *clientData);		//	callback functions
+//	callback functions
 typedef void (afterReading)(void *clientData,unsigned framesize,unsigned numTruncatedBytes,
-				struct timeval presentationTime,unsigned durationInMicroseconds);	
+				struct timeval presentationTime,unsigned durationInMicroseconds);
+typedef void (Close)(void *clientData);		
+
+// timeval structure : used for get the time of arrival of frames
+typedef timeval TIME;
 
 ///////////////////////////////////////////////////////////////////////////
 //	
@@ -122,7 +130,7 @@ public:
 virtual ~TFunctor()
 {
 }
-					//	function to call function member ProcessFrame
+					//	function to call function member getImage
 virtual Export_Frame Execute()=0;	
 
 };

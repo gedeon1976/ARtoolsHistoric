@@ -32,6 +32,13 @@ int members=0;
 int ID1=0;
 TFunctor *C1,*C2;					//	pointers to abstract class
 
+TIME t1L,t2L,t1R,t2R;
+//long int fpsL=0;
+
+float fpsL,fpsR;
+int FirstL =0;						//	flags for fps calculus
+int FirstR =0;
+
 //int  STREAM::MP4Hsize=0;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Constructor 
@@ -733,7 +740,7 @@ try{
 			InputBuffer.push_back(data_RTP);
 			//counter++;
 			//T.push(counter);
-			printf("writing frame %d from the camera %d \n",frameCounter,ID);
+		//	printf("writing frame %d from the camera %d \n",frameCounter,ID);
 			//printf("FIFO size: %d\n",InputBuffer.size());
 		
 
@@ -832,23 +839,64 @@ Export_Frame STREAM::getImage()//dataFrame
 	return I_Frame; 	
 	
 }
+TIME getTime()
+{
+	//timeval t;
+	TIME t;
+	struct timezone tz;
+	int time;
+	//time = ntp_gettime(&ntpTime);
+	time = gettimeofday(&t,&tz);
+	if (time==0)
+	{
+		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
+		//printf("time of timer was:%li.%06li\n",t.tv_sec,t.tv_usec);
+		printf("time was:%li.%06li\n",t.tv_sec,t.tv_usec);
+		//time = t.tv_sec + (t.tv_usec/1000000);
+		//printf("time was:%li.%06li\n",time);
+		//return t;
+	}else{
+		printf("error was:%i\n",errno);
+		
+	}
+	return t;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	update function show the frame from cameras
 
 void updateR(void *data,SoSensor*)	//	this function updates the texture based on the frame got
 					//	from the video stream
 {
+	long int AR,BR,diffR;//,fpsR;
+	
 	Export_Frame Fr;		//	struct for save the frame
 try{
 	
 	SoTexture2 *rightImage = (SoTexture2*)data;
-	
-	//  return a structure
-	Fr= C2->Execute();		//	call getImage() using a functor	
+	//	get the video frames rate per second
+	if (FirstR==0)
+	{
+		t1R = getTime();
+		FirstR=-1;
+	}
+	else{
+	t2R = getTime();
+	AR = (t2R.tv_sec - t1R.tv_sec);		//	seconds
+	BR = (t2R.tv_usec - t1R.tv_usec);	//	microseconds
+
+	diffR =(AR*1000000 + BR);			//	get the difference in microseconds
+	//printf("the difference in time was sec:%li ,usec:%li, diff:%li\n",A,B,diffL);
+	fpsR = 1000000/(diffR);			//	fps
+	((SoSFFloat*)SoDB::getGlobalField("FpsR"))->setValue(fpsR);
+	t1R = t2R;				//	update last time for next frame arrival
+	}
+	// return a structure that contain the image, size, width and height
+	Fr=C2->Execute();	//	call getImage() using a functor	
 	rightImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB, 4 = RGBA
+		
+	printf("fps %03f from right camera \n",fpsR);
 	
-	//printf("update image No: %d: from camera \n",ReceivedFrame.index);
-	//timeNow2();
 	}
 catch(...)
 {
@@ -863,17 +911,40 @@ void updateL(void *data,SoSensor*)	//	this function updates the texture based on
 					//	from the video stream
 {
 	//	get the video frames
+	long int AL,BL,diffL;//fpsL
+	//float diffL;
 	Export_Frame Fr;		//	struct for save the frame
 try{
 	SoTexture2 *leftImage = (SoTexture2*)data;
-	
+	//	get the video frames rate per second
+	if (FirstL==0)
+	{
+		t1L = getTime();
+		FirstL=-1;
+	}
+	else{
+	t2L = getTime();
+	AL = (t2L.tv_sec - t1L.tv_sec);		//	seconds
+	BL = (t2L.tv_usec - t1L.tv_usec);	//	microseconds
+
+	diffL =(AL*1000000 + BL);		//	get the difference in microseconds
+
+	//printf("the difference in time was sec:%li ,usec:%li, diff:%li\n",A,B,diffL);
+
+	fpsL = 1000000/(diffL);			//	fps
+	((SoSFFloat*)SoDB::getGlobalField("FpsL"))->setValue(fpsL);
+	//FpsL->setValue(fpsL);
+	t1L = t2L;				//	update last time for the next frame arrival
+	}
 	// return a structure that contain the image, size, width and height
 	Fr=C1->Execute();	//	call getImage() using a functor	
 	leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB 4 = RGBA
 		
-	//printf("update image No: %d: from camera \n",ReceivedFrame.index);
+	printf("fps %f from left camera \n",fpsL);
 	//timeNow2();
-	}
+
+	
+}
 catch(...)
 {
 	cout<<"error not viewer";
@@ -919,7 +990,13 @@ try{
 	
 	// Initializes SoQt library (and implicitly also the Coin and Qt
     	// libraries). Returns a top-level / shell Qt window to use.
-    	 QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
+    	QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
+	//	create global variable to show a text with the fps value for each stream
+	SoSFFloat *FpsL = (SoSFFloat*)SoDB::createGlobalField(SbName("FpsL"),SoSFFloat::getClassTypeId());
+	SoSFFloat *FpsR = (SoSFFloat*)SoDB::createGlobalField(SbName("FpsR"),SoSFFloat::getClassTypeId());
+	//FpsL->setValue(0.5);
+
+
 
 	SoSeparator *root = new SoSeparator;
     	root->ref();
@@ -969,6 +1046,11 @@ try{
 
 	// MAKE LEFT AND RIGHT PLANES	
 
+	SoFont *font = new SoFont;			//	create a font for the texts 
+	font->name.setValue("Arial:Bold Italic");
+	font->size.setValue(50.0);
+	root->addChild(font);
+
 	//	LEFT PLANE
 	
 	SoSeparator *leftPlane = new SoSeparator;
@@ -977,12 +1059,28 @@ try{
 	SoTexture2  *leftImage = new SoTexture2;
 	leftImage->filename.setValue("");	// this set is for use an image from memory in place of a file */
 	
+	
 
 	SoTransform *leftTransform = new SoTransform;
 	leftTransform->translation.setValue(-256,0.0,0.0);
 	leftPlane->addChild(leftTransform);
 	leftPlane->addChild(leftImage);
 	leftPlane->addChild(plane);
+	
+	SoBaseColor *F1 = new SoBaseColor;
+	F1->rgb.setValue(1.0,0.0,0.0);	
+	leftPlane->addChild(F1);
+	/*
+	SoAsciiText *FPSL = new SoAsciiText;
+	FPSL->justification.setValue("LEFT");
+	FPSL->spacing = 1;
+	FPSL->width =80;
+	*/
+	SoText2 *FPSL = new SoText2;
+	//FPSL->string = 'li%fpsL';
+	//FPSL->string= "esto es una prueba";
+	FPSL->string.connectFrom(FpsL);		//	connect fron global frame Left variable
+	leftPlane->addChild(FPSL);		//	add text on fps for this camera
 	
 	//	RIGHT PLANE
 
@@ -992,6 +1090,7 @@ try{
 	SoTexture2 *rightImage = new SoTexture2;
 	rightImage->filename.setValue("");
 	
+	
 
 	SoTransform *rightTransform = new SoTransform;
 	rightTransform->translation.setValue(256,0.0,0.0);
@@ -999,6 +1098,10 @@ try{
 	rightPlane->addChild(rightTransform);
 	rightPlane->addChild(rightImage);
 	rightPlane->addChild(plane);
+
+	SoText2 *FPSR = new SoText2;
+	FPSR->string.connectFrom(FpsR);
+	rightPlane->addChild(FPSR);		//	add text on fps for this camera
 	
 	//	ADD THE TWO PLANES
 
@@ -1008,7 +1111,7 @@ try{
 	//****************************************************************************
 	//	setup timer sensor for recursive image updating 
 
-	SoTimerSensor *timerL = new SoTimerSensor(updateL,leftImage);
+	SoTimerSensor *timerL = new SoTimerSensor(updateL,leftImage);//leftImage
 	timerL->setBaseTime(SbTime::getTimeOfDay()); 	//	useconds resolution
 	timerL->setInterval(1.0/25.0);//	 	//	interval 40 ms = 25fps
 	timerL->schedule();				//	enable timer		
@@ -1019,7 +1122,7 @@ try{
 	timerR->setBaseTime(SbTime::getTimeOfDay());	//	useconds resolution
 	timerR->setInterval(1.0/25.0);			//	set interval 40 ms = 25fps
 	timerR->schedule();				//	enable timer
-
+	
 	//****************************************************************************
 
 	/*

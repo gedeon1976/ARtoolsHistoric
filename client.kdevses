@@ -6,7 +6,7 @@
    <View0 Type="Source" />
   </Doc0>
   <Doc1 NumberOfViews="1" URL="file:///home/portilla/3T/src/client.cpp" >
-   <View0 line="620" Type="Source" />
+   <View0 line="838" Type="Source" />
   </Doc1>
  </DocsAndViews>
  <pluginList>
@@ -63,21 +63,9 @@
     <breakpoint16 location="/home/portilla/KDEV/client/src/client.cpp:968" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint16>
-    <breakpoint17 location="/home/portilla/3T/src/client.cpp:528" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
+    <breakpoint17 location="/home/portilla/3T/src/client.cpp:896" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint17>
-    <breakpoint18 location="/home/portilla/3T/src/client.cpp:311" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
-     <tracedExpressions/>
-    </breakpoint18>
-    <breakpoint19 location="/home/portilla/3T/src/client.cpp:313" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
-     <tracedExpressions/>
-    </breakpoint19>
-    <breakpoint20 location="/home/portilla/3T/src/client.cpp:266" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
-     <tracedExpressions/>
-    </breakpoint20>
-    <breakpoint21 location="/home/portilla/3T/src/client.cpp:588" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
-     <tracedExpressions/>
-    </breakpoint21>
    </breakpointList>
   </kdevdebugger>
   <kdevbookmarks>
@@ -87,7 +75,7 @@
      <mark line="302" />
     </bookmark>
     <bookmark url="/home/portilla/3T/src/client.cpp" >
-     <mark line="816" />
+     <mark line="820" />
     </bookmark>
    </bookmarks>
   </kdevbookmarks>

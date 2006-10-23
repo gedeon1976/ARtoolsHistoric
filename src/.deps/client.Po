@@ -330,6 +330,12 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/events/SoButtonEvent.h \
   /usr/include/Inventor/events/SoSubEvent.h \
   /usr/include/Inventor/events/SoEvent.h \
+  /usr/include/Inventor/fields/SoSFFloat.h \
+  /usr/include/Inventor/fields/SoSField.h \
+  /usr/include/Inventor/fields/SoField.h \
+  /usr/include/Inventor/fields/SoMField.h \
+  /usr/include/Inventor/fields/SoSubField.h \
+  /usr/include/Inventor/SoInput.h /usr/include/Inventor/SoOutput.h \
   /usr/include/Inventor/nodes/SoPerspectiveCamera.h \
   /usr/include/Inventor/nodes/SoSubNode.h \
   /usr/include/Inventor/fields/SoFieldData.h \
@@ -337,23 +343,23 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/fields/SoFieldContainer.h \
   /usr/include/Inventor/nodes/SoCamera.h \
   /usr/include/Inventor/fields/SoSFRotation.h \
-  /usr/include/Inventor/fields/SoSField.h \
-  /usr/include/Inventor/fields/SoField.h \
-  /usr/include/Inventor/fields/SoMField.h \
-  /usr/include/Inventor/fields/SoSubField.h \
-  /usr/include/Inventor/SoInput.h /usr/include/Inventor/SoOutput.h \
   /usr/include/Inventor/fields/SoSFEnum.h \
   /usr/include/Inventor/fields/SoSFVec3f.h \
-  /usr/include/Inventor/fields/SoSFFloat.h \
   /usr/include/Inventor/SbBox3f.h \
   /usr/include/Inventor/nodes/SoDirectionalLight.h \
   /usr/include/Inventor/nodes/SoLight.h \
   /usr/include/Inventor/fields/SoSFBool.h \
   /usr/include/Inventor/fields/SoSFColor.h \
+  /usr/include/Inventor/nodes/SoFont.h \
+  /usr/include/Inventor/fields/SoSFName.h \
+  /usr/include/Inventor/nodes/SoText2.h \
+  /usr/include/Inventor/nodes/SoShape.h \
+  /usr/include/Inventor/fields/SoMFString.h \
+  /usr/include/Inventor/nodes/SoAsciiText.h \
+  /usr/include/Inventor/fields/SoMFFloat.h \
   /usr/include/Inventor/nodes/SoBaseColor.h \
   /usr/include/Inventor/fields/SoMFColor.h \
   /usr/include/Inventor/nodes/SoCube.h \
-  /usr/include/Inventor/nodes/SoShape.h \
   /usr/include/Inventor/nodes/SoTransform.h \
   /usr/include/Inventor/nodes/SoTransformation.h \
   /usr/include/Inventor/nodes/SoSphere.h \
@@ -1239,6 +1245,20 @@ client.h:
 
 /usr/include/Inventor/events/SoEvent.h:
 
+/usr/include/Inventor/fields/SoSFFloat.h:
+
+/usr/include/Inventor/fields/SoSField.h:
+
+/usr/include/Inventor/fields/SoField.h:
+
+/usr/include/Inventor/fields/SoMField.h:
+
+/usr/include/Inventor/fields/SoSubField.h:
+
+/usr/include/Inventor/SoInput.h:
+
+/usr/include/Inventor/SoOutput.h:
+
 /usr/include/Inventor/nodes/SoPerspectiveCamera.h:
 
 /usr/include/Inventor/nodes/SoSubNode.h:
@@ -1253,23 +1273,9 @@ client.h:
 
 /usr/include/Inventor/fields/SoSFRotation.h:
 
-/usr/include/Inventor/fields/SoSField.h:
-
-/usr/include/Inventor/fields/SoField.h:
-
-/usr/include/Inventor/fields/SoMField.h:
-
-/usr/include/Inventor/fields/SoSubField.h:
-
-/usr/include/Inventor/SoInput.h:
-
-/usr/include/Inventor/SoOutput.h:
-
 /usr/include/Inventor/fields/SoSFEnum.h:
 
 /usr/include/Inventor/fields/SoSFVec3f.h:
-
-/usr/include/Inventor/fields/SoSFFloat.h:
 
 /usr/include/Inventor/SbBox3f.h:
 
@@ -1281,13 +1287,25 @@ client.h:
 
 /usr/include/Inventor/fields/SoSFColor.h:
 
+/usr/include/Inventor/nodes/SoFont.h:
+
+/usr/include/Inventor/fields/SoSFName.h:
+
+/usr/include/Inventor/nodes/SoText2.h:
+
+/usr/include/Inventor/nodes/SoShape.h:
+
+/usr/include/Inventor/fields/SoMFString.h:
+
+/usr/include/Inventor/nodes/SoAsciiText.h:
+
+/usr/include/Inventor/fields/SoMFFloat.h:
+
 /usr/include/Inventor/nodes/SoBaseColor.h:
 
 /usr/include/Inventor/fields/SoMFColor.h:
 
 /usr/include/Inventor/nodes/SoCube.h:
-
-/usr/include/Inventor/nodes/SoShape.h:
 
 /usr/include/Inventor/nodes/SoTransform.h:
 
