@@ -115,7 +115,9 @@ int STREAM::initCodecs()
 	pCodecCtx->width=720;//768
 	pCodecCtx->height=576;//576
 	pCodecCtx->bit_rate = 1000000;	//	bit rate?
-
+	//MPEG4 global header used for decode the frames
+	//pCodecCtx->extradata = (void*)"000001b0f5000001b509000001000000012000c888b0e0e0fa62d089028307";	//	info given by Leopold Avellaneda
+	//pCodecCtx->extradata_size= 62;
 //	look for truncated bitstreams
 
 //	if(pCodec->capabilities&&CODEC_CAP_TRUNCATED)
@@ -166,7 +168,7 @@ timeval STREAM::timeNow() //
 	{
 		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
 		//printf("time arrival of frame %d was:%li.%06li\n",frameCounter,t.tv_sec,t.tv_usec);
-		//printf("time was:%li.%06li\n",t.tv_sec,t.tv_usec);
+	//printf("time of capture was:%li.%06li from camera %d\n",t.tv_sec,t.tv_usec,ID);
 		//return t;
 	}else{
 		printf("error was:%i\n",errno);
@@ -228,38 +230,107 @@ int STREAM::unlock_mutex()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 int STREAM::create_Thread()
 {
-	int cod;
-	cod = pthread_create(&camera,0,STREAM::Entry_Point,this);
+	int cod, error;
+
+
+	pthread_attr_t attr;		//	attribute object
+	struct sched_param param;	//	struct for set the priority
+	
+
+	if (!(cod=pthread_attr_init(&attr)) &&
+	!(cod=pthread_attr_getschedparam(&attr,&param)))
+//	!(cod=pthread_attr_setscope(&attr,PTHREAD_SCOPE_SYSTEM)))
+
+		param.sched_priority = 10;
+		//printf("setup thread scope \n");
+					//	set priority to 10; max priority is = ?
+	else{
+		printf("error: \n", errno);
+	}	
+	
+	error=pthread_attr_setschedparam(&attr,&param);
+
+	if (error!=0)
+	{
+		printf("error: \n", errno);
+	}
+			
+	//	create thread
+
+	cod = pthread_create(&camera,&attr,STREAM::Entry_Point,this);
 	if (cod!=0)
 	{
 		printf("error creating thread \n");
 		return cod;
 	}else{
-		printf("creating thread \n");
+		printf("creating thread with  a priority of %d \n",get_ThreadPriority());
+		//printf("creating thread\n");
 		return cod;
 	}
 		
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+int STREAM::get_ThreadPriority()
+{
+	pthread_attr_t attr;		//	attributes
+	int cod, priority;
+	struct sched_param param;	//	contain the priority of the thread
+
+	if (!(cod=pthread_attr_init(&attr)) && 
+	!(cod=pthread_attr_getschedparam(&attr,&param)))
+
+		priority = param.sched_priority;
+	
+	return priority;
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+int STREAM::join_Thread()
+{
+	int cod; 
+	int *exitcode;
+	if (cod = pthread_join(camera,(void**)&exitcode))
+		printf("thread of data doesn't join to main flow\n");
+	else
+		printf("the exit code was %d \n",*exitcode);
+
+	return cod;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+int STREAM::cancel_Thread()
+{
+	int cod;
+	if(cod = pthread_cancel(camera))
+		printf("thread cannot be canceled\n");	
+	else{
+		printf("thread has been canceled\n");
+	}
+
+	
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void STREAM::set_Semaphore()
 {
 	sem_post(&sem);
-
+	printf("camera: %d  Semaphore: %d\n",ID,sem);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void STREAM::init_Semaphore(int i)
 {
 	sem_init(&sem,0,i);		//	start semaphore to i value
+					//	2d parameter = 0; only shared by threads of this process
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void STREAM::wait_Semaphore()
 {
 	sem_wait(&sem);
+	printf("camera: %d  Semaphore: %d\n",ID,sem);
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void STREAM::ProcessFrame(unsigned framesize)
+void STREAM::ProcessFrame(unsigned framesize, TIME presentationTime)
 {
 	
 try{
@@ -267,15 +338,22 @@ try{
 	dataBuffer.size = framesize;
 	
 	//	we get the data // 
-	data_RTP.size = MP4Hsize + dataBuffer.size;				//	save MP4Header
+	//data_RTP.size = MP4Hsize + dataBuffer.size;				//	save MP4Header
+	data_RTP.size = dataBuffer.size;					//	use an extradata global header previously got from 
+										//	read the fmtp field in the SDP protocol.
 	//	resize  buffer to save data
 	
    	memcpy(data_RTP.data,MP4H,MP4Hsize);				   	//	save frame in memory
 	memmove(data_RTP.data + MP4Hsize, dataRTP, dataBuffer.size);
-	//memcpy(data_RTP.data, dataRTP, dataBuffer.size);
-										//	save timestamp
-	//data_RTP.timestamp = Subsession->rtpSource()->curPacketRTPTimestamp();
- 	data_RTP.time = timeNow();
+	memcpy(data_RTP.data, dataRTP, dataBuffer.size);
+	//data_RTP.data=dataRTP;
+	
+										
+	data_RTP.timestamp = Subsession->rtpSource()->curPacketRTPTimestamp();	//	save timestamp
+ 	data_RTP.time = timeNow();						//	capture time used as arrival time
+	//	print presentation Time
+//	cout<<"presentation time:"<<presentationTime.tv_sec<<"."<<presentationTime.tv_usec<<" camera "<<ID<<endl;
+
 	data_RTP.index= frameCounter;						//	time arrival
 	//actualRTPtimestamp = 
 	//printf("current RTP timestamp %lu\n",data_RTP.timestamp);
@@ -318,6 +396,7 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 	//STREAM *ps = (STREAM*)clientData;
 	//ps = ps->
 	bind_object();
+	
 	unsigned int maxSize = 70000;			//	max size of the got frame
 	//test size of frame
 	if(framesize>=maxSize)				//	maxRTPDataSize
@@ -328,7 +407,7 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 		
 		
 		//ps->ProcessFrame(framesize);
-		ProcessFrame(framesize);
+		ProcessFrame(framesize,presentationTime);
 		readOKFlag = ~0;
 		//ps->readOKFlag = ~0;			//	set flag to new data   before ~0
 		//STREAM *ps= (STREAM*)temp;		// 	Auxiliar object to make reference to the actual 
@@ -391,13 +470,7 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 //			output: A subsession associated to the URL
  int STREAM::rtsp_Init()// int camNumber
  {
-	//const char *name = "RTSP";					//	name of client in live555 libraries
 	
-	
-	//bind_object();
-	
-	//	check for correct value of URL address 
-
 /////////////////	RTSP START	/////////////////
 
 	//	assign an environment to work
@@ -579,7 +652,7 @@ try{
 	//	get the data from rtp source
 
 	//	IMPORTANT: the this pointer is very important because is passed as the afterGettingData parameter
-	//	if not used in this form the program will not work!
+	//	if not is used in this form the program will not work!
 
 	//	the data is saved in the dataRTP buffer
 	Subsession->readSource()->getNextFrame(dataRTP,maxRTPDataSize,
@@ -600,7 +673,7 @@ try{
 }
 catch(...)
 {
-	cout<<"error reading frame";
+	cout<<"error reading frame from camera"<<ID<<endl;
 }	
 	
 	
@@ -625,7 +698,7 @@ try{
 		//	cut the top side of the image,	nothing by that 0
 			if (ID==0)		//	flag for cut image
 			{
-				img_crop((AVPicture*)pFrameCrop,(AVPicture*)pFrame,pCodecCtx->pix_fmt,0,200);//208
+				img_crop((AVPicture*)pFrameCrop,(AVPicture*)pFrame,pCodecCtx->pix_fmt,0,208);//208
 				img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,512,512);//RGB24
 			}else{
 		//	convert the image from his format to RGB
@@ -703,6 +776,7 @@ catch(...)
 
 //////////////////////////////////////////
 //	Getting data thread function
+
 void STREAM::rtsp_getData()
 {
 	int cod;
@@ -724,7 +798,9 @@ try{
 		//conditaugustion
 			
 			rtsp_getFrame();
+			//timeNow();		//	true capture time
 			rtsp_decode(data_RTP);
+			//timeNow();		
 			//sem_post(&sem);
 			
 			if(!InputBuffer.empty())
@@ -733,15 +809,33 @@ try{
 				dataFrame N = data_RTP;
 				dataFrame N_1 = InputBuffer.back();
 				s = skew(N,N_1);
-				//printf("skew : %06f\n",s);
+				//printf("skew : %06f camera %d\n",s,ID);
 				//s= skew(Temp,InputBuffer.back());
 				
 				}
-			InputBuffer.push_back(data_RTP);
+			
+
+			//	limit size of FIFO buffer
+
+			
+			if(InputBuffer.size()<50)
+			{
+				InputBuffer.push_back(data_RTP);	//	save data
+			}
+			if(InputBuffer.size()>=50)
+			{ 
+				InputBuffer.pop_front();		//	delete head frame in th FIFO
+				//wait_Semaphore();			//	decrease semaphore
+			}
+			
+
+
+
+
 			//counter++;
 			//T.push(counter);
-		//	printf("writing frame %d from the camera %d \n",frameCounter,ID);
-			//printf("FIFO size: %d\n",InputBuffer.size());
+			printf("writing frame %d from the camera %d \n",frameCounter,ID);
+		printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
 		
 
 		//	WAKE UP THE OTHER THREAD: SHOW DATA THREAD
@@ -760,7 +854,7 @@ try{
 }
 catch(...)
 {
-	cout<<"error obtaining frames"<<endl;
+	cout<<"error obtaining frames from camera:"<<ID<<endl;
 }	
 	
 }
@@ -773,6 +867,7 @@ int STREAM::Init_Session(char const *URLcam, int id)
 	int status;
 	URL = URLcam;
 	ID=id;
+try{
 	////////////////////////////////////////////////////////////////////////
 	//	start the codecs	
 	initCodecs();					//	init codecs
@@ -787,6 +882,7 @@ int STREAM::Init_Session(char const *URLcam, int id)
 	//	connect to RTSP server
 
 	status = rtsp_Init();			//	Init RTSP Clients for the camera
+	//throw status;
 	/////////////////////////////////////////////////////////////////////////
 	//	START TO READ THE DATA FROM CAMERA
 
@@ -810,12 +906,21 @@ int STREAM::Init_Session(char const *URLcam, int id)
 	//
 return 0;
 }
+catch(int status)
+{
+	cout<<"Video not available, review if the server is working\n"<<endl;
+	
+
+}
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 Export_Frame STREAM::getImage()//dataFrame
 {
-	//sem_wait(&sem);					
-	wait_Semaphore();				//	wait for semaphore set
-							
+					
+	wait_Semaphore();				//	look for semaphore, test if it is green to get the image		
+							//	of the network
+		
+					
 	Export_Frame I_Frame;
 	if(!InputBuffer.empty())			//	check if buffer is not empty
 	{
@@ -825,14 +930,14 @@ Export_Frame STREAM::getImage()//dataFrame
 		I_Frame.h=512;				//	width of image
 		I_Frame.w=512;				//	height of image
  		
-		InputBuffer.pop_front();		//	delete frame from the FIFO buffer
+		InputBuffer.pop_front();		//	delete the head frame from the FIFO buffer
 		
 		//printf("FIFO size: %d\n",InputBuffer.size());
-		
+		printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
 		
 	}else
 	{
-		printf("empty buffer %d\n", InputBuffer.size());
+		printf("empty buffer %d from camera %d\n", InputBuffer.size(),ID);
 	}	
 
 	//return ReceivedFrame.image;				//	return the last frame
@@ -851,7 +956,7 @@ TIME getTime()
 	{
 		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
 		//printf("time of timer was:%li.%06li\n",t.tv_sec,t.tv_usec);
-		printf("time was:%li.%06li\n",t.tv_sec,t.tv_usec);
+	//	 printf("time in coin was:%li.%06li\n",t.tv_sec,t.tv_usec);
 		//time = t.tv_sec + (t.tv_usec/1000000);
 		//printf("time was:%li.%06li\n",time);
 		//return t;
@@ -874,7 +979,8 @@ void updateR(void *data,SoSensor*)	//	this function updates the texture based on
 try{
 	
 	SoTexture2 *rightImage = (SoTexture2*)data;
-	//	get the video frames rate per second
+	//	calculus for get the video frames rate per second
+	/////////////////////////////////////////////////////////////////////////////////////////
 	if (FirstR==0)
 	{
 		t1R = getTime();
@@ -891,12 +997,15 @@ try{
 	((SoSFFloat*)SoDB::getGlobalField("FpsR"))->setValue(fpsR);
 	t1R = t2R;				//	update last time for next frame arrival
 	}
+	/////////////////////////////////////////////////////////////////////////////////////////
+
 	// return a structure that contain the image, size, width and height
 	Fr=C2->Execute();	//	call getImage() using a functor	
 	rightImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB, 4 = RGBA
 		
-	printf("fps %03f from right camera \n",fpsR);
-	
+	//printf("fps %03f from right camera \n",fpsR);
+		
+
 	}
 catch(...)
 {
@@ -916,7 +1025,9 @@ void updateL(void *data,SoSensor*)	//	this function updates the texture based on
 	Export_Frame Fr;		//	struct for save the frame
 try{
 	SoTexture2 *leftImage = (SoTexture2*)data;
-	//	get the video frames rate per second
+
+	//	calculus for get the video frames rate per second
+	/////////////////////////////////////////////////////////////////////////////////////////
 	if (FirstL==0)
 	{
 		t1L = getTime();
@@ -936,13 +1047,14 @@ try{
 	//FpsL->setValue(fpsL);
 	t1L = t2L;				//	update last time for the next frame arrival
 	}
+	/////////////////////////////////////////////////////////////////////////////////////////
 	// return a structure that contain the image, size, width and height
-	Fr=C1->Execute();	//	call getImage() using a functor	
+	Fr=C1->Execute();			//	call getImage() using a functor	
 	leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB 4 = RGBA
 		
-	printf("fps %f from left camera \n",fpsL);
+	//printf("fps %f from left camera \n",fpsL);
 	//timeNow2();
-
+	
 	
 }
 catch(...)
@@ -966,8 +1078,11 @@ try{
 									NORMAL_IMAGE 
 									where the image kept the original size
 								*/	
-	const char *camL ="rtsp://sonar:7070/cam3";//argv[1];		//	
-	const char *camR ="rtsp://sonar:7070/cam1";//argv[2];						
+
+	//;	channel 0 and 3
+	//;
+	const char *camL ="rtsp://sonar:7070/cam0";//argv[1];		//	
+	const char *camR ="rtsp://sonar:7070/cam3";//argv[2];						
 
 	STREAM camara1;						//  	create an stream object
 	
@@ -984,23 +1099,39 @@ try{
 	C2 =&D2;
 	set_format=NORMAL_IMAGE;
 	camara2.Init_Session(camR,set_format);
-		
 	// ******************************************************************************************** 
 	//		Graphics Scene
 	
 	// Initializes SoQt library (and implicitly also the Coin and Qt
     	// libraries). Returns a top-level / shell Qt window to use.
     	QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
+
+
 	//	create global variable to show a text with the fps value for each stream
 	SoSFFloat *FpsL = (SoSFFloat*)SoDB::createGlobalField(SbName("FpsL"),SoSFFloat::getClassTypeId());
 	SoSFFloat *FpsR = (SoSFFloat*)SoDB::createGlobalField(SbName("FpsR"),SoSFFloat::getClassTypeId());
-	//FpsL->setValue(0.5);
-
-
+	
 
 	SoSeparator *root = new SoSeparator;
     	root->ref();
+
+	//	add  camera and lights
+	/*
+	SoPerspectiveCamera *mycam = new SoPerspectiveCamera;
+	SoDirectionalLight *Light = new SoDirectionalLight;
+
+	root->addChild(mycam);
+	root->addChild(Light);
+	*/
+//	Add the transparency node, used to create the augmented reality appareance
 	
+	
+
+	
+	
+
+
+
 	//	MAKE A PLANE FOR IMAGE 
 
 	SoGroup *plane = new SoGroup;
@@ -1048,7 +1179,7 @@ try{
 
 	SoFont *font = new SoFont;			//	create a font for the texts 
 	font->name.setValue("Arial:Bold Italic");
-	font->size.setValue(50.0);
+	font->size.setValue(20.0);
 	root->addChild(font);
 
 	//	LEFT PLANE
@@ -1059,8 +1190,6 @@ try{
 	SoTexture2  *leftImage = new SoTexture2;
 	leftImage->filename.setValue("");	// this set is for use an image from memory in place of a file */
 	
-	
-
 	SoTransform *leftTransform = new SoTransform;
 	leftTransform->translation.setValue(-256,0.0,0.0);
 	leftPlane->addChild(leftTransform);
@@ -1079,7 +1208,7 @@ try{
 	SoText2 *FPSL = new SoText2;
 	//FPSL->string = 'li%fpsL';
 	//FPSL->string= "esto es una prueba";
-	FPSL->string.connectFrom(FpsL);		//	connect fron global frame Left variable
+	FPSL->string.connectFrom(FpsL);		//	connect from global frame Left variable
 	leftPlane->addChild(FPSL);		//	add text on fps for this camera
 	
 	//	RIGHT PLANE
@@ -1098,6 +1227,11 @@ try{
 	rightPlane->addChild(rightTransform);
 	rightPlane->addChild(rightImage);
 	rightPlane->addChild(plane);
+
+	//	set color of text
+	SoBaseColor *F2 = new SoBaseColor;
+	F2->rgb.setValue(1.0,0.0,0.0);	
+	rightPlane->addChild(F2);
 
 	SoText2 *FPSR = new SoText2;
 	FPSR->string.connectFrom(FpsR);
@@ -1136,29 +1270,105 @@ try{
 	cube->height = 200;
 	root->addChild(cube);
 	*/
+
+	SoTransparencyType *Trans1 = new SoTransparencyType;
+	Trans1->value.setValue(SoTransparencyType::ADD);
+	SoMaterial *mat = new SoMaterial;
+	mat->transparency.setValue(0.05);
+	mat->diffuseColor.setValue(0.0,1.0,0.0);
+
+	SoCube *Cube = new SoCube;
+	Cube->height.setValue(80.0);
+	Cube->width.setValue(180.0);
+	Cube->depth.setValue(1.0);
+	SoSphere *ball = new SoSphere;
+	ball->radius.setValue(75.0f);
+	
+	SoSeparator *Overlay = new SoSeparator;
+	//SoBaseColor *Color1 = new SoBaseColor;
+	//Color1->rgb.setValue(0.0,1.0,0.0);
+	
+	SoTransform *T1 = new SoTransform;
+	SoTransform *T2 = new SoTransform;
+	//T1->translation.setValue(300.0,-107.0,0.0);
+	T1->translation.setValue(285.0,-103.0,100.0);
+	T2->translation.setValue(0.0,0.0,-60.0);
+
+	Overlay->addChild(Trans1);
+	Overlay->addChild(mat);
+	Overlay->addChild(T1);
+	Overlay->addChild(ball);
+	Overlay->addChild(T2);
+	SoMaterial *mat2 = new SoMaterial;
+	mat2->diffuseColor.setValue(0.0,1.0,0.0);
+	Overlay->addChild(mat2);
+	//Overlay->addChild(Cube);
+
+	root->addChild(Overlay);
+
+
      	SoTransform *myTrans = new SoTransform;
 	root->addChild(myTrans);
    	myTrans->translation.setValue(0.0,0.0,200.0);
 
-	
+
+
+
+
+
+
+	/*
+	SoQtRenderArea *render =new SoQtRenderArea(mainwin);
+	mycam->viewAll(root,render->getViewportRegion());
+	render->setSceneGraph(root);
+	render->setBackgroundColor(SbColor(0.0f,0.5f,0.5f));
+	render->show();
+	SoQt::show(mainwin);
+	SoQt::mainLoop();
+
+	delete render;
+	*/
 	
 	// Use one of the convenient SoQt viewer classes.
 	SoQtExaminerViewer * eviewer = new SoQtExaminerViewer(mainwin);
     	eviewer->setSceneGraph(root);
+	/*
+	//***********************************************
+	//	test for rendering bottleneck
+	//***********************************************
+	SoSwitch *renderOff = new SoSwitch;
+	renderOff->ref();
+	renderOff->addChild(root);
+	eviewer->setSceneGraph(renderOff);
+	//***********************************************
+	*/
     	eviewer->show();
 	// Pop up the main window.
     	SoQt::show(mainwin);
     	// Loop until exit.
     	SoQt::mainLoop();
+	delete eviewer;
+		
 	// 			Clean up resources.				  
-    	delete eviewer;
+    	
     	root->unref();
 		
 return 0;
 }
+catch(exception& e)
+{
+ 	cout<<e.what()<<endl;
+
+
+}
+catch(bad_exception& e)
+{
+	cout<<"error"<<e.what()<<endl;
+
+}  
 catch(...)
 {
-	cout<<"error"<<endl;
+	cout<<"unknow error\n"<<endl;
 }
 }	
 

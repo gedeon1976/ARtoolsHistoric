@@ -291,10 +291,6 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/errors/SoDebugError.h \
   /usr/include/Inventor/errors/SoError.h \
   /usr/include/Inventor/C/errors/error.h \
-  /usr/include/Inventor/Qt/viewers/SoQtExaminerViewer.h \
-  /usr/include/Inventor/Qt/viewers/SoQtFullViewer.h \
-  /usr/include/Inventor/Qt/viewers/SoQtViewer.h \
-  /usr/include/Inventor/SbTime.h \
   /usr/include/Inventor/Qt/SoQtRenderArea.h \
   /usr/include/Inventor/SbColor.h \
   /usr/include/Inventor/SbViewportRegion.h \
@@ -326,6 +322,10 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/Qt/SoQtGLWidget.h \
   /usr/include/Inventor/Qt/SoQtComponent.h \
   /usr/include/Inventor/Qt/SoQtObject.h \
+  /usr/include/Inventor/Qt/viewers/SoQtExaminerViewer.h \
+  /usr/include/Inventor/Qt/viewers/SoQtFullViewer.h \
+  /usr/include/Inventor/Qt/viewers/SoQtViewer.h \
+  /usr/include/Inventor/SbTime.h \
   /usr/include/Inventor/events/SoKeyboardEvent.h \
   /usr/include/Inventor/events/SoButtonEvent.h \
   /usr/include/Inventor/events/SoSubEvent.h \
@@ -336,11 +336,14 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/fields/SoMField.h \
   /usr/include/Inventor/fields/SoSubField.h \
   /usr/include/Inventor/SoInput.h /usr/include/Inventor/SoOutput.h \
-  /usr/include/Inventor/nodes/SoPerspectiveCamera.h \
+  /usr/include/Inventor/nodes/SoSwitch.h \
   /usr/include/Inventor/nodes/SoSubNode.h \
   /usr/include/Inventor/fields/SoFieldData.h \
   /usr/include/Inventor/nodes/SoNode.h \
   /usr/include/Inventor/fields/SoFieldContainer.h \
+  /usr/include/Inventor/fields/SoSFInt32.h \
+  /usr/include/Inventor/nodes/SoGroup.h \
+  /usr/include/Inventor/nodes/SoPerspectiveCamera.h \
   /usr/include/Inventor/nodes/SoCamera.h \
   /usr/include/Inventor/fields/SoSFRotation.h \
   /usr/include/Inventor/fields/SoSFEnum.h \
@@ -359,12 +362,13 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/fields/SoMFFloat.h \
   /usr/include/Inventor/nodes/SoBaseColor.h \
   /usr/include/Inventor/fields/SoMFColor.h \
+  /usr/include/Inventor/nodes/SoMaterial.h \
   /usr/include/Inventor/nodes/SoCube.h \
   /usr/include/Inventor/nodes/SoTransform.h \
   /usr/include/Inventor/nodes/SoTransformation.h \
   /usr/include/Inventor/nodes/SoSphere.h \
-  /usr/include/Inventor/nodes/SoGroup.h \
   /usr/include/Inventor/nodes/SoSeparator.h \
+  /usr/include/Inventor/nodes/SoTransparencyType.h \
   /usr/include/Inventor/nodes/SoTexture2.h \
   /usr/include/Inventor/fields/SoSFImage.h \
   /usr/include/Inventor/fields/SoSFString.h \
@@ -393,7 +397,6 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/fields/SoMFUInt32.h \
   /usr/include/Inventor/nodes/SoMaterialBinding.h \
   /usr/include/Inventor/elements/SoMaterialBindingElement.h \
-  /usr/include/Inventor/fields/SoSFInt32.h \
   /usr/include/Inventor/fields/SoMFInt32.h \
   /usr/include/Inventor/sensors/SoNodeSensor.h \
   /usr/include/Inventor/sensors/SoDataSensor.h \
@@ -1165,14 +1168,6 @@ client.h:
 
 /usr/include/Inventor/C/errors/error.h:
 
-/usr/include/Inventor/Qt/viewers/SoQtExaminerViewer.h:
-
-/usr/include/Inventor/Qt/viewers/SoQtFullViewer.h:
-
-/usr/include/Inventor/Qt/viewers/SoQtViewer.h:
-
-/usr/include/Inventor/SbTime.h:
-
 /usr/include/Inventor/Qt/SoQtRenderArea.h:
 
 /usr/include/Inventor/SbColor.h:
@@ -1237,6 +1232,14 @@ client.h:
 
 /usr/include/Inventor/Qt/SoQtObject.h:
 
+/usr/include/Inventor/Qt/viewers/SoQtExaminerViewer.h:
+
+/usr/include/Inventor/Qt/viewers/SoQtFullViewer.h:
+
+/usr/include/Inventor/Qt/viewers/SoQtViewer.h:
+
+/usr/include/Inventor/SbTime.h:
+
 /usr/include/Inventor/events/SoKeyboardEvent.h:
 
 /usr/include/Inventor/events/SoButtonEvent.h:
@@ -1259,7 +1262,7 @@ client.h:
 
 /usr/include/Inventor/SoOutput.h:
 
-/usr/include/Inventor/nodes/SoPerspectiveCamera.h:
+/usr/include/Inventor/nodes/SoSwitch.h:
 
 /usr/include/Inventor/nodes/SoSubNode.h:
 
@@ -1268,6 +1271,12 @@ client.h:
 /usr/include/Inventor/nodes/SoNode.h:
 
 /usr/include/Inventor/fields/SoFieldContainer.h:
+
+/usr/include/Inventor/fields/SoSFInt32.h:
+
+/usr/include/Inventor/nodes/SoGroup.h:
+
+/usr/include/Inventor/nodes/SoPerspectiveCamera.h:
 
 /usr/include/Inventor/nodes/SoCamera.h:
 
@@ -1305,6 +1314,8 @@ client.h:
 
 /usr/include/Inventor/fields/SoMFColor.h:
 
+/usr/include/Inventor/nodes/SoMaterial.h:
+
 /usr/include/Inventor/nodes/SoCube.h:
 
 /usr/include/Inventor/nodes/SoTransform.h:
@@ -1313,9 +1324,9 @@ client.h:
 
 /usr/include/Inventor/nodes/SoSphere.h:
 
-/usr/include/Inventor/nodes/SoGroup.h:
-
 /usr/include/Inventor/nodes/SoSeparator.h:
+
+/usr/include/Inventor/nodes/SoTransparencyType.h:
 
 /usr/include/Inventor/nodes/SoTexture2.h:
 
@@ -1372,8 +1383,6 @@ client.h:
 /usr/include/Inventor/nodes/SoMaterialBinding.h:
 
 /usr/include/Inventor/elements/SoMaterialBindingElement.h:
-
-/usr/include/Inventor/fields/SoSFInt32.h:
 
 /usr/include/Inventor/fields/SoMFInt32.h:
 

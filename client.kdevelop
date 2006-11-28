@@ -28,7 +28,9 @@
       <customdirectory>/</customdirectory>
       <programargs/>
       <autocompile>true</autocompile>
-      <envvars/>
+      <envvars>
+        <envvar value="1" name="COIN_SHOW_FPS_COUNTER" />
+      </envvars>
       <runarguments>
         <client/>
       </runarguments>
@@ -51,7 +53,9 @@
         <envvars/>
       </debug>
       <default>
-        <envvars/>
+        <envvars>
+          <envvar value="1" name="COIN_SHOW_FPS_COUNTER" />
+        </envvars>
         <configargs/>
         <builddir/>
         <topsourcedir/>
@@ -70,6 +74,7 @@
     </configurations>
     <make>
       <envvars>
+        <envvar value="1" name="COIN_SHOW_FPS_COUNTER" />
         <envvar value="1" name="WANT_AUTOCONF_2_5" />
         <envvar value="1" name="WANT_AUTOMAKE_1_6" />
       </envvars>
@@ -78,6 +83,7 @@
       <dontact>false</dontact>
       <makebin/>
       <prio>0</prio>
+      <runmultiplejobs>false</runmultiplejobs>
     </make>
   </kdevautoproject>
   <kdevdoctreeview>
@@ -127,6 +133,7 @@
     </ignoredoxygen>
   </kdevdoctreeview>
   <kdevfilecreate>
+    <filetypes/>
     <useglobaltypes>
       <type ext="cpp" />
       <type ext="h" />
@@ -216,4 +223,8 @@
       <outputradix>10</outputradix>
     </display>
   </kdevdebugger>
+  <ctagspart>
+    <customArguments/>
+    <customTagfilePath/>
+  </ctagspart>
 </kdevelop>

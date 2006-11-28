@@ -31,10 +31,13 @@
 //********************************************************************************
 //	include coin libraries
 #include <Inventor/Qt/SoQt.h>
+#include <Inventor/Qt/SoQtRenderArea.h>
+
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
 #include <Inventor/SoDB.h>				//	classes to see the graphic scene
 #include <Inventor/fields/SoSFFloat.h>			// 	contains a float point value
 #include <Inventor/SoSceneManager.h>
+#include <Inventor/nodes/SoSwitch.h>			//	switch to test if rendering is the bottleneck
 #include <Inventor/nodes/SoPerspectiveCamera.h>
 #include <Inventor/nodes/SoDirectionalLight.h>
 #include <Inventor/actions/SoGLRenderAction.h>		//	GL render Action
@@ -45,11 +48,14 @@
 #include <Inventor/nodes/SoText2.h>			//	texts
 #include <Inventor/nodes/SoAsciiText.h>			//	ascii text node used for fps texts
 #include <Inventor/nodes/SoBaseColor.h>
+#include <Inventor/nodes/SoMaterial.h>
 #include <Inventor/nodes/SoCube.h>
 #include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoSphere.h>
 #include <Inventor/nodes/SoGroup.h>
 #include <Inventor/nodes/SoSeparator.h>
+#include <Inventor/nodes/SoTransparencyType.h>		//  Only coin compliant, not in the original SGI version
+							//  this allows several kinds of tranparencies in the same scene	
 #include <Inventor/nodes/SoTexture2.h>			// for texture association
 #include <Inventor/nodes/SoComplexity.h>		// set texture quality
 
@@ -64,6 +70,7 @@
 
 #include <Inventor/nodes/SoCallback.h>			// to use opengl
 #include <GL/gl.h>
+//#include <GL/glext.h>					//GL extensions
 //*********************************************************************************
 //	C/C++ libraries
 #include <cstdlib>
@@ -340,8 +347,8 @@ int rtsp_decode(Frame dataCompress);
 					//	Decodes a compressed frame and convert to RGB format
 int rtsp_Buffering(int n);		//	Buffer for get n frames at Start of reception, used to smooth the appareance of frames
 
-
-static timeval timeNow();		//	To save time of arrival of the frames
+//static
+timeval timeNow();		//	To save time of arrival of the frames
 int timeNow2();				//	Show the actual time using getoftimeday with microseconds resolution
 double skew(Frame N, Frame N_1);	//	Calculates skew between sender and receiver, See Colin Perkins Book on RTP for meaning
 
@@ -351,7 +358,7 @@ double skew(Frame N, Frame N_1);	//	Calculates skew between sender and receiver,
 					//	assigning their this pointer to the actual object, by that the use of
 					//	temp object
 void SaveFrame(void* clienData, unsigned framesize);
-void ProcessFrame(unsigned framesize);//void *clientData
+void ProcessFrame(unsigned framesize, TIME presentationTime);//void *clientData
 //THESE function are used with live555 GetNextFrame function
 //************************************************************************************************
 //	pointer to function
@@ -360,6 +367,9 @@ afterReading* onRead;		 	// function pointer for process the frame after its cap
 //************************************************************************************************
 
 int create_Thread();			//	create a thread
+int join_Thread();			//	wait until a thread finish
+int cancel_Thread();			//	cancel a thread
+int get_ThreadPriority();
 void rtsp_getData();			//	thread function
 void init_Semaphore(int i);		//	init the semaphore
 int init_mutex();			//	init the mutex
