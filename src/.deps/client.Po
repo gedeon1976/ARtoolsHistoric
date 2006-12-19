@@ -366,6 +366,7 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/nodes/SoCube.h \
   /usr/include/Inventor/nodes/SoTransform.h \
   /usr/include/Inventor/nodes/SoTransformation.h \
+  /usr/include/Inventor/nodes/SoRotation.h \
   /usr/include/Inventor/nodes/SoSphere.h \
   /usr/include/Inventor/nodes/SoSeparator.h \
   /usr/include/Inventor/nodes/SoTransparencyType.h \
@@ -404,6 +405,7 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/sensors/SoSensor.h \
   /usr/include/Inventor/sensors/SoTimerSensor.h \
   /usr/include/Inventor/sensors/SoTimerQueueSensor.h \
+  /usr/include/Inventor/elements/SoCacheElement.h \
   /usr/include/Inventor/nodes/SoCallback.h /usr/include/GL/gl.h \
   /usr/include/GL/glext.h /usr/include/semaphore.h \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/queue \
@@ -1322,6 +1324,8 @@ client.h:
 
 /usr/include/Inventor/nodes/SoTransformation.h:
 
+/usr/include/Inventor/nodes/SoRotation.h:
+
 /usr/include/Inventor/nodes/SoSphere.h:
 
 /usr/include/Inventor/nodes/SoSeparator.h:
@@ -1397,6 +1401,8 @@ client.h:
 /usr/include/Inventor/sensors/SoTimerSensor.h:
 
 /usr/include/Inventor/sensors/SoTimerQueueSensor.h:
+
+/usr/include/Inventor/elements/SoCacheElement.h:
 
 /usr/include/Inventor/nodes/SoCallback.h:
 

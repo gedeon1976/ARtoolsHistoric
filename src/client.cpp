@@ -1064,12 +1064,207 @@ catch(...)
 	
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//		OPENGL CODE ROUTINES
+
+//	This function initializes a texture under openGL
+void init_Texture(void*,SoAction* action)
+	
+{
+if(action->isOfType(SoGLRenderAction::getClassTypeId()))
+{
+	//SoCacheElement::invalidate(action->getState());
+	
+	//	using PBO according to the extension specification
+
+	//glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+       // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0,
+       //              GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+        // Create and bind texture image buffer object
+
+        //glGenBuffersARB(1, &bufferID);
+        //glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, bufferID);
+
+	// Setup texture environment
+
+	//	opengl 2 extensions
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//			PBO SETUP
+	/*
+	glGenBuffersARB(1,&bufferID);	//	create the buffer for the PBO
+	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,bufferID); 
+							//allocate a chunk of memory using a PBO pixel_buffer_object 
+ 							// view Fast Texture Transfer, using VBOs articles
+							// from nvidia developer web site
+							// see also the reference to the lesson 45 NeHe web site
+							// openGL tutorials dec 2006
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,,NULL,GL_STREAM_DRAW_ARB);
+	*/
+
+	//glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT );
+	glPushMatrix();
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//			TEXTURE SETUP
+	glClearColor(0.0,0.0,0.0,0.0);			//	clear color to black when the buffers will be cleaned
+	glShadeModel(GL_FLAT);				//	solid colors not shading
+	glEnable(GL_DEPTH_TEST);			//	enable depth test?
+	//	This function configure how the pixels are unpacked from memory
+	glPixelStorei(GL_UNPACK_ALIGNMENT,1);		// REVIEW FOR PERFORMANCE
+
+	glGenTextures(1,&texName);			//	assigns a name for the texture from the texname array
+	glBindTexture(GL_TEXTURE_2D,texName);		//	create a texture object and assigns a name  
+	
+	//texture parameters
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);//	extend the texture in S coord
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);//	and T too
+	//	REVIEW IF THIS  FILTERS ARE NEEDED WITH GL_TEXTURE_RECTANGLE_NV
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);	//	on view magnification
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST); 	//	on view mimimization
+	
+	//glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,512,512,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+	glEnable(GL_TEXTURE_2D);
+	/*glTexSubImage2D(GL_TEXTURE_2D,0,0,0,512,512,GL_RGB,GL_UNSIGNED_BYTE,Fr.pData->data[0]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0,0.0);glVertex3f( -512.0,  512.0,0.0);
+		glTexCoord2f(0.0,1.0);glVertex3f( -512.0, -512.0,0.0);
+		glTexCoord2f(1.0,1.0);glVertex3f(  512.0, -512.0,0.0);
+		glTexCoord2f(1.0,0.0);glVertex3f(  512.0,  512.0,0.0);
+	glEnd();*/
+	glPopMatrix();
+	//glPopAttrib();
+	}
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void draw_texture(void*,SoAction* action)
+{
+if(action->isOfType(SoGLRenderAction::getClassTypeId()))
+{
+	//SoCacheElement::invalidate(action->getState());
+	
+	Export_Frame Fr;		//	structure for save the frames
+	
+	glPushMatrix();
+
+	//	load texture data with parameter, this is important for the good
+	//	transfer of data to the GPU card, for detailed explanation see pag 370 from
+	//	the openGl programming book
+	Fr=C1->Execute();	//	get data from remote site using a functor
+				//	to call Get_Image in the STREAM class
+/*
+	glClearColor(0.0,0.0,0.0,0.0);			//	clear color to black when the buffers will be cleaned
+
+	glShadeModel(GL_FLAT);				//	solid colors not shading
+	glEnable(GL_DEPTH_TEST);			//	enable depth test?
+	//	This function configure how the pixels are unpacked from memory
+	glPixelStorei(GL_UNPACK_ALIGNMENT,1);		// REVIEW FOR PERFORMANCE
+*/
+	//glGenTextures(1,&texName);			//	assigns a name for the texture from the texname array
+	//glBindTexture(GL_TEXTURE_2D,texName);		//	create a texture object and assigns a name  
+/*	//texture parameters
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);//	extend the texture in S coord
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);//	and T too
+	//	REVIEW IF THIS  FILTERS ARE NEEDED WITH GL_TEXTURE_RECTANGLE_NV
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);	//	on view magnification
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST); 	//	on view mimimization
+*/	
+	//glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,512,512,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	//glEnable(GL_TEXTURE_2D);
+	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);// how to place the texture
+	//glBindTexture(GL_TEXTURE_2D,texName);
+	glEnable(GL_TEXTURE_2D);
+
+	Fr=C1->Execute();
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,512,512,0,GL_RGB,GL_UNSIGNED_BYTE,Fr.pData->data[0]);
+	//glTexSubImage2D(GL_TEXTURE_2D,0,0,0,512,512,GL_RGB,GL_UNSIGNED_BYTE,Fr.pData->data[0]);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0,0.0);glVertex3f( -512.0,  512.0,0.0);
+		glTexCoord2f(0.0,1.0);glVertex3f( -512.0, -512.0,0.0);
+		glTexCoord2f(1.0,1.0);glVertex3f(  512.0, -512.0,0.0);
+		glTexCoord2f(1.0,0.0);glVertex3f(  512.0,  512.0,0.0);
+	glEnd();
+	
+	//glDisable(GL_TEXTURE_2D);
+	glPopMatrix();
+	
+}
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void update_texture(void *data, SoSensor*)
+{
+	Export_Frame Fr;		//	structure for save the frames
+	//void *pboMemory;
+	
+	glPushMatrix();
+	//	load texture data with parameter, this is important for the good
+	//	transfer of data to the GPU card, for detailed explanation see pag 370 from
+	//	the openGl programming book
+	Fr=C1->Execute();	//	get data from remote site using a functor
+				//	to call Get_Image in the STREAM class
+	//glPushMatrix();
+
+	// Reset the contents of the texSize-sized buffer object
+        
+	//glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,sizeof(Fr.pData->data[0]),NULL,GL_STREAM_DRAW_ARB); 
+							//allocate a chunk of memory using a PBO pixel_buffer_object 
+ 							// view Fast Texture Transfer, using VBOs articles
+							// from nvidia developer web site
+							// see also the reference to the lesson 45 NeHe web site
+							// openGL tutorials dec 2006
+
+	// Map the texture image buffer (the contents of which
+        // are undefined due to the previous glBufferData)
+        /*pboMemory = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,
+                                    GL_WRITE_ONLY_ARB);*/
+
+        // Modify (sub-)buffer data
+        //memcpy(pboMemory, Fr.pData->data[0], 786432);
+
+        // Unmap the texture image buffer
+       // glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+
+        // Update (sub-)teximage from texture image buffer
+	//glEnable(GL_TEXTURE_2D);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0,
+                     GL_RGB, GL_UNSIGNED_BYTE, Fr.pData->data[0]);
+	
+       // glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 512, 512,
+        //                   GL_RGB, GL_UNSIGNED_BYTE, Fr.pData->data[0]);
+	/*
+        // Draw textured geometry
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0,0.0);glVertex3f( -512.0,  512.0,0.0);
+	    glTexCoord2f(0.0,1.0);glVertex3f( -512.0, -512.0,0.0);
+	    glTexCoord2f(1.0,1.0);glVertex3f(  512.0, -512.0,0.0);
+	    glTexCoord2f(1.0,0.0);glVertex3f(  512.0,  512.0,0.0);
+        glEnd();
+	*/
+	glPopMatrix();
+	
+	
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 //		MAIN PROGRAM
 //		user input: .\client rtsp://sonar:7070/cam1 rtsp://sonar:7070/cam2
 
 int main(int argc,char **argv)
+//int main()
 {
 try{	
+	/*
+	//	test openGL version
+	//	get the openGL version being used
+	printf("openGL version is: %s\n",glGetString);
+	printf("openGL vendor is: %s\n",glGetString(GL_VENDOR));
+	printf("openGL renderer is: %s\n",glGetString(GL_RENDERER));
+	printf("openGL version is: %s\n",glGetString(GL_VERSION));
+	printf("openGL extension are: %s\n",glGetString(GL_EXTENSIONS));
+*/
+	//	Start setup of cameras
+
+
 	IMAGE set_format;					/*	set the format to use in the image
 									there are 2 formats:
 									CUT_IMAGE 
@@ -1083,7 +1278,7 @@ try{
 	//;
 	const char *camL ="rtsp://sonar:7070/cam0";//argv[1];		//	
 	const char *camR ="rtsp://sonar:7070/cam3";//argv[2];						
-
+	
 	STREAM camara1;						//  	create an stream object
 	
 	myfunctor<STREAM> D1(&camara1,&STREAM::getImage);	//	this is a functor, some as a pointer to 
@@ -1101,20 +1296,29 @@ try{
 	camara2.Init_Session(camR,set_format);
 	// ******************************************************************************************** 
 	//		Graphics Scene
+
 	
 	// Initializes SoQt library (and implicitly also the Coin and Qt
     	// libraries). Returns a top-level / shell Qt window to use.
     	QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
-
+	//QWidget *mainwin = SoQt::init(argv[0]);
 
 	//	create global variable to show a text with the fps value for each stream
 	SoSFFloat *FpsL = (SoSFFloat*)SoDB::createGlobalField(SbName("FpsL"),SoSFFloat::getClassTypeId());
 	SoSFFloat *FpsR = (SoSFFloat*)SoDB::createGlobalField(SbName("FpsR"),SoSFFloat::getClassTypeId());
 	
-
 	SoSeparator *root = new SoSeparator;
     	root->ref();
 
+	//	insert opengl calls using SoCallbacks
+	SoCallback *initTextures = new SoCallback;
+	SoCallback *drawPlane = new SoCallback();
+	initTextures->setCallback(init_Texture);
+	drawPlane->setCallback(draw_texture);
+
+	root->addChild(initTextures);
+	root->addChild(drawPlane);
+	
 	//	add  camera and lights
 	/*
 	SoPerspectiveCamera *mycam = new SoPerspectiveCamera;
@@ -1125,15 +1329,9 @@ try{
 	*/
 //	Add the transparency node, used to create the augmented reality appareance
 	
-	
-
-	
-	
-
-
 
 	//	MAKE A PLANE FOR IMAGE 
-
+/*
 	SoGroup *plane = new SoGroup;
 	
 	SoCoordinate3 *Origin = new SoCoordinate3;
@@ -1188,7 +1386,7 @@ try{
 	
 	//	ADD THE IMAGE FROM THE FIRST CAMERA
 	SoTexture2  *leftImage = new SoTexture2;
-	leftImage->filename.setValue("");	// this set is for use an image from memory in place of a file */
+	leftImage->filename.setValue("");	// this set is for use an image from memory in place of a file 
 	
 	SoTransform *leftTransform = new SoTransform;
 	leftTransform->translation.setValue(-256,0.0,0.0);
@@ -1204,7 +1402,7 @@ try{
 	FPSL->justification.setValue("LEFT");
 	FPSL->spacing = 1;
 	FPSL->width =80;
-	*/
+	
 	SoText2 *FPSL = new SoText2;
 	//FPSL->string = 'li%fpsL';
 	//FPSL->string= "esto es una prueba";
@@ -1218,8 +1416,6 @@ try{
 	//	ADD THE IMAGE FROM THE SECOND CAMERA
 	SoTexture2 *rightImage = new SoTexture2;
 	rightImage->filename.setValue("");
-	
-	
 
 	SoTransform *rightTransform = new SoTransform;
 	rightTransform->translation.setValue(256,0.0,0.0);
@@ -1241,30 +1437,36 @@ try{
 
 	root->addChild(leftPlane);		// 
 	root->addChild(rightPlane);
-
+*/
 	//****************************************************************************
 	//	setup timer sensor for recursive image updating 
-
+/*
 	SoTimerSensor *timerL = new SoTimerSensor(updateL,leftImage);//leftImage
 	timerL->setBaseTime(SbTime::getTimeOfDay()); 	//	useconds resolution
 	timerL->setInterval(1.0/25.0);//	 	//	interval 40 ms = 25fps
 	timerL->schedule();				//	enable timer		
 
-	
+	/*
 	SoTimerSensor *timerR = new SoTimerSensor(updateR,rightImage);//
 	//
 	timerR->setBaseTime(SbTime::getTimeOfDay());	//	useconds resolution
 	timerR->setInterval(1.0/25.0);			//	set interval 40 ms = 25fps
 	timerR->schedule();				//	enable timer
-	
+	*/
 	//****************************************************************************
+	
+	SoTimerSensor *timerL = new SoTimerSensor();	//	default constructor 1/30 second
+	timerL->setFunction(update_texture);		//	set the callback function
+	//timerL->setData((void*)texName);
+	timerL->setBaseTime(SbTime::getTimeOfDay());	//	useconds resolution
+	timerL->setInterval(1.0/25.0);			//	set fps =25
+	timerL->schedule();				// 	enable timer
 
 	/*
 	SoTransform *t1 = new SoTransform;
 	t1->translation.setValue(-128,0,0);
 	root->addChild(t1);
 	
-
 	SoCube *cube = new SoCube;
 	cube->width = 200;
 	cube->height = 200;
@@ -1274,15 +1476,15 @@ try{
 	SoTransparencyType *Trans1 = new SoTransparencyType;
 	Trans1->value.setValue(SoTransparencyType::ADD);
 	SoMaterial *mat = new SoMaterial;
-	mat->transparency.setValue(0.05);
+	mat->transparency.setValue(0.2);
 	mat->diffuseColor.setValue(0.0,1.0,0.0);
 
 	SoCube *Cube = new SoCube;
-	Cube->height.setValue(80.0);
-	Cube->width.setValue(180.0);
+	Cube->height.setValue(380.0);//380
+	Cube->width.setValue(80.0);//80
 	Cube->depth.setValue(1.0);
 	SoSphere *ball = new SoSphere;
-	ball->radius.setValue(75.0f);
+	ball->radius.setValue(120.0f);//120
 	
 	SoSeparator *Overlay = new SoSeparator;
 	//SoBaseColor *Color1 = new SoBaseColor;
@@ -1290,33 +1492,32 @@ try{
 	
 	SoTransform *T1 = new SoTransform;
 	SoTransform *T2 = new SoTransform;
+	SoRotation *R1 = new SoRotation;
 	//T1->translation.setValue(300.0,-107.0,0.0);
-	T1->translation.setValue(285.0,-103.0,100.0);
-	T2->translation.setValue(0.0,0.0,-60.0);
+	//T1->translation.setValue(-100.0,-140.0,100.0);
+	//T2->translation.setValue(-120.0,80.0,-60.0);
+	T1->translation.setValue(-205.0,-40.0,100.0);
+	T2->translation.setValue(105.0,-80.0,-120.0);
+	R1->rotation.setValue(SbVec3f(0,0,1),50.0);
 
 	Overlay->addChild(Trans1);
 	Overlay->addChild(mat);
 	Overlay->addChild(T1);
-	Overlay->addChild(ball);
+	Overlay->addChild(R1);
+	Overlay->addChild(Cube);
 	Overlay->addChild(T2);
 	SoMaterial *mat2 = new SoMaterial;
 	mat2->diffuseColor.setValue(0.0,1.0,0.0);
 	Overlay->addChild(mat2);
-	//Overlay->addChild(Cube);
+	Overlay->addChild(ball);
 
 	root->addChild(Overlay);
 
 
      	SoTransform *myTrans = new SoTransform;
+	myTrans->translation.setValue(0.0,0.0,200.0);
 	root->addChild(myTrans);
-   	myTrans->translation.setValue(0.0,0.0,200.0);
-
-
-
-
-
-
-
+   	
 	/*
 	SoQtRenderArea *render =new SoQtRenderArea(mainwin);
 	mycam->viewAll(root,render->getViewportRegion());
@@ -1330,9 +1531,9 @@ try{
 	*/
 	
 	// Use one of the convenient SoQt viewer classes.
-	SoQtExaminerViewer * eviewer = new SoQtExaminerViewer(mainwin);
+	SoQtExaminerViewer *eviewer = new SoQtExaminerViewer(mainwin);
     	eviewer->setSceneGraph(root);
-	/*
+	
 	//***********************************************
 	//	test for rendering bottleneck
 	//***********************************************
@@ -1341,7 +1542,7 @@ try{
 	renderOff->addChild(root);
 	eviewer->setSceneGraph(renderOff);
 	//***********************************************
-	*/
+	
     	eviewer->show();
 	// Pop up the main window.
     	SoQt::show(mainwin);

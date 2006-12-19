@@ -3,9 +3,9 @@
 
 //	Author:		Henry Portilla
 //	Date:		june/2006
-//	Modified:	sept/06
+//	Modified:	December/06
 
-//	Thanks:		
+//	Thanks:		GOD
 
 //	Description: 	this program uses the live555 libraries 
 			to make a client to communicate with spook video server
@@ -51,6 +51,7 @@
 #include <Inventor/nodes/SoMaterial.h>
 #include <Inventor/nodes/SoCube.h>
 #include <Inventor/nodes/SoTransform.h>
+#include <Inventor/nodes/SoRotation.h>
 #include <Inventor/nodes/SoSphere.h>
 #include <Inventor/nodes/SoGroup.h>
 #include <Inventor/nodes/SoSeparator.h>
@@ -68,9 +69,13 @@
 #include <Inventor/sensors/SoNodeSensor.h>		// detect changes of nodes
 #include <Inventor/sensors/SoTimerSensor.h>		// repeat cycles every time
 
-#include <Inventor/nodes/SoCallback.h>			// to use opengl
+//	Other inventor components
+
+#include <Inventor/elements/SoCacheElement.h>		// to invalidate cache
+
+#include <Inventor/nodes/SoCallback.h>			// to use with opengl
 #include <GL/gl.h>
-//#include <GL/glext.h>					//GL extensions
+#include <GL/glext.h>					// GL extensions
 //*********************************************************************************
 //	C/C++ libraries
 #include <cstdlib>
@@ -126,6 +131,20 @@ typedef void (Close)(void *clientData);
 
 // timeval structure : used for get the time of arrival of frames
 typedef timeval TIME;
+///////////////////////////////////////////////////////////////////////////
+//	OPENGL variables
+static GLuint texName;			//	to assign textures names in openGL
+GLuint bufferID;			//	PBO (pixel_buffer_object) name	
+//	OPENGL EXTENSIONS       
+
+//	define procedures for PBO according to glext.h
+PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;	// define a glGenBufferARB according to opengl Extensions procedures
+PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;	// define an association function for the PBO (pixel buffer object)
+PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;	// define load of data procedure
+PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;// delete the object
+PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL; 	// pointer to memory of the PBO
+PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;// releases the mapping
+
 
 ///////////////////////////////////////////////////////////////////////////
 //	
