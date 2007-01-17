@@ -22,5 +22,5 @@ client_LDADD = \
 
 
 
-client_SOURCES = client.cpp
-noinst_HEADERS = client.h
+client_SOURCES = client.cpp SoStereoTexture.cpp
+noinst_HEADERS = client.h SoStereoTexture.h

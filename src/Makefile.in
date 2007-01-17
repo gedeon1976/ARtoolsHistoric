@@ -135,7 +135,6 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 bin_PROGRAMS = client
-client_SOURCES = client.cpp
 
 # set the include path found by configure
 INCLUDES = -I/usr/include/Inventor/Qt -I/usr/share/qt3/include \
@@ -146,13 +145,14 @@ INCLUDES = -I/usr/include/Inventor/Qt -I/usr/share/qt3/include \
 
 
 # the library search path.
-noinst_HEADERS = client.h
-
 AM_CXXFLAGS = -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1
 client_LDADD = \
 	-L/home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -L/home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a \
 	-L/home/portilla/Live/live/groupsock/libgroupsock.a -L/home/portilla/Live/live/liveMedia/libliveMedia.a
 
+
+client_SOURCES = client.cpp SoStereoTexture.cpp
+noinst_HEADERS = client.h SoStereoTexture.h
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -161,7 +161,7 @@ CONFIG_CLEAN_FILES =
 bin_PROGRAMS = client$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_client_OBJECTS = client.$(OBJEXT)
+am_client_OBJECTS = client.$(OBJEXT) SoStereoTexture.$(OBJEXT)
 client_OBJECTS = $(am_client_OBJECTS)
 client_DEPENDENCIES =
 client_LDFLAGS =
@@ -169,7 +169,8 @@ client_LDFLAGS =
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/client.Po
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/SoStereoTexture.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/client.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) \
@@ -232,6 +233,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SoStereoTexture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
 
 .cpp.o:

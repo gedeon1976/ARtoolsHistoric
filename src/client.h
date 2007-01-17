@@ -3,9 +3,9 @@
 
 //	Author:		Henry Portilla
 //	Date:		june/2006
-//	Modified:	December/06
+//	Modified:	sept/06
 
-//	Thanks:		GOD
+//	Thanks:		
 
 //	Description: 	this program uses the live555 libraries 
 			to make a client to communicate with spook video server
@@ -32,7 +32,7 @@
 //	include coin libraries
 #include <Inventor/Qt/SoQt.h>
 #include <Inventor/Qt/SoQtRenderArea.h>
-
+#include <Inventor/SoInput.h>				//	to open iv files
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
 #include <Inventor/SoDB.h>				//	classes to see the graphic scene
 #include <Inventor/fields/SoSFFloat.h>			// 	contains a float point value
@@ -51,8 +51,10 @@
 #include <Inventor/nodes/SoMaterial.h>
 #include <Inventor/nodes/SoCube.h>
 #include <Inventor/nodes/SoTransform.h>
+#include <Inventor/nodes/SoTransformation.h>
 #include <Inventor/nodes/SoRotation.h>
 #include <Inventor/nodes/SoSphere.h>
+#include <Inventor/nodes/SoCylinder.h>
 #include <Inventor/nodes/SoGroup.h>
 #include <Inventor/nodes/SoSeparator.h>
 #include <Inventor/nodes/SoTransparencyType.h>		//  Only coin compliant, not in the original SGI version
@@ -69,13 +71,14 @@
 #include <Inventor/sensors/SoNodeSensor.h>		// detect changes of nodes
 #include <Inventor/sensors/SoTimerSensor.h>		// repeat cycles every time
 
-//	Other inventor components
+#include <Inventor/nodes/SoCallback.h>			// to use opengl
 
-#include <Inventor/elements/SoCacheElement.h>		// to invalidate cache
 
-#include <Inventor/nodes/SoCallback.h>			// to use with opengl
-#include <GL/gl.h>
-#include <GL/glext.h>					// GL extensions
+
+//#include <GL/gl.h>					
+//#include <GL/glext.h>					//GL extensions
+
+				
 //*********************************************************************************
 //	C/C++ libraries
 #include <cstdlib>
@@ -131,12 +134,12 @@ typedef void (Close)(void *clientData);
 
 // timeval structure : used for get the time of arrival of frames
 typedef timeval TIME;
-///////////////////////////////////////////////////////////////////////////
 //	OPENGL variables
-static GLuint texName;			//	to assign textures names in openGL
-GLuint bufferID;			//	PBO (pixel_buffer_object) name	
-//	OPENGL EXTENSIONS       
+//static GLuint texName;			//	to assign textures names in openGL
 
+//GLuint bufferID;			//	PBO (pixel_buffer_object) name	
+//	OPENGL EXTENSIONS       
+/*
 //	define procedures for PBO according to glext.h
 PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;	// define a glGenBufferARB according to opengl Extensions procedures
 PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;	// define an association function for the PBO (pixel buffer object)
@@ -144,8 +147,7 @@ PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;	// define load of data procedure
 PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;// delete the object
 PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL; 	// pointer to memory of the PBO
 PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;// releases the mapping
-
-
+*/
 ///////////////////////////////////////////////////////////////////////////
 //	
 class TFunctor				//	abstract class
@@ -318,7 +320,7 @@ static int ID1;
 AVFormatContext	*pFormatCtx;		//	to save the file and its data
 int		decodeOK;		//	to access video stream within the file
 AVCodecContext	*pCodecCtx;		//	to get the info of codec used in the file
-AVCodec		*pCodec;		//	to get thfriend e codec to decode the file
+AVCodec		*pCodec;		//	to get codec to decode the file
 AVFrame		*pFrame;		//	to get raw frame of video in format YUV?
 AVFrame		*pFrameCrop;		//	to cut an image
 AVFrame		*pFrameRGBA;		//	to convert the frame got to RGB format, native format for opengl
@@ -369,7 +371,7 @@ int rtsp_Buffering(int n);		//	Buffer for get n frames at Start of reception, us
 //static
 timeval timeNow();		//	To save time of arrival of the frames
 int timeNow2();				//	Show the actual time using getoftimeday with microseconds resolution
-double skew(Frame N, Frame N_1);	//	Calculates skew between sender and receiver, See Colin Perkins Book on RTP for meaning
+  double skew(Frame N, Frame N_1);	//	Calculates skew between sender and receiver, See Colin Perkins Book on RTP for meaning
 
 					//	these two function are used to save the frame in a structure
 					//	these are use so because the use afterReading is an static function

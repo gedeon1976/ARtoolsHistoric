@@ -36,15 +36,15 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_triplet = i686-pc-linux-gnu
-ACLOCAL = ${SHELL} /home/portilla/3T/missing --run aclocal-1.7
+ACLOCAL = ${SHELL} /home/portilla/3Dnodes/missing --run aclocal-1.7
 AMDEP_FALSE = #
 AMDEP_TRUE = 
-AMTAR = ${SHELL} /home/portilla/3T/missing --run tar
+AMTAR = ${SHELL} /home/portilla/3Dnodes/missing --run tar
 AR = ar
-AUTOCONF = ${SHELL} /home/portilla/3T/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/portilla/3T/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/portilla/3T/missing --run automake-1.7
-AWK = mawk
+AUTOCONF = ${SHELL} /home/portilla/3Dnodes/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/portilla/3Dnodes/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/portilla/3Dnodes/missing --run automake-1.7
+AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
@@ -63,8 +63,8 @@ ECHO_N = -n
 ECHO_T = 
 EGREP = /bin/grep -E
 EXEEXT = 
-F77 = 
-FFLAGS = 
+F77 = g77
+FFLAGS = -g -O2
 GREP = /bin/grep
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -76,7 +76,7 @@ LIBS =
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/portilla/3T/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/portilla/3Dnodes/missing --run makeinfo
 OBJEXT = o
 PACKAGE = client
 PACKAGE_BUGREPORT = 
@@ -92,7 +92,7 @@ STRIP = strip
 VERSION = 0.1
 ac_ct_CC = gcc
 ac_ct_CXX = g++
-ac_ct_F77 = 
+ac_ct_F77 = g77
 am__fastdepCC_FALSE = #
 am__fastdepCC_TRUE = 
 am__fastdepCXX_FALSE = #
@@ -119,7 +119,7 @@ host_vendor = pc
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = /home/portilla/3T/install-sh
+install_sh = /home/portilla/3Dnodes/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -135,7 +135,6 @@ sharedstatedir = ${prefix}/com
 sysconfdir = ${prefix}/etc
 target_alias = 
 bin_PROGRAMS = client
-client_SOURCES = client.cpp
 
 # set the include path found by configure
 INCLUDES = -I/usr/include/Inventor/Qt -I/usr/share/qt3/include \
@@ -146,13 +145,14 @@ INCLUDES = -I/usr/include/Inventor/Qt -I/usr/share/qt3/include \
 
 
 # the library search path.
-noinst_HEADERS = client.h
-
 AM_CXXFLAGS = -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1
 client_LDADD = \
 	-L/home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -L/home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a \
 	-L/home/portilla/Live/live/groupsock/libgroupsock.a -L/home/portilla/Live/live/liveMedia/libliveMedia.a
 
+
+client_SOURCES = client.cpp SoStereoTexture.cpp
+noinst_HEADERS = client.h SoStereoTexture.h
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -161,7 +161,7 @@ CONFIG_CLEAN_FILES =
 bin_PROGRAMS = client$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_client_OBJECTS = client.$(OBJEXT)
+am_client_OBJECTS = client.$(OBJEXT) SoStereoTexture.$(OBJEXT)
 client_OBJECTS = $(am_client_OBJECTS)
 client_DEPENDENCIES =
 client_LDFLAGS =
@@ -169,7 +169,8 @@ client_LDFLAGS =
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-DEP_FILES = ./$(DEPDIR)/client.Po
+DEP_FILES = ./$(DEPDIR)/SoStereoTexture.Po \
+	./$(DEPDIR)/client.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) \
@@ -232,6 +233,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ./$(DEPDIR)/SoStereoTexture.Po
 include ./$(DEPDIR)/client.Po
 
 .cpp.o:

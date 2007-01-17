@@ -140,6 +140,10 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign 1.4
 
 SUBDIRS = src
+AM_CXXFLAGS = -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1
+INCLUDES = -I/usr/include/Inventor/Qt -I/usr/share/qt3/include\
+	-I/usr/include/qt3
+
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
