@@ -50,9 +50,28 @@ SoStereoTexture::SoStereoTexture()
 	pthis->image_R = NULL;
 
 	//	if is the first time the constructor is called
-	//	setup textures
+	//	setup opengl extensions
 	if (SO_NODE_IS_FIRST_INSTANCE())
 	{
+	//	USING OPENGL EXTENSIONS       
+		
+	//	define procedures for PBO according to glext.h
+	//	use glx.h to do the correct binding through glXGetProcAddress(GLubyte*) in linux
+	//	and to use the opengl extensions
+	
+
+	// define a glGenBufferARB according to opengl Extensions procedures
+		glGenBuffersARB = (PFNGLGENBUFFERSPROC)glXGetProcAddress((const unsigned char*)"glGenBuffersARB");	
+	// define an association function for the PBO (pixel buffer object)
+		glBindBufferARB = (PFNGLBINDBUFFERPROC)glXGetProcAddress((const unsigned char*)"glBindBufferARB");	
+	// define load of data procedure
+		glBufferDataARB = (PFNGLBUFFERDATAPROC)glXGetProcAddress((const unsigned char*)"glBufferDataARB");	
+	// delete the object
+		glDeleteBuffersARB = (PFNGLDELETEBUFFERSPROC)glXGetProcAddress((const unsigned char*)"glDeleteBuffersARB");
+	// pointer to memory of the PBO
+		glMapBufferARB = (PFNGLMAPBUFFERPROC)glXGetProcAddress((const unsigned char*)"glMapBufferARB"); 	
+	// releases the mapping	
+		glUnmapBufferARB = (PFNGLUNMAPBUFFERPROC)glXGetProcAddress((const unsigned char*)"glUnmapBufferARB");
 		
 	}
 }
@@ -68,6 +87,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 {
 	// acces the state from the  action
 	//SoState *state = action->getState();
+	const unsigned char *version;
 	static GLuint texName;			//	texture name
 	GLuint bufferID;			//	PBO (pixel_buffer_object) name	
 	void *pboMemory;
@@ -98,17 +118,27 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 	glPushMatrix();			//	save openGl state
 
+	version = glGetString(GL_VERSION);
+	printf("The openGL version is %s\n",version);
+	//	see for opengl version
+
+
 	//	using PBO according to the extension specification
 
 	//	start with a null image
-	//glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
-      //  glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
-      //                      GL_RGB, GL_UNSIGNED_BYTE, NULL);	
+	//glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, 0);
+        // glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
+	//                           GL_RGB, GL_UNSIGNED_BYTE, NULL);	
 
         // Create and bind texture image buffer object
 
-        //glGenBuffersARB(1, &bufferID);
-        //glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, bufferID);
+	glGenBuffersARB(1, &bufferID);
+        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, bufferID);
+	//	reset contents of PBO
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW);
+
+ 	//glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
+	//                           GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
 	// Setup texture environment
 	
@@ -116,9 +146,11 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	glShadeModel(GL_FLAT);				//	solid colors not shading
 	glEnable(GL_DEPTH_TEST);			//	enable depth test?
 	//	This function configure how the pixels are unpacked from memory
-	glPixelStorei(GL_UNPACK_ALIGNMENT,1);		// REVIEW FOR PERFORMANCE
-	glGenTextures(1,&texName);			//	assigns a name for the texture from the texname array
-	glBindTexture(GL_TEXTURE_RECTANGLE_NV,texName);		//	create a texture object and assigns a name  
+	//glPixelStorei(GL_UNPACK_ALIGNMENT,1);		// 	REVIEW FOR PERFORMANCE, but this use boundaries of 1 Byte
+							// 	in test this is the better	
+	//glGenTextures(1,&texName);			//	assigns a name for the texture from the texname array
+							//	create a texture object and assigns a name  
+	//glBindTexture(GL_TEXTURE_RECTANGLE_NV,texName);		
 	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);// how to place the texture
 	//texture parameters
 	glTexParameteri(GL_TEXTURE_RECTANGLE_NV,GL_TEXTURE_WRAP_S,GL_CLAMP);//	extend the texture in S coord
@@ -142,28 +174,30 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 							// openGL tutorials dec 2006
 	*/
 
-	//	reset contents of PBO
-	//glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,720*576*3,NULL,GL_STREAM_DRAW_ARB);
-	
-	//	define a pointer that maps to memory at the GPU memory card						
-
-	//pboMemory = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,bufferID);
-
 	//	modify the data in the GPU memory
 
 	SbVec2s size; int components;
 	size.setValue(720,576);
 	components=3;
 
-	//memcpy(pboMemory,pthis->imageL.getValue(size,components),720*576*3);	
+
+	//	reset contents of PBO
+	//glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW);
+	
+	//	define a pointer that maps to memory at the GPU memory card						
+
+	pboMemory = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT,GL_WRITE_ONLY);
+
+	
+	memcpy(pboMemory,pthis->imageL.getValue(size,components),720*576*3);	
 
 	//	Unmap the PBO buffer	
 
-	//glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
 
-	//	DRAW THE TEXTURE
+	//	DRAW THE TEXTURE//pthis->imageL.getValue(size,components)
 
-	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
+	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0,0.0);
 			glVertex3f(-width.getValue(), heigh.getValue()/2.0,0.0);
@@ -174,6 +208,14 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		glTexCoord2f(width.getValue(),0.0);
 			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
 	glEnd();
+
+	
+
+	//	Delete the buffer	
+
+	glDeleteBuffersARB(1,&bufferID);
+
+	//glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, 0);
 /*
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
 	glBegin(GL_QUADS);

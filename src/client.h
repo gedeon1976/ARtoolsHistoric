@@ -137,7 +137,7 @@ typedef timeval TIME;
 //	OPENGL variables
 //static GLuint texName;			//	to assign textures names in openGL
 
-//GLuint bufferID;			//	PBO (pixel_buffer_object) name	
+//GLuint bufferID;				//	PBO (pixel_buffer_object) name	
 //	OPENGL EXTENSIONS       
 /*
 //	define procedures for PBO according to glext.h

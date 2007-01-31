@@ -17,6 +17,7 @@
 
 #include <GL/gl.h>
 #include <GL/glext.h>				// 	GL extensions
+#include <GL/glx.h>				//	Binding pointer to opengl in linux
 
 #include  <Inventor/SbLinear.h>			//	vectors, planes and others
 #include  <Inventor/fields/SoSFFloat.h>
@@ -25,19 +26,8 @@
 #include  <Inventor/nodes/SoShape.h>
 //	note SoSubNode.h has the macros definitions to
 //	create the new nodes
-
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 //GLuint bufferID;				//	PBO (pixel_buffer_object) name	
-//	OPENGL EXTENSIONS       
-/*
-//	define procedures for PBO according to glext.h
-PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;	// define a glGenBufferARB according to opengl Extensions procedures
-PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;	// define an association function for the PBO (pixel buffer object)
-PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;	// define load of data procedure
-PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;// delete the object
-PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL; 	// pointer to memory of the PBO
-PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;// releases the mapping
-
-*/
 
 class SoStereoTexture :public SoShape
 {
@@ -86,6 +76,16 @@ private:
 //	normals of quads
 SoStereoTexture *pthis;
 GLuint texName;			//	texture name
+
+//	OPENGL EXTENSIONS       
+
+//	define procedures for PBO according to glext.h
+PFNGLGENBUFFERSPROC glGenBuffersARB;	// define a glGenBufferARB according to opengl Extensions procedures
+PFNGLBINDBUFFERPROC glBindBufferARB;	// define an association function for the PBO (pixel buffer object)
+PFNGLBUFFERDATAPROC glBufferDataARB;	// define load of data procedure
+PFNGLDELETEBUFFERSPROC glDeleteBuffersARB;// delete the object
+PFNGLMAPBUFFERPROC glMapBufferARB; 	// pointer to memory of the PBO
+PFNGLUNMAPBUFFERPROC glUnmapBufferARB;// releases the mapping
 
 // destructor
 virtual ~SoStereoTexture();

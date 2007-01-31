@@ -1052,9 +1052,9 @@ try{
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// return a structure that contain the image, size, width and height
 	FrL=C1->Execute();
-	//FrR=C2->Execute();			//	call getImage() using a functor
+	FrR=C2->Execute();			//	call getImage() using a functor
 	Stereo->imageL.setValue(SbVec2s(720,576),3,FrL.pData->data[0]);
-	//Stereo->imageR.setValue(SbVec2s(720,576),3,FrR.pData->data[0]);
+	Stereo->imageR.setValue(SbVec2s(720,576),3,FrR.pData->data[0]);
 	//Stereo->imageL = Fr.pData->data[0];	
 	//leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB 4 = RGBA
 		
@@ -1140,7 +1140,7 @@ try{
 //	Add the transparency node, used to create the augmented reality appareance
 	
 	// read the tx90 model
-/*
+
 	SoInput TX90;
 	SoSeparator *tx = new SoSeparator;
 		
@@ -1149,7 +1149,7 @@ try{
 		tx = SoDB::readAll(&TX90);
 	}
 
-*/	
+	
     
 	//	MAKE A PLANE FOR IMAGE 
 /*
@@ -1363,15 +1363,16 @@ try{
 	OverlayR->addChild(T4);
 	OverlayR->addChild(CubeR);
 
-	//root->addChild(OverlayL);
-	//root->addChild(OverlayR);
+	root->addChild(OverlayL);
+	root->addChild(OverlayR);
 
-	/*
+*/
+/*
 	SoTransform *tRobot = new SoTransform;
 	//SoTransform *r1 = new SoTransform;
 	//tRobot->translation.setValue(-100.0,-100.0,0.0);
 	tRobot->rotation.setValue(1.0,0.0,0.0,180*(M_PI/180));
-	r1->rotation.setValue(0.0,1.0,0.0,30*(M_PI/180));
+//	r1->rotation.setValue(0.0,1.0,0.0,30*(M_PI/180));
 	root->addChild(tRobot);
 	//root->addChild(r1);
 	root->addChild(tx);
