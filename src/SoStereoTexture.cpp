@@ -89,8 +89,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	//SoState *state = action->getState();
 	const unsigned char *version;
 	static GLuint texName;			//	texture name
-	GLuint bufferID;			//	PBO (pixel_buffer_object) name	
-	void *pboMemory;
+	GLuint bufferID[2];			//	PBO (pixel_buffer_object) name	
+	void *pboMemoryL,*pboMemoryR;
 	/*
 	int c;
 	static GLubyte subImage[512][512][3];
@@ -132,10 +132,15 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
         // Create and bind texture image buffer object
 
-	glGenBuffersARB(1, &bufferID);
-        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, bufferID);
+	glGenBuffersARB(1, &bufferID[0]);
+        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, bufferID[0]);
 	//	reset contents of PBO
-	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW);
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW_ARB);
+
+	glGenBuffersARB(1, &bufferID[1]);
+        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, bufferID[1]);
+	//	reset contents of PBO
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW_ARB);
 
  	//glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
 	//                           GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -185,16 +190,13 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	//glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW);
 	
 	//	define a pointer that maps to memory at the GPU memory card						
-
-	pboMemory = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT,GL_WRITE_ONLY);
-
+	pboMemoryL = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT,GL_WRITE_ONLY);
 	
-	memcpy(pboMemory,pthis->imageL.getValue(size,components),720*576*3);	
-
+	memcpy(pboMemoryL,pthis->imageL.getValue(size,components),720*576*3);	
 	//	Unmap the PBO buffer	
-
 	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
 
+	
 	//	DRAW THE TEXTURE//pthis->imageL.getValue(size,components)
 
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
@@ -209,15 +211,17 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
 	glEnd();
 
-	
+	//	second PBO
+	pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT,GL_WRITE_ONLY);
 
-	//	Delete the buffer	
+	memcpy(pboMemoryR,pthis->imageR.getValue(size,components),720*576*3);	
 
-	glDeleteBuffersARB(1,&bufferID);
+	//	Unmap the PBO buffer	
 
-	//glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, 0);
-/*
-	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
+	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+
+
+	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0,0.0);
 			glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
@@ -228,9 +232,13 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		glTexCoord2f(width.getValue(),0.0);
 			glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
 	glEnd();
-*/
+
 	glPopMatrix();			//	restore opengl state
 
+	//	Delete the buffers
+
+	glDeleteBuffersARB(1,&bufferID[0]);
+	glDeleteBuffersARB(1,&bufferID[1]);
 //	endSolidShape(action);
 	
 }
