@@ -13,6 +13,10 @@
 	The code is based on the book: the inventor toolmaker
 */
 
+/**	
+  *	This is a code for an Inventor node made thanks to God
+
+*/
 
 #include <Inventor/SoPrimitiveVertex.h> 	// save information of each vertex point, 
 						// normal, texture coordinates, material index
@@ -49,6 +53,13 @@ SoStereoTexture::SoStereoTexture()
 	pthis->image_L = NULL;
 	pthis->image_R = NULL;
 
+	//	initialise pointers to extension
+	glBindBufferARB=NULL;
+	glBufferDataARB=NULL;
+	glDeleteBuffersARB=NULL;
+	glGenBuffersARB=NULL;
+	glMapBufferARB=NULL;
+	glUnmapBufferARB=NULL;
 	//	if is the first time the constructor is called
 	//	setup opengl extensions
 	if (SO_NODE_IS_FIRST_INSTANCE())
@@ -57,7 +68,8 @@ SoStereoTexture::SoStereoTexture()
 		
 	//	define procedures for PBO according to glext.h
 	//	use glx.h to do the correct binding through glXGetProcAddress(GLubyte*) in linux
-	//	and to use the opengl extensions
+	//	and to eanabled to use the opengl extensions
+	
 	
 
 	// define a glGenBufferARB according to opengl Extensions procedures
@@ -81,30 +93,75 @@ SoStereoTexture::~SoStereoTexture()
 }
 //	Methods
 
+//	PRIVATE METHODS
+
+GLboolean SoStereoTexture::isExtensionSupported(char *pExtensionName)
+{
+	const unsigned char *pVersion, *pstrExtensions;
+	const unsigned char *pStart;
+	unsigned char *pszWhere,*pszTerminator;
+	
+	//glPushMatrix();
+	
+	//	look for the opengl version and the extensions supported
+	pVersion = glGetString(GL_VERSION);
+//	printf("The openGL version is %s\n",pVersion);
+	//	strExtensions =glGetString(GL_EXTENSIONS);
+	//printf("The openGL extensions supported are %s\n",strExtensions);
+
+	//	look for the PBO openGL extension see pag 598 red book 5 edition
+	//ExtensionName = (const GLubyte*)"GL_EXT_pixel_buffer_object";
+	//EXT_SUPPORTED = gluCheckExtension(ExtensionName,strExtensions);
+	
+	//pExtensionName = (char*)"GL_EXT_pixel_buffer_object";
+
+	//	Extensions names should not have spaces
+	pszWhere =(unsigned char*)strchr(pExtensionName,' ');
+	if(pszWhere||pExtensionName == '\0')
+	{
+		return GL_FALSE;	//	no extension name asked.
+	}
+	//	Get the extension string
+	pstrExtensions = glGetString(GL_EXTENSIONS);
+	
+	//	Search the extensions string for an exact copy of extension queried
+
+	pStart= pstrExtensions;
+	for(;;)
+	{
+		// search for the extension in the extension string
+		pszWhere=(unsigned char*)strstr((const char*)pStart,pExtensionName);
+		if(!pszWhere)
+			break;
+		pszTerminator= pszWhere + strlen(pExtensionName);
+		if(pszWhere == pStart || *(pszWhere-1)==' ')
+		{
+			if(*pszTerminator == ' ' || *pszTerminator == '\0')
+			{
+				return GL_TRUE;
+			}
+		}
+	pStart = pszTerminator;
+	}
+	
+	//glPopMatrix();
+
+}
+
+
+//	PROTECTED METHODS
+
 //	SoGLRenderAction 
 
 void SoStereoTexture::GLRender(SoGLRenderAction *action)
 {
-	// acces the state from the  action
+	// access the state from the  action
 	//SoState *state = action->getState();
-	const unsigned char *version;
+	
 	static GLuint texName;			//	texture name
 	GLuint bufferID[2];			//	PBO (pixel_buffer_object) name	
 	void *pboMemoryL,*pboMemoryR;
-	/*
-	int c;
-	static GLubyte subImage[512][512][3];
-	for (int i=0;i<512;i++)
-	{
-		for(int j=0;j<512;j++)
-		{
-			c =(((i&0x04)==0)^((j&0x04)==0))*255;
-			subImage[i][j][0] = (GLubyte)c;
-			subImage[i][j][1] = (GLubyte)c;
-			subImage[i][j][2] = (GLubyte)255;
-		}
-	}*/
-	//imageL = (unsigned char*)subImage;
+	GLboolean isPBO;
 	// ask if this should be rendered
 	if(!shouldGLRender(action))
 	{
@@ -113,34 +170,37 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 //	beginSolidShape(action);	//	start draw object with optimizations
 					//	like backculling
 
+	// 	look for Extension supported
+
+	isPBO = isExtensionSupported("GL_EXT_pixel_buffer_object");	//	is PBO supported?
+
 	
 	//	openGL code for textures
 
-	glPushMatrix();			//	save openGl state
-
-	version = glGetString(GL_VERSION);
-	printf("The openGL version is %s\n",version);
-	//	see for opengl version
-
-
 	//	using PBO according to the extension specification
 
+if (isPBO == GL_TRUE)	
+
+{
 	//	start with a null image
 	//glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, 0);
         // glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
 	//                           GL_RGB, GL_UNSIGNED_BYTE, NULL);	
 
+	glPushMatrix();			//	save openGl state
+
+
         // Create and bind texture image buffer object
 
 	glGenBuffersARB(1, &bufferID[0]);
-        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, bufferID[0]);
+        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, bufferID[0]);
 	//	reset contents of PBO
-	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW_ARB);
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,720*576*3,NULL,GL_DYNAMIC_DRAW_ARB);
 
-	glGenBuffersARB(1, &bufferID[1]);
-        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, bufferID[1]);
+ 	glGenBuffersARB(1, &bufferID[1]);
+        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, bufferID[1]);
 	//	reset contents of PBO
-	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW_ARB);
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,720*576*3,NULL,GL_DYNAMIC_DRAW_ARB);
 
  	//glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
 	//                           GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -190,15 +250,14 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	//glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW);
 	
 	//	define a pointer that maps to memory at the GPU memory card						
-	pboMemoryL = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT,GL_WRITE_ONLY);
-	
+	pboMemoryL = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
+	//	write data in the GPU RAM memory
 	memcpy(pboMemoryL,pthis->imageL.getValue(size,components),720*576*3);	
 	//	Unmap the PBO buffer	
-	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
 
-	
-	//	DRAW THE TEXTURE//pthis->imageL.getValue(size,components)
-
+	//	DRAW THE LEFT IMAGE
+	//	PBO usage 
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0,0.0);
@@ -211,16 +270,19 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
 	glEnd();
 
-	//	second PBO
-	pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT,GL_WRITE_ONLY);
 
+
+	//	second PBO
+	pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
+	//	write data in the GPU RAM memory
 	memcpy(pboMemoryR,pthis->imageR.getValue(size,components),720*576*3);	
 
 	//	Unmap the PBO buffer	
 
-	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
 
-
+	//	PBO usage 
+	//	DRAW THE RIGHT IMAGE
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0,0.0);
@@ -233,12 +295,83 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
 	glEnd();
 
+	
+
 	glPopMatrix();			//	restore opengl state
 
 	//	Delete the buffers
 
 	glDeleteBuffersARB(1,&bufferID[0]);
 	glDeleteBuffersARB(1,&bufferID[1]);
+
+//	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, 0);
+
+}else
+{
+
+	glPushMatrix();
+	
+	// Setup texture environment
+	
+	glClearColor(0.0,0.0,0.0,0.0);			//	clear color to black when the buffers will be cleaned
+	glShadeModel(GL_FLAT);				//	solid colors not shading
+	glEnable(GL_DEPTH_TEST);			//	enable depth test?
+	//	This function configure how the pixels are unpacked from memory
+	//glPixelStorei(GL_UNPACK_ALIGNMENT,1);		// 	REVIEW FOR PERFORMANCE, but this use boundaries of 1 Byte
+							// 	in test this is the better	
+	//glGenTextures(1,&texName);			//	assigns a name for the texture from the texname array
+							//	create a texture object and assigns a name  
+	//glBindTexture(GL_TEXTURE_RECTANGLE_NV,texName);		
+	glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);// how to place the texture
+	//texture parameters
+	glTexParameteri(GL_TEXTURE_RECTANGLE_NV,GL_TEXTURE_WRAP_S,GL_CLAMP);//	extend the texture in S coord
+	glTexParameteri(GL_TEXTURE_RECTANGLE_NV,GL_TEXTURE_WRAP_T,GL_CLAMP);//	and T too
+	//	REVIEW IF THIS  FILTERS ARE NEEDED WITH GL_TEXTURE_RECTANGLE_NV
+	glTexParameteri(GL_TEXTURE_RECTANGLE_NV,GL_TEXTURE_MAG_FILTER,GL_NEAREST);	//	on view magnification
+	glTexParameteri(GL_TEXTURE_RECTANGLE_NV,GL_TEXTURE_MIN_FILTER,GL_NEAREST); 	//	on view mimimization
+	glEnable(GL_TEXTURE_RECTANGLE_NV);
+	glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
+                            GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+	//	define size of images
+	
+	SbVec2s size; int components;
+	size.setValue(720,576);
+	components=3;
+
+	//	DRAW THE LEFT IMAGE
+
+	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0,0.0);
+			glVertex3f(-width.getValue(), heigh.getValue()/2.0,0.0);
+		glTexCoord2f(0.0,heigh.getValue());
+			glVertex3f(-width.getValue(),-heigh.getValue()/2.0 ,0.0);
+		glTexCoord2f(width.getValue(),heigh.getValue());
+			glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
+		glTexCoord2f(width.getValue(),0.0);
+			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
+	glEnd();
+
+	//	DRAW THE RIGHT IMAGE
+
+	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0,0.0);
+			glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
+		glTexCoord2f(0.0,heigh.getValue());	
+			glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
+		glTexCoord2f(width.getValue(),heigh.getValue());
+			glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
+		glTexCoord2f(width.getValue(),0.0);
+			glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
+	glEnd();
+
+	glPopMatrix();
+		
+}
+
+	
 //	endSolidShape(action);
 	
 }
@@ -275,21 +408,4 @@ void SoStereoTexture::show()
 {
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

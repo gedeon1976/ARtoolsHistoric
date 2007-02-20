@@ -333,8 +333,11 @@ unsigned char	*image;			//	to save the RGB data to load in the texture
 //	PTHREAD library
 
 pthread_mutex_t mutexBuffer,mutexFrame;	//	mutex to syncronize the access to the data buffer 
-sem_t sem;				//	semaphores
-pthread_t camera;			//	threads ID
+
+sem_t Sem1,Sem2;			//	semaphores
+pthread_t camera;			//	threads IDs
+pthread_t render;
+
 //pthread_cond_t cond;			//	threads conditional variables
 
 /////////////////////////////////////////////////////////friend ///////////////////////////////////////////
@@ -392,11 +395,11 @@ int join_Thread();			//	wait until a thread finish
 int cancel_Thread();			//	cancel a thread
 int get_ThreadPriority();
 void rtsp_getData();			//	thread function
-void init_Semaphore(int i);		//	init the semaphore
+void init_Semaphore(int sem, int i);	//	init the semaphore
 int init_mutex();			//	init the mutex
 int lock_mutex();			//	lock the mutex
 int unlock_mutex();			//	unlock the mutex
-
+int m_global_flag;			//	flag to comtrol semaphores start
 //static int members;			//	number of cameras
 STREAM *bind_object();			//	assign correct object
 
@@ -415,11 +418,11 @@ STREAM();
 Export_Frame getImage();		//	get the last frame available from the FIFO Buffer
 
 int Init_Session(char const *URL,int ID);//	Setup the connection 
-static void *Entry_Point(void*);	//	to make thread function, Create a thread to get data from the RTSP Server
+static void *Entry_Point(void*);	//	to make a thread function, Create a thread to get data from the RTSP Server
 
-void set_Semaphore();			//	set the class semaphore
+void set_Semaphore(int sem);		//	set the semaphore signal
 //int down_Semaphore();			//	decrease the semaphore
-void wait_Semaphore();			//	wait for semaphore 
+void wait_Semaphore(int sem);	//	wait and lock the semaphore 
 
 //	
 void onClose(void *clientData);		//	on close after reading frame

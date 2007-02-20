@@ -12,12 +12,18 @@
 
 	The code is based on the book: the inventor toolmaker
 */
+/**	
+ *	This is a code for an Inventor node made thanks to God
+
+
+*/
 #ifndef	_SOSTEREOTEXTURE_H_
 #define _SOSTEREOTEXTURE_H_
 
 #include <GL/gl.h>
 #include <GL/glext.h>				// 	GL extensions
-#include <GL/glx.h>				//	Binding pointer to opengl in linux
+#include <GL/glx.h>				//	Binding extensions with pointers to opengl in linux
+						//	see opengl red book pag 715 in the 5 edition
 
 #include  <Inventor/SbLinear.h>			//	vectors, planes and others
 #include  <Inventor/fields/SoSFFloat.h>
@@ -86,6 +92,10 @@ PFNGLBUFFERDATAPROC glBufferDataARB;	// define load of data procedure
 PFNGLDELETEBUFFERSPROC glDeleteBuffersARB;// delete the object
 PFNGLMAPBUFFERPROC glMapBufferARB; 	// pointer to memory of the PBO
 PFNGLUNMAPBUFFERPROC glUnmapBufferARB;// releases the mapping
+
+//	EXTENSIONS REQUEST
+
+GLboolean isExtensionSupported(char *pExtensionName);
 
 // destructor
 virtual ~SoStereoTexture();

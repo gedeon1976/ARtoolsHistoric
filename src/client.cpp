@@ -55,6 +55,8 @@ maxRTPDataSize = RTPDataSize;				//	max size of frames
 MP4Hsize=0;
 frameCounter=0;						//	start frame counter
 ID=0;
+m_global_flag = -1;					//	flag to start semaphore synchronization
+
 
 //	Allocation of  memory to save the compressed and uncompressed frames
 	
@@ -170,7 +172,7 @@ timeval STREAM::timeNow() //
 	{
 		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
 		//printf("time arrival of frame %d was:%li.%06li\n",frameCounter,t.tv_sec,t.tv_usec);
-	//printf("time of capture was:%li.%06li from camera %d\n",t.tv_sec,t.tv_usec,ID);
+//	printf("time of capture was:%li.%06li from camera %d\n",t.tv_sec,t.tv_usec,ID);
 		//return t;
 	}else{
 		printf("error was:%i\n",errno);
@@ -247,14 +249,14 @@ int STREAM::create_Thread()
 		//printf("setup thread scope \n");
 					//	set priority to 10; max priority is = ?
 	else{
-		printf("error: \n", errno);
+		printf("error: %d \n", errno);
 	}	
 	
 	error=pthread_attr_setschedparam(&attr,&param);
 
 	if (error!=0)
 	{
-		printf("error: \n", errno);
+		printf("error: %d \n", errno);
 	}
 			
 	//	create thread
@@ -265,7 +267,7 @@ int STREAM::create_Thread()
 		printf("error creating thread \n");
 		return cod;
 	}else{
-		printf("creating thread with  a priority of %d \n",get_ThreadPriority());
+		printf("creating thread %d with a priority of %d \n",ID,get_ThreadPriority());
 		//printf("creating thread\n");
 		return cod;
 	}
@@ -312,24 +314,97 @@ int STREAM::cancel_Thread()
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void STREAM::set_Semaphore()
+void STREAM::set_Semaphore(int sem)
 {
-	sem_post(&sem);
-	printf("camera: %d  Semaphore: %d\n",ID,sem);
+	switch(sem)
+	{
+	case 1:
+		if (sem_post(&Sem1)==-1)	//	start semaphore to i value
+					//	2d parameter = 0; only shared by threads in this process(class)
+		{
+			printf("Failed to unlock or increase the semaphore %d in camera %d",Sem1,ID);
+		}else
+		{
+			printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+		}
+		
+	
+		break;
+	case 2:
+		if (sem_post(&Sem2)==-1)	//	start semaphore to i value
+					//	2d parameter = 0; only shared by threads in this process(class)
+		{
+			printf("Failed to unlock or increase the semaphore %d in camera %d",Sem2,ID);
+		}else{
+			printf("camera: %d  Semaphore: %d\n",ID,Sem2);
+		}
+
+		break;
+	}	
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void STREAM::init_Semaphore(int i)
+void STREAM::init_Semaphore(int sem,int i)
 {
-	sem_init(&sem,0,i);		//	start semaphore to i value
-					//	2d parameter = 0; only shared by threads of this process
-
+	switch(sem)
+	{
+	case 1:
+		if (sem_init(&Sem1,0,i)==-1)	//	start semaphore to i value
+					//	2d parameter = 0; only shared by threads in this process(class)
+		{
+			printf("Failed to initialize the semaphore %d in camera %d",Sem1,ID);
+		}
+		
+	
+		break;
+	case 2:
+		if (sem_init(&Sem2,0,i)==-1)	//	start semaphore to i value
+					//	2d parameter = 0; only shared by threads in this process(class)
+		{
+			printf("Failed to initialize the semaphore %d in camera %d",Sem2,ID);
+		}
+		break;
+	}
+	
+	
+	
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void STREAM::wait_Semaphore()
+void STREAM::wait_Semaphore(int sem)
 {
-	sem_wait(&sem);
-	printf("camera: %d  Semaphore: %d\n",ID,sem);
+	
+	switch(sem)
+	{
+	case 1:
+		if (sem_wait(&Sem1)==-1)	//	start semaphore to i value
+					//	2d parameter = 0; only shared by threads in this process(class)
+		{
+			printf("Failed to lock or decrease the semaphore %d in camera %d",Sem1,ID);
+		}else
+		{
+			printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+		}
+		
+	
+		break;
+	case 2:
+		if (sem_wait(&Sem2)==-1)	//	start semaphore to i value
+					//	2d parameter = 0; only shared by threads in this process(class)
+		{
+			printf("Failed to lock or decrease the semaphore %d in camera %d",Sem2,ID);
+		}else{
+			printf("camera: %d  Semaphore: %d\n",ID,Sem2);
+		}
 
+		break;
+	}	
+	
+	
+	//throw sem.count;
+/*	
+	catch(sem)
+	{
+		printf("the thread %id is blocked by a deadlock\n",ID);
+	}*/
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void STREAM::ProcessFrame(unsigned framesize, TIME presentationTime)
@@ -578,7 +653,7 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 				printf("%s\n","PLAY command was not sent");
 				return -1;
 			}else{
-				printf("%s", "PLAY command sent");
+				printf("%s", "PLAY command sent\n");
 			}
 		}else{
 			printf("%s", "CLIENT PROBLEMS");
@@ -698,14 +773,14 @@ try{
 		{
 		//	cut the left side of the image, so 720-512 = 208 
 		//	cut the top side of the image,	nothing by that 0
-			if (ID==0)		//	flag for cut image
-			{
+		//	if (ID==0)		//	flag for cut image
+		//	{
 			//	img_crop((AVPicture*)pFrameCrop,(AVPicture*)pFrame,pCodecCtx->pix_fmt,0,208);//208
-				img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,720,576);//RGB24
-			}else{
+	//			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,720,576);//RGB24
+	//		}else{
 		//	convert the image from his format to RGB
 			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,720,576);//RGB24
-			}	
+	//		}	
 		
 			//pCodecCtx->width,pCodecCtx->height);
 			//	save to a buffer
@@ -764,15 +839,15 @@ return 0;
 //	static function
 void *STREAM::Entry_Point(void *pthis)
 {
-try{
-	STREAM *pS = (STREAM*)pthis;	//	convert to class Stream to allow correct thread work
-	pS->rtsp_getData();
-	return 0;
-}
-catch(...)
-{
-	printf("%s"," Something wrong with the thread ");
-}
+	try{
+		STREAM *pS = (STREAM*)pthis;	//	convert to class Stream to allow correct thread work
+		pS->rtsp_getData();
+		return 0;
+	}
+	catch(...)
+	{
+		printf("%s"," Something wrong happened with the thread ");
+	}
 }
 
 
@@ -785,11 +860,15 @@ void STREAM::rtsp_getData()
 	double s;
 
 try{			
-	while(1)	//	threads is always in execution
+	while(1)	//	threads are always in execution
 	{
 		//usleep(delay);	//	delay
-	
-		//	LOCK THE RESOURCE
+	if (m_global_flag==0)
+	{
+		wait_Semaphore(1);
+	}
+
+	//	LOCK THE RESOURCE
 		cod = lock_mutex();
 		                           
 		if (cod!=0)	
@@ -797,14 +876,24 @@ try{
 				printf("%s\n","Error locking get RTP data");
 			}
 		else{
+	
 		//conditaugustion
 			
 			rtsp_getFrame();
-			//timeNow();		//	true capture time
+		//	printf("start decoding, camera %d\n",ID);
+		//	timeNow();		//	true capture time
 			rtsp_decode(data_RTP);
-			//timeNow();		
+		//	timeNow();
+		//	printf("finish decoding, camera %d\n",ID);		
 			//sem_post(&sem);
-			
+
+			if(InputBuffer.empty() | InputBuffer.size()>= 1 )
+			{
+				InputBuffer.push_back(data_RTP);	//	save data
+				//printf("writing frame %d from the camera %d \n",frameCounter,ID);
+				//set_Semaphore();			//	increase the semaphore
+			}
+
 			if(!InputBuffer.empty())
 				{
 				
@@ -816,41 +905,36 @@ try{
 				
 				}
 			
-
-			//	limit size of FIFO buffer
-
+			//	limit the size of FIFO buffer
 			
-			if(InputBuffer.size()<50)
-			{
-				InputBuffer.push_back(data_RTP);	//	save data
-			}
-			if(InputBuffer.size()>=50)
+			
+			if(InputBuffer.size() >= 50)
 			{ 
 				InputBuffer.pop_front();		//	delete head frame in th FIFO
 				//wait_Semaphore();			//	decrease semaphore
 			}
 			
-
-
-
-
 			//counter++;
 			//T.push(counter);
 			printf("writing frame %d from the camera %d \n",frameCounter,ID);
-		printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
+		//	printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
 		
 
 		//	WAKE UP THE OTHER THREAD: SHOW DATA THREAD
-			//cod = pthread_cond_signal(&cond[1]);
+			
 			//sem_post(&sem);
-			set_Semaphore();
+	
+	//	 	set_Semaphore();		//	send signal
 			
 		}
 		cod = unlock_mutex();
 		if (cod!=0)	
 			{printf("%s\n","Error unlocking get RTP data");}
-
-		
+	
+	if(m_global_flag==0)
+		{
+			set_Semaphore(1);
+		}
 	}
 	//return 0;
 }
@@ -875,7 +959,9 @@ try{
 	initCodecs();					//	init codecs
 	////////////////////////////////////////////////////////////////////////
 	//	Start threads and semaphores
-	init_Semaphore(0);				//	start semaphores with a  value of 0 = blocked
+	//init_Semaphore(1);				//	start semaphores with a  value of 0 = blocked
+	init_Semaphore(1,1);				//	writing semaphore
+	init_Semaphore(2,1);				//	reading semaphore
 	init_mutex();					//	start mutex for exclusion of buffers
 	
 	//int cod;					//	not used			
@@ -918,32 +1004,61 @@ catch(int status)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 Export_Frame STREAM::getImage()//dataFrame
 {
-					
-	wait_Semaphore();				//	look for semaphore, test if it is green to get the image		
-							//	of the network
-		
-					
-	Export_Frame I_Frame;
+Export_Frame I_Frame;
+int cod;
+	
+if (m_global_flag == -1)
+{
+		m_global_flag = 0;
+}
+
+if (m_global_flag==0)
+{				
+	wait_Semaphore(1);				//	look for semaphore, test if it is green to get the image		
+							//	from the network
+	//Export_Frame I_Frame;
+	char *ID_cam[2]={"LEFT","RIGTH"};
+/*	
+	//	LOCK THE RESOURCE
+	cod = lock_mutex();
+		                           
+if (cod!=0)	
+{
+	printf("%s\n","Error locking get RTP data");
+}
+else{	
+*/
 	if(!InputBuffer.empty())			//	check if buffer is not empty
 	{
 					
-		ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer
+		ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer 
+
 		I_Frame.pData = ReceivedFrame.pFrame;	//	save image
-		I_Frame.h=512;				//	width of image
-		I_Frame.w=512;				//	height of image
- 		
+		I_Frame.h=720;				//	width of image
+		I_Frame.w=576;				//	height of image
+ 	
 		InputBuffer.pop_front();		//	delete the head frame from the FIFO buffer
 		
 		//printf("FIFO size: %d\n",InputBuffer.size());
 		printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
 		
-	}else
+		
+	}
+	else
 	{
-		printf("empty buffer %d from camera %d\n", InputBuffer.size(),ID);
+			printf("Empty buffer from  %s camera, Size = %d\n",ID_cam[ID],InputBuffer.size());
 	}	
-
-	//return ReceivedFrame.image;				//	return the last frame
-	return I_Frame; 	
+/*
+}
+cod = unlock_mutex();
+if (cod!=0)	
+{printf("%s\n","Error unlocking get RTP data");}
+*/	
+	
+	set_Semaphore(1);		//	send signal increase semaphore
+}
+		//return ReceivedFrame.image;				//	return the last frame
+	 return I_Frame;
 	
 }
 TIME getTime()
@@ -1052,8 +1167,8 @@ try{
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// return a structure that contain the image, size, width and height
 	FrL=C1->Execute();
-	FrR=C2->Execute();			//	call getImage() using a functor
 	Stereo->imageL.setValue(SbVec2s(720,576),3,FrL.pData->data[0]);
+	FrR=C2->Execute();			//	call getImage() using a functor
 	Stereo->imageR.setValue(SbVec2s(720,576),3,FrR.pData->data[0]);
 	//Stereo->imageL = Fr.pData->data[0];	
 	//leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB 4 = RGBA
@@ -1073,6 +1188,12 @@ catch(...)
 //		MAIN PROGRAM
 //		user input: .\client rtsp://sonar:7070/cam1 rtsp://sonar:7070/cam2
 
+/**
+ * 
+ * @param argc 
+ * @param argv rtsp://sonar:7070
+ * @return 
+ */
 int main(int argc,char **argv)
 {
 try{	
@@ -1087,8 +1208,8 @@ try{
 
 	//;	channel 0 and 3
 	//;
-	const char *camL ="rtsp://sonar:7070/cam1";//argv[1];		//	
-	const char *camR ="rtsp://sonar:7070/cam2";//argv[2];						
+	const char *camL =argv[1];//"rtsp://sonar:7070/cam3";	//	
+	const char *camR =argv[2];//"rtsp://sonar:7070/cam0"						
 
 	STREAM camara1;						//  	create an stream object
 	
@@ -1097,7 +1218,7 @@ try{
 								//	getImage function of camara1 object
 	C1 =&D1;						//	C1 is a abstract class base for myfunctor class
 	//set_format=CUT_IMAGE;					//	with a virtual method to overload
-	set_format=NORMAL_IMAGE;
+	set_format=CUT_IMAGE;
 	camara1.Init_Session(camL,set_format);			//	start connection with url
 								//	set the format of the image
 								//	for the camera 
@@ -1111,6 +1232,7 @@ try{
 	// Initializes SoQt library (and implicitly also the Coin and Qt
     	// libraries). Returns a top-level / shell Qt window to use.
     	QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
+	//QWidget * mainwin = SoQt::init(argv[0]);
 	if (mainwin==NULL) exit(1);
 	
 	//	initialize the new nodes, required
@@ -1122,6 +1244,16 @@ try{
 	
 	SoSeparator *root = new SoSeparator;
     	root->ref();
+
+	//	add  camera and lights
+/*
+	SoPerspectiveCamera *mycam = new SoPerspectiveCamera;
+	SoDirectionalLight *Light = new SoDirectionalLight;
+
+	root->addChild(mycam);
+	root->addChild(Light);
+*/
+	//	add Stereo node
 	
 	SoStereoTexture *Stereo = new SoStereoTexture;
 	Stereo->width.setValue(720);
@@ -1129,14 +1261,8 @@ try{
 
 	root->addChild(Stereo);
 
-	//	add  camera and lights
-	/*
-	SoPerspectiveCamera *mycam = new SoPerspectiveCamera;
-	SoDirectionalLight *Light = new SoDirectionalLight;
 
-	root->addChild(mycam);
-	root->addChild(Light);
-	*/
+	
 //	Add the transparency node, used to create the augmented reality appareance
 	
 	// read the tx90 model
@@ -1286,7 +1412,7 @@ try{
 	cube->height = 200;
 	root->addChild(cube);
 	*/
-/*
+
 	SoTransparencyType *Trans1 = new SoTransparencyType;
 	Trans1->value.setValue(SoTransparencyType::ADD);
 	SoMaterial *mat = new SoMaterial;
@@ -1363,10 +1489,10 @@ try{
 	OverlayR->addChild(T4);
 	OverlayR->addChild(CubeR);
 
-	root->addChild(OverlayL);
-	root->addChild(OverlayR);
+//	root->addChild(OverlayL);
+//	root->addChild(OverlayR);
 
-*/
+
 /*
 	SoTransform *tRobot = new SoTransform;
 	//SoTransform *r1 = new SoTransform;
@@ -1381,7 +1507,7 @@ try{
 	root->addChild(myTrans);
    	myTrans->translation.setValue(0.0,0.0,200.0);
 
-	/*
+/*	
 	SoQtRenderArea *render =new SoQtRenderArea(mainwin);
 	mycam->viewAll(root,render->getViewportRegion());
 	render->setSceneGraph(root);
@@ -1390,11 +1516,16 @@ try{
 	SoQt::show(mainwin);
 	SoQt::mainLoop();
 	delete render;
-	*/
-	
+*/	
+	SbColor color(10, 0.5,0.5);
 	// Use one of the convenient SoQt viewer classes.
+
 	SoQtExaminerViewer * eviewer = new SoQtExaminerViewer(mainwin);
     	eviewer->setSceneGraph(root);
+/*
+	eviewer->setOverlaySceneGraph(OverlayL);
+	eviewer->setOverlayColorMap(1,1,&color);
+	eviewer->setTitle("Overlay Plane");
 	/*
 	//***********************************************
 	//	test for rendering bottleneck
@@ -1405,12 +1536,14 @@ try{
 	eviewer->setSceneGraph(renderOff);
 	//***********************************************
 	*/
+
     	eviewer->show();
 	// Pop up the main window.
     	SoQt::show(mainwin);
     	// Loop until exit.
     	SoQt::mainLoop();
 	delete eviewer;
+
 	// 			Clean up resources.				  
     	
     	root->unref();
