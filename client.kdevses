@@ -1,13 +1,19 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 <!DOCTYPE KDevPrjSession>
 <KDevPrjSession>
- <DocsAndViews NumberOfDocuments="2" >
-  <Doc0 NumberOfViews="1" URL="file:///home/portilla/3T/src/client.h" >
-   <View0 line="431" Type="Source" />
+ <DocsAndViews NumberOfDocuments="4" >
+  <Doc0 NumberOfViews="1" URL="file:///home/portilla/3Dnodes/src/client.h" >
+   <View0 line="4" Type="Source" />
   </Doc0>
-  <Doc1 NumberOfViews="1" URL="file:///home/portilla/3T/src/client.cpp" >
-   <View0 line="1393" Type="Source" />
+  <Doc1 NumberOfViews="1" URL="file:///home/portilla/3Dnodes/src/client.cpp" >
+   <View0 line="11" Type="Source" />
   </Doc1>
+  <Doc2 NumberOfViews="1" URL="file:///home/portilla/3Dnodes/src/SoStereoTexture.h" >
+   <View0 line="6" Type="Source" />
+  </Doc2>
+  <Doc3 NumberOfViews="1" URL="file:///home/portilla/3Dnodes/src/SoStereoTexture.cpp" >
+   <View0 line="387" Type="Source" />
+  </Doc3>
  </DocsAndViews>
  <pluginList>
   <kdevdebugger>
@@ -70,6 +76,11 @@
   </kdevdebugger>
   <kdevbookmarks>
    <bookmarks>
+    <bookmark url="/home/portilla/3Dnodes/src/client.cpp" >
+     <mark line="1045" />
+     <mark line="962" />
+     <mark line="915" />
+    </bookmark>
     <bookmark url="/home/portilla/KDEV/client/src/client.cpp" >
      <mark line="1077" />
      <mark line="302" />
@@ -84,7 +95,7 @@
   </kdevsubversion>
   <kdevvalgrind>
    <executable path="" params="" />
-   <valgrind path="/usr/bin/valgrind" params="--tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --leak-check=yes" />
+   <valgrind path="/usr/bin/valgrind" params="--tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --leak-check=yes" />
    <calltree path="calltree" params="" />
    <kcachegrind path="/usr/bin/kcachegrind" />
   </kdevvalgrind>

@@ -26,7 +26,7 @@
       <terminal>true</terminal>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs/>
+      <programargs>rtsp://sonar:7070/cam3 rtsp://sonar:7070/cam0</programargs>
       <autocompile>true</autocompile>
       <envvars>
         <envvar value="1" name="COIN_SHOW_FPS_COUNTER" />
