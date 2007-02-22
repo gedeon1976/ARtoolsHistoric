@@ -20,7 +20,8 @@
 #ifndef	_SOSTEREOTEXTURE_H_
 #define _SOSTEREOTEXTURE_H_
 
-#include <GL/gl.h>
+//#include <GL/gl.h>
+#include <GL/glu.h>
 #include <GL/glext.h>				// 	GL extensions
 #include <GL/glx.h>				//	Binding extensions with pointers to opengl in linux
 						//	see opengl red book pag 715 in the 5 edition

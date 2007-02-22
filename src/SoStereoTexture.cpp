@@ -162,6 +162,18 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	GLuint bufferID[2];			//	PBO (pixel_buffer_object) name	
 	void *pboMemoryL,*pboMemoryR;
 	GLboolean isPBO;
+
+	//	Quad Buffer TEST
+	//**********************************************************************************
+	 float depthZ = -10.0;                                      //depth of the object drawing
+
+	double fovy = 45;                                          //field of view in y-axis
+	double aspect = double(720)/double(576);  //screen aspect ratio
+	double nearZ = 3.0;                                        //near clipping plane
+	double farZ = 30.0;                                        //far clipping plane
+	double screenZ = 10.0;                                     //screen projection plane
+	double IOD = 0.5;                                          //intraocular distance
+	//***********************************************************************************
 	// ask if this should be rendered
 	if(!shouldGLRender(action))
 	{
@@ -189,6 +201,24 @@ if (isPBO == GL_TRUE)
 
 	glPushMatrix();			//	save openGl state
 
+	//*******************************************************************************
+	glViewport (0, 0, 720, 576);            //sets drawing viewport
+  	glMatrixMode(GL_PROJECTION);
+  	glLoadIdentity();
+	glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	//	set frustum to see
+  	//gluPerspective(fovy, aspect, nearZ, farZ);               //sets frustum using gluPerspective
+  	glMatrixMode(GL_MODELVIEW);
+  	glLoadIdentity();
+
+	glDrawBuffer(GL_BACK);                                   //draw into both back buffers
+  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);      //clear color and depth buffers
+
+  	glDrawBuffer(GL_BACK_LEFT);                              //draw into back left buffer
+  	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();                                        //reset modelview matrix
+
+	                   
+	//*******************************************************************************
 
         // Create and bind texture image buffer object
 
@@ -269,7 +299,16 @@ if (isPBO == GL_TRUE)
 		glTexCoord2f(width.getValue(),0.0);
 			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
 	glEnd();
+	
+	//**************************************************************************
+	//	Draw right Image in buffer
+	glDrawBuffer(GL_BACK_RIGHT);                             //draw into back right buffer
+  	glMatrixMode(GL_MODELVIEW);
+  	glLoadIdentity();    
 
+
+                                    //reset modelview matrix
+	//**************************************************************************
 
 
 	//	second PBO
@@ -296,6 +335,14 @@ if (isPBO == GL_TRUE)
 	glEnd();
 
 	
+	//*******************************************************************************
+	//	swap Buffers
+
+	//glXSwapBuffers();
+	//glReadBuffer(GL_BACK);
+	//glDrawBuffer(GL_FRONT);
+	//glCopyPixels(0, 0, 720, 576, GL_COLOR);
+	//*******************************************************************************
 
 	glPopMatrix();			//	restore opengl state
 

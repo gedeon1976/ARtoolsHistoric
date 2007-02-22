@@ -417,12 +417,13 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/vector.tcc \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_queue.h \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/iostream \
-  /usr/include/sys/timex.h SoStereoTexture.h /usr/include/GL/gl.h \
-  /usr/include/GL/glext.h /usr/include/GL/glx.h /usr/include/X11/Xlib.h \
-  /usr/include/X11/X.h /usr/include/X11/Xfuncproto.h \
-  /usr/include/X11/Xosdefs.h /usr/include/X11/Xutil.h \
-  /usr/include/X11/keysym.h /usr/include/X11/keysymdef.h \
-  /usr/include/GL/glxext.h /usr/include/Inventor/fields/SoSFUInt32.h
+  /usr/include/sys/timex.h SoStereoTexture.h /usr/include/GL/glu.h \
+  /usr/include/GL/gl.h /usr/include/GL/glext.h /usr/include/GL/glx.h \
+  /usr/include/X11/Xlib.h /usr/include/X11/X.h \
+  /usr/include/X11/Xfuncproto.h /usr/include/X11/Xosdefs.h \
+  /usr/include/X11/Xutil.h /usr/include/X11/keysym.h \
+  /usr/include/X11/keysymdef.h /usr/include/GL/glxext.h \
+  /usr/include/Inventor/fields/SoSFUInt32.h
 
 client.h:
 
@@ -1437,6 +1438,8 @@ client.h:
 /usr/include/sys/timex.h:
 
 SoStereoTexture.h:
+
+/usr/include/GL/glu.h:
 
 /usr/include/GL/gl.h:
 
