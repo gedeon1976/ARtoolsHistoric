@@ -363,12 +363,13 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/include/Inventor/fields/SoMFColor.h \
   /usr/include/Inventor/nodes/SoMaterial.h \
   /usr/include/Inventor/nodes/SoCube.h \
+  /usr/include/Inventor/nodes/SoCone.h \
+  /usr/include/Inventor/fields/SoSFBitMask.h \
   /usr/include/Inventor/nodes/SoTransform.h \
   /usr/include/Inventor/nodes/SoTransformation.h \
   /usr/include/Inventor/nodes/SoRotation.h \
   /usr/include/Inventor/nodes/SoSphere.h \
   /usr/include/Inventor/nodes/SoCylinder.h \
-  /usr/include/Inventor/fields/SoSFBitMask.h \
   /usr/include/Inventor/nodes/SoSeparator.h \
   /usr/include/Inventor/nodes/SoTransparencyType.h \
   /usr/include/Inventor/nodes/SoTexture2.h \
@@ -417,8 +418,8 @@ client.o client.o: client.cpp client.h /usr/include/ffmpeg/avcodec.h \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/vector.tcc \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/bits/stl_queue.h \
   /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../include/c++/4.1.2/iostream \
-  /usr/include/sys/timex.h SoStereoTexture.h /usr/include/GL/glu.h \
-  /usr/include/GL/gl.h /usr/include/GL/glext.h /usr/include/GL/glx.h \
+  /usr/include/sys/timex.h SoStereoTexture.h /usr/include/GL/gl.h \
+  /usr/include/GL/glext.h /usr/include/GL/glu.h /usr/include/GL/glx.h \
   /usr/include/X11/Xlib.h /usr/include/X11/X.h \
   /usr/include/X11/Xfuncproto.h /usr/include/X11/Xosdefs.h \
   /usr/include/X11/Xutil.h /usr/include/X11/keysym.h \
@@ -1325,6 +1326,10 @@ client.h:
 
 /usr/include/Inventor/nodes/SoCube.h:
 
+/usr/include/Inventor/nodes/SoCone.h:
+
+/usr/include/Inventor/fields/SoSFBitMask.h:
+
 /usr/include/Inventor/nodes/SoTransform.h:
 
 /usr/include/Inventor/nodes/SoTransformation.h:
@@ -1334,8 +1339,6 @@ client.h:
 /usr/include/Inventor/nodes/SoSphere.h:
 
 /usr/include/Inventor/nodes/SoCylinder.h:
-
-/usr/include/Inventor/fields/SoSFBitMask.h:
 
 /usr/include/Inventor/nodes/SoSeparator.h:
 
@@ -1439,11 +1442,11 @@ client.h:
 
 SoStereoTexture.h:
 
-/usr/include/GL/glu.h:
-
 /usr/include/GL/gl.h:
 
 /usr/include/GL/glext.h:
+
+/usr/include/GL/glu.h:
 
 /usr/include/GL/glx.h:
 

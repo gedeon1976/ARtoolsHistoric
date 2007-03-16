@@ -34,6 +34,7 @@
 #include <Inventor/Qt/SoQtRenderArea.h>
 #include <Inventor/SoInput.h>				//	to open iv files
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
+#include <Inventor/Qt/viewers/SoQtViewer.h>
 #include <Inventor/SoDB.h>				//	classes to see the graphic scene
 #include <Inventor/fields/SoSFFloat.h>			// 	contains a float point value
 #include <Inventor/SoSceneManager.h>
@@ -50,6 +51,7 @@
 #include <Inventor/nodes/SoBaseColor.h>
 #include <Inventor/nodes/SoMaterial.h>
 #include <Inventor/nodes/SoCube.h>
+#include <Inventor/nodes/SoCone.h>
 #include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoTransformation.h>
 #include <Inventor/nodes/SoRotation.h>

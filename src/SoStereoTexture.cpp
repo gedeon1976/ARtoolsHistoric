@@ -162,17 +162,20 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	GLuint bufferID[2];			//	PBO (pixel_buffer_object) name	
 	void *pboMemoryL,*pboMemoryR;
 	GLboolean isPBO;
-
+	GLXDrawable glXSurface;			//	glX variables to do the SwapBuffer
+	Display *pDisplay;			
 	//	Quad Buffer TEST
 	//**********************************************************************************
-	 float depthZ = -10.0;                                      //depth of the object drawing
+	
+	float depthZ = -50.0;                                     // depth of the object drawing
 
-	double fovy = 45;                                          //field of view in y-axis
-	double aspect = double(720)/double(576);  //screen aspect ratio
-	double nearZ = 3.0;                                        //near clipping plane
-	double farZ = 30.0;                                        //far clipping plane
-	double screenZ = 10.0;                                     //screen projection plane
-	double IOD = 0.5;                                          //intraocular distance
+	double fovy =  45;                                          // field of view in y-axis
+	double aspect = double(720)/double(576);  		   // screen aspect ratio
+	double nearZ = 3.0;                                        // near clipping plane
+	double farZ = 800.0;                                       // far clipping plane
+	double screenZ = 200.0;                                   // screen projection plane
+	double IOD = 2000.0;                             // intraocular distance
+	
 	//***********************************************************************************
 	// ask if this should be rendered
 	if(!shouldGLRender(action))
@@ -191,7 +194,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 	//	using PBO according to the extension specification
 
-if (isPBO == GL_TRUE)	
+if (isPBO == GL_FALSE)	// GL_TRUE
 
 {
 	//	start with a null image
@@ -201,32 +204,18 @@ if (isPBO == GL_TRUE)
 
 	glPushMatrix();			//	save openGl state
 
-	//*******************************************************************************
-	glViewport (0, 0, 720, 576);            //sets drawing viewport
-  	glMatrixMode(GL_PROJECTION);
-  	glLoadIdentity();
-	glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	//	set frustum to see
-  	//gluPerspective(fovy, aspect, nearZ, farZ);               //sets frustum using gluPerspective
-  	glMatrixMode(GL_MODELVIEW);
-  	glLoadIdentity();
-
-	glDrawBuffer(GL_BACK);                                   //draw into both back buffers
-  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);      //clear color and depth buffers
-
-  	glDrawBuffer(GL_BACK_LEFT);                              //draw into back left buffer
-  	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();                                        //reset modelview matrix
-
-	                   
-	//*******************************************************************************
+	
+	
 
         // Create and bind texture image buffer object
 
+	//	PBO LEFT
 	glGenBuffersARB(1, &bufferID[0]);
         glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, bufferID[0]);
 	//	reset contents of PBO
 	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,720*576*3,NULL,GL_DYNAMIC_DRAW_ARB);
 
+	//	PBO RIGHT
  	glGenBuffersARB(1, &bufferID[1]);
         glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, bufferID[1]);
 	//	reset contents of PBO
@@ -274,7 +263,36 @@ if (isPBO == GL_TRUE)
 	SbVec2s size; int components;
 	size.setValue(720,576);
 	components=3;
+	
+	//*******************************************************************************
+	//	QUAD BUFFER INITIALIZATION
+	glViewport (0, 0, 1000, 800);            		// sets drawing viewport
+  	glMatrixMode(GL_PROJECTION);
+  	glLoadIdentity();					// reset Projection matrix
+	//glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	// set frustum to see
+  	gluPerspective(fovy, aspect, nearZ, farZ);              // sets frustum using gluPerspective
+  	glMatrixMode(GL_MODELVIEW);
+  	glLoadIdentity();
 
+	glDrawBuffer(GL_BACK);                                   // draw into both back buffers
+  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);      // clear color and depth buffers
+
+  	glDrawBuffer(GL_BACK_LEFT);                              // draw into back left buffer
+  	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();                                        // reset modelview matrix
+
+	gluLookAt(-IOD/2,                                        //set camera position  x=-IOD/2
+            0.0,                                           //                     y=0.0
+            0.0,                                           //                     z=0.0
+            0.0,                                           //set camera "look at" x=0.0
+            0.0,                                           //                     y=0.0
+            screenZ,                                       //                     z=screenplane
+            0.0,                                           //set camera up vector x=0.0
+            1.0,                                           //                     y=1.0
+            0.0);                                          //                     z=0.0
+	//*******************************************************************************
+
+	glPushMatrix();	
 
 	//	reset contents of PBO
 	//glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW);
@@ -300,16 +318,21 @@ if (isPBO == GL_TRUE)
 			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
 	glEnd();
 	
+	glPopMatrix();
+
 	//**************************************************************************
 	//	Draw right Image in buffer
 	glDrawBuffer(GL_BACK_RIGHT);                             //draw into back right buffer
   	glMatrixMode(GL_MODELVIEW);
   	glLoadIdentity();    
 
+	gluLookAt(IOD/2, 0.0, 0.0, 0.0, 0.0, screenZ,            //as for left buffer with camera position at:
+            0.0, 1.0, 0.0);                                //                     (IOD/2, 0.0, 0.0)
 
-                                    //reset modelview matrix
+                                   //reset modelview matrix
 	//**************************************************************************
 
+	glPushMatrix();	
 
 	//	second PBO
 	pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
@@ -334,11 +357,24 @@ if (isPBO == GL_TRUE)
 			glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
 	glEnd();
 
-	
+	glPopMatrix();
 	//*******************************************************************************
 	//	swap Buffers
+	//	see the openGL programming Guide appendix C
+	glXSurface = glXGetCurrentDrawable();
 
-	//glXSwapBuffers();
+	if(glXSurface =! NULL)
+	{
+		pDisplay = glXGetCurrentDisplay();	//	get the current display
+		//if (pDisplay  NULL)
+		//{
+			glXSwapBuffers(pDisplay,glXSurface);
+		//}
+	}
+	
+//	glXSwapBuffers(glXGetCurrentDisplay(),glXGetCurrentDrawable());
+	//glXWaitGL();			//	wait openGl execution
+
 	//glReadBuffer(GL_BACK);
 	//glDrawBuffer(GL_FRONT);
 	//glCopyPixels(0, 0, 720, 576, GL_COLOR);
@@ -386,6 +422,36 @@ if (isPBO == GL_TRUE)
 	size.setValue(720,576);
 	components=3;
 
+	//*******************************************************************************
+	//	QUAD BUFFER INITIALIZATION
+	glViewport (0, 0, 1000, 800);            		// sets drawing viewport
+  	glMatrixMode(GL_PROJECTION);
+  	glLoadIdentity();
+	//glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	// set frustum to see
+  	gluPerspective(fovy, aspect, nearZ, farZ);              // sets frustum using gluPerspective
+  	glMatrixMode(GL_MODELVIEW);
+  	glLoadIdentity();
+
+	glDrawBuffer(GL_BACK);                                   // draw into both back buffers
+  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);      // clear color and depth buffers
+
+
+  	glDrawBuffer(GL_BACK_LEFT);                              // draw into back left buffer
+  	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();                                        // reset modelview matrix
+
+	gluLookAt(-IOD/2,                                        //set camera position  x=-IOD/2
+            0.0,                                           //                     y=0.0
+            0.0,                                           //                     z=0.0
+            0.0,                                           //set camera "look at" x=0.0
+            0.0,                                           //                     y=0.0
+            screenZ,                                       //                     z=screenplane
+            0.0,                                           //set camera up vector x=0.0
+            1.0,                                           //                     y=1.0
+            0.0);                                          //                     z=0.0
+	//*******************************************************************************
+	glPushMatrix();
+	glTranslatef(0.0,0.0,depthZ);
 	//	DRAW THE LEFT IMAGE
 
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
@@ -400,6 +466,20 @@ if (isPBO == GL_TRUE)
 			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
 	glEnd();
 
+	glPopMatrix();
+	//**************************************************************************
+	//	Draw right Image in buffer
+	glDrawBuffer(GL_BACK_RIGHT);                             //draw into back right buffer
+  	glMatrixMode(GL_MODELVIEW);
+  	glLoadIdentity();    
+
+	gluLookAt(IOD/2, 0.0, 0.0, 0.0, 0.0, screenZ,            //as for left buffer with camera position at:
+            0.0, 1.0, 0.0);     
+                                   //reset modelview matrix
+	//**************************************************************************
+
+	glPushMatrix();
+	glTranslatef(0.0,0.0,depthZ);
 	//	DRAW THE RIGHT IMAGE
 
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
@@ -413,6 +493,16 @@ if (isPBO == GL_TRUE)
 		glTexCoord2f(width.getValue(),0.0);
 			glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
 	glEnd();
+	glPopMatrix();
+	//*******************************************************************************
+	//	swap Buffers
+	//	see the openGL programming Guide appendix C
+	
+	glXSwapBuffers(glXGetCurrentDisplay(),glXGetCurrentDrawable());
+	//glReadBuffer(GL_BACK_LEFT);
+	//glDrawBuffer(GL_FRONT_LEFT);
+	//glCopyPixels(0, 0, 720, 576, GL_COLOR);
+	//*******************************************************************************
 
 	glPopMatrix();
 		

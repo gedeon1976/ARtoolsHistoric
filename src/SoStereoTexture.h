@@ -20,7 +20,7 @@
 #ifndef	_SOSTEREOTEXTURE_H_
 #define _SOSTEREOTEXTURE_H_
 
-//#include <GL/gl.h>
+#include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glext.h>				// 	GL extensions
 #include <GL/glx.h>				//	Binding extensions with pointers to opengl in linux
@@ -31,6 +31,8 @@
 #include  <Inventor/fields/SoSFUInt32.h>
 #include  <Inventor/fields/SoSFImage.h>		//	for load images
 #include  <Inventor/nodes/SoShape.h>
+#include  <Inventor/nodes/SoPerspectiveCamera.h>
+#include  <Inventor/Qt/SoQtGLWidget.h>		//	to do the swap of buffers
 //	note SoSubNode.h has the macros definitions to
 //	create the new nodes
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))

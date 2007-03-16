@@ -1255,6 +1255,7 @@ try{
 */
 	//	add Stereo node
 	
+
 	SoStereoTexture *Stereo = new SoStereoTexture;
 	Stereo->width.setValue(720);
 	Stereo->heigh.setValue(576);
@@ -1388,10 +1389,13 @@ try{
 	//****************************************************************************
 	//	setup timer sensor for recursive image updating 
 
+
+
 	SoTimerSensor *timerL = new SoTimerSensor(updateL,Stereo);//leftImage
 	timerL->setBaseTime(SbTime::getTimeOfDay()); 	//	useconds resolution
 	timerL->setInterval(1.0/25.0);//	 	//	interval 40 ms = 25fps
 	timerL->schedule();				//	enable timer		
+
 
 /*
 	SoTimerSensor *timerR = new SoTimerSensor(updateR,rightImage);//
@@ -1446,6 +1450,9 @@ try{
 	//SoBaseColor *Color1 = new SoBaseColor;
 	//Color1->rgb.setValue(0.0,1.0,0.0);
 
+
+
+
 	SoSeparator *OverlayL = new SoSeparator;
 	SoTransform *T1 = new SoTransform;
 	SoTransform *T2 = new SoTransform;
@@ -1493,39 +1500,63 @@ try{
 //	root->addChild(OverlayR);
 
 
-/*
-	SoTransform *tRobot = new SoTransform;
+
+//	SoTransform *tRobot = new SoTransform;
 	//SoTransform *r1 = new SoTransform;
 	//tRobot->translation.setValue(-100.0,-100.0,0.0);
-	tRobot->rotation.setValue(1.0,0.0,0.0,180*(M_PI/180));
+//	tRobot->rotation.setValue(1.0,0.0,0.0,180*(M_PI/180));
 //	r1->rotation.setValue(0.0,1.0,0.0,30*(M_PI/180));
-	root->addChild(tRobot);
+//	root->addChild(tRobot);
 	//root->addChild(r1);
-	root->addChild(tx);
-*/
+//	root->addChild(tx);			// load robot model
+/*
+	//	CAMERA TEST
+	//	set camera position to parallel configuration
+	SoPerspectiveCamera *CamL = new SoPerspectiveCamera;
+	CamL->position.setValue(-256.0,0.0,0.0);
+	CamL->nearDistance.setValue(50.0);
+	CamL->farDistance.setValue(300.0);
+
+	root->addChild(CamL);
+
+	SoCone *c1 = new SoCone;
+	//c1->height.setValue(20.0);
+	//c1->radius.setValue(25.0);
+
+	SoSeparator *S1 = new SoSeparator;
+	S1->addChild(c1);
+	//root->addChild(c1);
+*/	
+/*
      	SoTransform *myTrans = new SoTransform;
 	root->addChild(myTrans);
-   	myTrans->translation.setValue(0.0,0.0,200.0);
-
+   	myTrans->translation.setValue(0.0,50.0,200.0);
+*/
 /*	
 	SoQtRenderArea *render =new SoQtRenderArea(mainwin);
 	mycam->viewAll(root,render->getViewportRegion());
 	render->setSceneGraph(root);
+	render->setQuadBufferStereo(TRUE);
 	render->setBackgroundColor(SbColor(0.0f,0.5f,0.5f));
 	render->show();
 	SoQt::show(mainwin);
 	SoQt::mainLoop();
 	delete render;
-*/	
+*/
+	
 	SbColor color(10, 0.5,0.5);
 	// Use one of the convenient SoQt viewer classes.
 
 	SoQtExaminerViewer * eviewer = new SoQtExaminerViewer(mainwin);
-    	eviewer->setSceneGraph(root);
+   	eviewer->setSceneGraph(root);
+//	eviewer->setStereoViewing(TRUE);
+//	eviewer->setQuadBufferStereo(TRUE);	//	set stereo mode = QUAD BUFFER = page flipping
+
 /*
-	eviewer->setOverlaySceneGraph(OverlayL);
+	eviewer->setOverlaySceneGraph(S1);
 	eviewer->setOverlayColorMap(1,1,&color);
 	eviewer->setTitle("Overlay Plane");
+*/
 	/*
 	//***********************************************
 	//	test for rendering bottleneck
