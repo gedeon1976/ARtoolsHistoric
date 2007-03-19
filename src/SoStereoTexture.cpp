@@ -167,15 +167,15 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	//	Quad Buffer TEST
 	//**********************************************************************************
 	
-	float depthZ = -50.0;                                     // depth of the object drawing
+	float depthZ = 650.0;                          // depth of the object model
 
-	double fovy =  45;                                          // field of view in y-axis
-	double aspect = double(720)/double(576);  		   // screen aspect ratio
-	double nearZ = 3.0;                                        // near clipping plane
-	double farZ = 800.0;                                       // far clipping plane
-	double screenZ = 200.0;                                   // screen projection plane
-	double IOD = 2000.0;                             // intraocular distance
-	
+	double fovy =  45;                              // field of view in y-axis
+	double aspect = double(720)/double(576);  	// screen aspect ratio
+	double nearZ = 3.0;                             // near clipping plane
+	double farZ = 1000.0;                            // far clipping plane
+	double screenZ = 200.0;                         // screen projection plane
+	double IOD = 5.0;                             // intraocular distance
+		
 	//***********************************************************************************
 	// ask if this should be rendered
 	if(!shouldGLRender(action))
@@ -455,15 +455,16 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 	//	DRAW THE LEFT IMAGE
 
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
+	//	modifying for stereo
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0,0.0);
-			glVertex3f(-width.getValue(), heigh.getValue()/2.0,0.0);
-		glTexCoord2f(0.0,heigh.getValue());
-			glVertex3f(-width.getValue(),-heigh.getValue()/2.0 ,0.0);
+			glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
+		glTexCoord2f(0.0,heigh.getValue());	
+			glVertex3f( width.getValue()/2.0,-heigh.getValue()/2.0 ,screenZ);
 		glTexCoord2f(width.getValue(),heigh.getValue());
-			glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
+			glVertex3f( -width.getValue()/2.0, -heigh.getValue()/2.0,screenZ);
 		glTexCoord2f(width.getValue(),0.0);
-			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
+			glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
 	glEnd();
 
 	glPopMatrix();
@@ -485,20 +486,20 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0,0.0);
-			glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
+			glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
 		glTexCoord2f(0.0,heigh.getValue());	
-			glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
+			glVertex3f( width.getValue()/2.0,-heigh.getValue()/2.0 ,screenZ);
 		glTexCoord2f(width.getValue(),heigh.getValue());
-			glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
+			glVertex3f( -width.getValue()/2.0, -heigh.getValue()/2.0,screenZ);
 		glTexCoord2f(width.getValue(),0.0);
-			glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
+			glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
 	glEnd();
 	glPopMatrix();
 	//*******************************************************************************
 	//	swap Buffers
 	//	see the openGL programming Guide appendix C
 	
-	glXSwapBuffers(glXGetCurrentDisplay(),glXGetCurrentDrawable());
+	//  glXSwapBuffers(glXGetCurrentDisplay(),glXGetCurrentDrawable());
 	//glReadBuffer(GL_BACK_LEFT);
 	//glDrawBuffer(GL_FRONT_LEFT);
 	//glCopyPixels(0, 0, 720, 576, GL_COLOR);

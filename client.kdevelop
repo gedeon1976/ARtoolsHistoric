@@ -60,7 +60,7 @@
         <builddir/>
         <topsourcedir/>
         <cppflags>-I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1</cppflags>
-        <ldflags>-L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec </ldflags>
+        <ldflags>-L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec </ldflags>
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
         <f77compiler>kdevpgf77options</f77compiler>
