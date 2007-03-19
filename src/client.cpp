@@ -1209,7 +1209,8 @@ try{
 	//;	channel 0 and 3
 	//;
 	const char *camL =argv[1];//"rtsp://sonar:7070/cam3";	//	
-	const char *camR =argv[2];//"rtsp://sonar:7070/cam0"						
+	const char *camR =argv[2];//"rtsp://sonar:7070/cam0"	
+	float IOD =atof(argv[3]);
 
 	STREAM camara1;						//  	create an stream object
 	
@@ -1255,10 +1256,10 @@ try{
 */
 	//	add Stereo node
 	
-
 	SoStereoTexture *Stereo = new SoStereoTexture;
 	Stereo->width.setValue(720);
 	Stereo->heigh.setValue(576);
+	Stereo->IOD.setValue(IOD);
 
 	root->addChild(Stereo);
 

@@ -167,14 +167,14 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	//	Quad Buffer TEST
 	//**********************************************************************************
 	
-	float depthZ = 650.0;                          // depth of the object model
+	float depthZ = 650.0;                           // depth of the object model
 
 	double fovy =  45;                              // field of view in y-axis
 	double aspect = double(720)/double(576);  	// screen aspect ratio
 	double nearZ = 3.0;                             // near clipping plane
-	double farZ = 1000.0;                            // far clipping plane
-	double screenZ = 200.0;                         // screen projection plane
-	double IOD = 5.0;                             // intraocular distance
+	double farZ = 1000.0;                           // far clipping plane
+	double screenZ = 300.0;                         // screen projection plane
+	//double IOD = 5.0;                               // intraocular distance
 		
 	//***********************************************************************************
 	// ask if this should be rendered
@@ -281,7 +281,7 @@ if (isPBO == GL_FALSE)	// GL_TRUE
   	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();                                        // reset modelview matrix
 
-	gluLookAt(-IOD/2,                                        //set camera position  x=-IOD/2
+	gluLookAt(-IOD.getValue()/2,                                        //set camera position  x=-IOD/2
             0.0,                                           //                     y=0.0
             0.0,                                           //                     z=0.0
             0.0,                                           //set camera "look at" x=0.0
@@ -326,7 +326,7 @@ if (isPBO == GL_FALSE)	// GL_TRUE
   	glMatrixMode(GL_MODELVIEW);
   	glLoadIdentity();    
 
-	gluLookAt(IOD/2, 0.0, 0.0, 0.0, 0.0, screenZ,            //as for left buffer with camera position at:
+	gluLookAt(IOD.getValue()/2, 0.0, 0.0, 0.0, 0.0, screenZ,            //as for left buffer with camera position at:
             0.0, 1.0, 0.0);                                //                     (IOD/2, 0.0, 0.0)
 
                                    //reset modelview matrix
@@ -440,7 +440,7 @@ if (isPBO == GL_FALSE)	// GL_TRUE
   	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();                                        // reset modelview matrix
 
-	gluLookAt(-IOD/2,                                        //set camera position  x=-IOD/2
+	gluLookAt(-IOD.getValue()/2,                                        //set camera position  x=-IOD/2
             0.0,                                           //                     y=0.0
             0.0,                                           //                     z=0.0
             0.0,                                           //set camera "look at" x=0.0
@@ -474,7 +474,7 @@ if (isPBO == GL_FALSE)	// GL_TRUE
   	glMatrixMode(GL_MODELVIEW);
   	glLoadIdentity();    
 
-	gluLookAt(IOD/2, 0.0, 0.0, 0.0, 0.0, screenZ,            //as for left buffer with camera position at:
+	gluLookAt(IOD.getValue()/2, 0.0, 0.0, 0.0, 0.0, screenZ,            //as for left buffer with camera position at:
             0.0, 1.0, 0.0);     
                                    //reset modelview matrix
 	//**************************************************************************
