@@ -173,8 +173,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	double aspect = double(720)/double(576);  	// screen aspect ratio
 	double nearZ = 3.0;                             // near clipping plane
 	double farZ = 1000.0;                           // far clipping plane
-	double screenZ = 300.0;                         // screen projection plane
-	//double IOD = 5.0;                               // intraocular distance
+	double screenZ =200.0;                          // screen projection plane
+	//double IOD = 5.0;                             // intraocular distance
 		
 	//***********************************************************************************
 	// ask if this should be rendered
