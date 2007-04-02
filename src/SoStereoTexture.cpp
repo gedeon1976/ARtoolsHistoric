@@ -167,15 +167,22 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	//	Quad Buffer TEST
 	//**********************************************************************************
 	
-	float depthZ = 650.0;                           // depth of the object model
+	float depthZ = 150.0;                          // depth of the object model
 
-	double fovy =  45;                              // field of view in y-axis
+      //double fovy =  45;                              // field of view in y-axis, 
+	double theta = 46;
 	double aspect = double(720)/double(576);  	// screen aspect ratio
-	double nearZ = 3.0;                             // near clipping plane
-	double farZ = 1000.0;                           // far clipping plane
-	double screenZ =200.0;                          // screen projection plane
+	double nearZ = 75.0;                             // near clipping plane
+	double farZ = 400.0;                           // far clipping plane
+	double screenZ =100.0;                          // screen projection plane
 	//double IOD = 5.0;                             // intraocular distance
-		
+	double beta;					// vergence angle
+	double l,r,b,t,K;				// limits for glfrustum delimitation	
+	
+	beta = 2*atan(IOD.getValue()/(2*screenZ));	// get vergence angle from IOD
+	t =  nearZ*tan(theta/2);				// top coordinate
+	b = -nearZ*tan(theta/2);				// bottom coordinate
+	K = (0.5*IOD.getValue()*nearZ)/screenZ;		// to get l and r values
 	//***********************************************************************************
 	// ask if this should be rendered
 	if(!shouldGLRender(action))
@@ -267,10 +274,19 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 	//*******************************************************************************
 	//	QUAD BUFFER INITIALIZATION
 	glViewport (0, 0, 1000, 800);            		// sets drawing viewport
-  	glMatrixMode(GL_PROJECTION);
-  	glLoadIdentity();					// reset Projection matrix
+  	//glMatrixMode(GL_PROJECTION);
+  	//glLoadIdentity();					// reset Projection matrix
 	//glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	// set frustum to see
-  	gluPerspective(fovy, aspect, nearZ, farZ);              // sets frustum using gluPerspective
+  	//gluPerspective(fovy, aspect, nearZ, farZ);              // sets frustum using gluPerspective
+	
+	// Off-axis method for rendering
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	r = aspect*t - K;	
+	l = aspect*b - K;
+	glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+
   	glMatrixMode(GL_MODELVIEW);
   	glLoadIdentity();
 
@@ -279,12 +295,21 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 
   	glDrawBuffer(GL_BACK_LEFT);                              // draw into back left buffer
   	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();                                        // reset modelview matrix
+	glLoadIdentity(); 
+	
+		
+        // reset modelview matrix
+
+	/*	rendering method in flat screens by Paul Borke
+	
+		a) toe-in method (introduces vertical parallax)
+		b) off axis method (correct)
+	*/
 
 	gluLookAt(-IOD.getValue()/2,                                        //set camera position  x=-IOD/2
             0.0,                                           //                     y=0.0
             0.0,                                           //                     z=0.0
-            0.0,                                           //set camera "look at" x=0.0
+            -IOD.getValue()/2,                                           //set camera "look at" x=0.0
             0.0,                                           //                     y=0.0
             screenZ,                                       //                     z=screenplane
             0.0,                                           //set camera up vector x=0.0
@@ -321,12 +346,21 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 	glPopMatrix();
 
 	//**************************************************************************
+	// Off-axis method for rendering
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	r = aspect*t + K;	
+	l = aspect*b + K;
+	glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+
 	//	Draw right Image in buffer
 	glDrawBuffer(GL_BACK_RIGHT);                             //draw into back right buffer
   	glMatrixMode(GL_MODELVIEW);
   	glLoadIdentity();    
 
-	gluLookAt(IOD.getValue()/2, 0.0, 0.0, 0.0, 0.0, screenZ,            //as for left buffer with camera position at:
+	
+
+	gluLookAt(IOD.getValue()/2, 0.0, 0.0, IOD.getValue()/2, 0.0, screenZ,            //as for left buffer with camera position at:
             0.0, 1.0, 0.0);                                //                     (IOD/2, 0.0, 0.0)
 
                                    //reset modelview matrix
@@ -425,25 +459,33 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 	//*******************************************************************************
 	//	QUAD BUFFER INITIALIZATION
 	glViewport (0, 0, 1000, 800);            		// sets drawing viewport
-  	glMatrixMode(GL_PROJECTION);
+/*
+	TOE-IN method for rendering	
+
+ 	glMatrixMode(GL_PROJECTION);
   	glLoadIdentity();
 	//glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	// set frustum to see
   	gluPerspective(fovy, aspect, nearZ, farZ);              // sets frustum using gluPerspective
+*/
+	// Off-axis method for rendering
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	r = aspect*t - K;	
+	l = aspect*b - K;
+	glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+
   	glMatrixMode(GL_MODELVIEW);
-  	glLoadIdentity();
+  	glDrawBuffer(GL_BACK_LEFT);           			// draw into back left buffer
+  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
+  	                             
+  	glLoadIdentity();                                        // reset modelview matrix
 
-	glDrawBuffer(GL_BACK);                                   // draw into both back buffers
-  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);      // clear color and depth buffers
-
-
-  	glDrawBuffer(GL_BACK_LEFT);                              // draw into back left buffer
-  	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();                                        // reset modelview matrix
 
 	gluLookAt(-IOD.getValue()/2,                                        //set camera position  x=-IOD/2
             0.0,                                           //                     y=0.0
             0.0,                                           //                     z=0.0
-            0.0,                                           //set camera "look at" x=0.0
+            -IOD.getValue()/2,                                           //set camera "look at" x=0.0
             0.0,                                           //                     y=0.0
             screenZ,                                       //                     z=screenplane
             0.0,                                           //set camera up vector x=0.0
@@ -469,12 +511,30 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 
 	glPopMatrix();
 	//**************************************************************************
+	// Off-axis method for rendering
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	r = aspect*t + K;	
+	l = aspect*b + K;
+	glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+
 	//	Draw right Image in buffer
 	glDrawBuffer(GL_BACK_RIGHT);                             //draw into back right buffer
   	glMatrixMode(GL_MODELVIEW);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
   	glLoadIdentity();    
 
-	gluLookAt(IOD.getValue()/2, 0.0, 0.0, 0.0, 0.0, screenZ,            //as for left buffer with camera position at:
+	/*
+		rendering methods
+	
+	1) Toe-in: the left and rght cameras look at the center of vergence at the screen
+			plane, this method introduce vertical parallax
+
+	2)Off-axis: correct rendering method for screen surfaces, it does not introduces 		vertical parallax to a better stereo effect, the kleft and right 		cameras point at two different points but that are parallel one to other.
+
+	*/
+	gluLookAt(IOD.getValue()/2, 0.0, 0.0, IOD.getValue()/2, 0.0, screenZ,            //as for left buffer with camera position at:
             0.0, 1.0, 0.0);     
                                    //reset modelview matrix
 	//**************************************************************************
