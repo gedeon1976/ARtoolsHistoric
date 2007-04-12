@@ -207,18 +207,16 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 	//	using PBO according to the extension specification
 
-if (isPBO == GL_FALSE)	// GL_TRUE
+if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware supported, if this go slow
+			// probably is software supported, remember PBO since opengl 2.1 in april/07
 
 {
 	//	start with a null image
-	//glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, 0);
+	// glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, 0);
         // glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
 	//                           GL_RGB, GL_UNSIGNED_BYTE, NULL);	
 
 	glPushMatrix();			//	save openGl state
-
-	
-	
 
         // Create and bind texture image buffer object
 
@@ -267,7 +265,7 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 							// allocate a chunk of memory using a PBO pixel_buffer_object 
  							// view Fast Texture Transfer and using VBOs articles
 							// from nvidia developer web site
-							// see also the reference to the lesson 45 NeHe web site
+							// see also the reference to the lesson 45 in NeHe web site
 							// openGL tutorials dec 2006
 	*/
 
@@ -277,127 +275,126 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 	size.setValue(720,576);
 	components=3;
 	
+	//	check for stereo support
+
+	if(*isStereo == GL_TRUE)	
+	{
+	
 	//*******************************************************************************
 	//	QUAD BUFFER INITIALIZATION
-	glViewport (0, 0, 1000, 800);            		// sets drawing viewport
-  	//glMatrixMode(GL_PROJECTION);
-  	//glLoadIdentity();					// reset Projection matrix
-	//glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	// set frustum to see
-  	//gluPerspective(fovy, aspect, nearZ, farZ);              // sets frustum using gluPerspective
+		glViewport (0, 0, 1000, 800);            		// sets drawing viewport
+  		//glMatrixMode(GL_PROJECTION);
+  		//glLoadIdentity();					// reset Projection matrix
+		//glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	// set frustum to see
+  		//gluPerspective(fovy, aspect, nearZ, farZ);            // sets frustum using gluPerspective
 	
-	// Off-axis method for rendering
+		// Off-axis method for rendering
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	r = aspect*t - K;	
-	l = aspect*b - K;
-	glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		r = aspect*t - K;	
+		l = aspect*b - K;
+		glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
 
-  	glMatrixMode(GL_MODELVIEW);
-  	glLoadIdentity();
-
-	glDrawBuffer(GL_BACK);                                   // draw into both back buffers
-  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);      // clear color and depth buffers
-
-  	glDrawBuffer(GL_BACK_LEFT);                              // draw into back left buffer
-  	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity(); 
+  		glMatrixMode(GL_MODELVIEW);
+  		glDrawBuffer(GL_BACK_LEFT);           			// draw into back left buffer
+  		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
+  	                             
+  		glLoadIdentity();                                       // reset modelview matrix
 	
-		
-        // reset modelview matrix
-
-	/*	rendering method in flat screens by Paul Borke
+	
+		/*	rendering method in flat screens by Paul Borke
 	
 		a) toe-in method (introduces vertical parallax)
 		b) off axis method (correct)
-	*/
-
-	gluLookAt(-IOD.getValue()/2,                                        //set camera position  x=-IOD/2
-            0.0,                                           //                     y=0.0
-            0.0,                                           //                     z=0.0
-            -IOD.getValue()/2,                                           //set camera "look at" x=0.0
-            0.0,                                           //                     y=0.0
-            screenZ,                                       //                     z=screenplane
-            0.0,                                           //set camera up vector x=0.0
-            1.0,                                           //                     y=1.0
-            0.0);                                          //                     z=0.0
+		*/
+	
+		gluLookAt(-IOD.getValue()/2,0.0,0.0,	//set camera position  x=-IOD/2
+       		  	  -IOD.getValue()/2,0.0,screenZ,//set camera "look at" x=0.0
+         				0.0,1.0,0.0);   //set camera up vector
 	//*******************************************************************************
 
-	glPushMatrix();	
+		glPushMatrix();	
+		glTranslatef(0.0,0.0,depthZ);
 
-	//	reset contents of PBO
-	//glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW);
+		//	reset contents of PBO
+		//glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT,720*576*3,NULL,GL_STREAM_DRAW);
 	
-	//	define a pointer that maps to memory at the GPU memory card						
-	pboMemoryL = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
-	//	write data in the GPU RAM memory
-	memcpy(pboMemoryL,pthis->imageL.getValue(size,components),720*576*3);	
-	//	Unmap the PBO buffer	
-	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+		//	define a pointer that maps to memory at the GPU memory card						
+		pboMemoryL = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
+		//	write data in the GPU RAM memory
+		memcpy(pboMemoryL,pthis->imageL.getValue(size,components),720*576*3);	
+		//	Unmap the PBO buffer	
+		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
 
-	//	DRAW THE LEFT IMAGE
-	//	PBO usage 
-	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0,0.0);
-			glVertex3f(-width.getValue(), heigh.getValue()/2.0,0.0);
-		glTexCoord2f(0.0,heigh.getValue());
-			glVertex3f(-width.getValue(),-heigh.getValue()/2.0 ,0.0);
-		glTexCoord2f(width.getValue(),heigh.getValue());
-			glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
-		glTexCoord2f(width.getValue(),0.0);
-			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
-	glEnd();
+		//	DRAW THE LEFT IMAGE
+		//	PBO usage 
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+				glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
+			glTexCoord2f(0.0,heigh.getValue());	
+				glVertex3f( width.getValue()/2.0,-heigh.getValue()/2.0 ,screenZ);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( -width.getValue()/2.0, -heigh.getValue()/2.0,screenZ);
+			glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
+		glEnd();
 	
-	glPopMatrix();
+		glPopMatrix();
 
 	//**************************************************************************
 	// Off-axis method for rendering
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	r = aspect*t + K;	
-	l = aspect*b + K;
-	glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		r = aspect*t + K;	
+		l = aspect*b + K;
+		glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
 
 	//	Draw right Image in buffer
-	glDrawBuffer(GL_BACK_RIGHT);                             //draw into back right buffer
-  	glMatrixMode(GL_MODELVIEW);
-  	glLoadIdentity();    
+
+		glDrawBuffer(GL_BACK_RIGHT);                            //draw into back right buffer
+	  	glMatrixMode(GL_MODELVIEW);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
+  		glLoadIdentity();      					//reset modelview matrix
 
 	
 
-	gluLookAt(IOD.getValue()/2, 0.0, 0.0, IOD.getValue()/2, 0.0, screenZ,            //as for left buffer with camera position at:
-            0.0, 1.0, 0.0);                                //                     (IOD/2, 0.0, 0.0)
+		//as for the left buffer but with camera position at:
+		gluLookAt(IOD.getValue()/2, 0.0, 0.0, 
+			  IOD.getValue()/2, 0.0, screenZ,            
+            			       0.0, 1.0, 0.0);
 
-                                   //reset modelview matrix
+                                 
 	//**************************************************************************
 
-	glPushMatrix();	
+		glPushMatrix();	
+		glTranslatef(0.0,0.0,depthZ);
 
-	//	second PBO
-	pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
-	//	write data in the GPU RAM memory
-	memcpy(pboMemoryR,pthis->imageR.getValue(size,components),720*576*3);	
+		//	second PBO
+		pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
+		//	write data in the GPU RAM memory
+		memcpy(pboMemoryR,pthis->imageR.getValue(size,components),720*576*3);	
 
-	//	Unmap the PBO buffer	
+		//	Unmap the PBO buffer	
 
-	glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
 
-	//	PBO usage 
-	//	DRAW THE RIGHT IMAGE
-	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0,0.0);
-			glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
-		glTexCoord2f(0.0,heigh.getValue());	
-			glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
-		glTexCoord2f(width.getValue(),heigh.getValue());
-			glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
-		glTexCoord2f(width.getValue(),0.0);
-			glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
-	glEnd();
+		//	PBO usage 
+		//	DRAW THE RIGHT IMAGE
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+				glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
+			glTexCoord2f(0.0,heigh.getValue());	
+				glVertex3f( width.getValue()/2.0,-heigh.getValue()/2.0 ,screenZ);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( -width.getValue()/2.0, -heigh.getValue()/2.0,screenZ);
+			glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
+		glEnd();
 
-	glPopMatrix();
+		glPopMatrix();
 	//*******************************************************************************
 	//	swap Buffers
 	//	see the openGL programming Guide appendix C
@@ -419,8 +416,56 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 	//glDrawBuffer(GL_FRONT);
 	//glCopyPixels(0, 0, 720, 576, GL_COLOR);
 	//*******************************************************************************
+	}
+	else{	// If not stereo support
 
-	glPopMatrix();			//	restore opengl state
+		//	define a pointer that maps to memory at the GPU memory card						
+		pboMemoryL = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
+		//	write data in the GPU RAM memory
+		memcpy(pboMemoryL,pthis->imageL.getValue(size,components),720*576*3);	
+		//	Unmap the PBO buffer	
+		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+
+		//	DRAW THE LEFT IMAGE
+		//	PBO usage 
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+				glVertex3f( -width.getValue(), heigh.getValue()/2.0,0.0);
+			glTexCoord2f(0.0,heigh.getValue());	
+				glVertex3f( -width.getValue(),-heigh.getValue()/2.0 ,0.0);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
+			glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
+		glEnd();
+
+		//	second PBO
+		pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
+		//	write data in the GPU RAM memory
+		memcpy(pboMemoryR,pthis->imageR.getValue(size,components),720*576*3);	
+		//	Unmap the PBO buffer	
+		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+
+		//	PBO usage 
+		//	DRAW THE RIGHT IMAGE
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+				glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
+			glTexCoord2f(0.0,heigh.getValue());	
+				glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
+			glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
+		glEnd();
+	
+
+	}
+	//	End of stereo verification
+	//********************************************************************************
+	glPopMatrix();			//	restore opengl states
 
 	//	Delete the buffers
 

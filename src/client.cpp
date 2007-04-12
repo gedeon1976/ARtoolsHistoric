@@ -1214,9 +1214,9 @@ try{
 
 	//;	channel 0 and 3
 	//;
-	const char *camL =argv[1];//"rtsp://sonar:7070/cam3";	//	
-	const char *camR =argv[2];//"rtsp://sonar:7070/cam0";	//	
-	float IOD = atof(argv[3]);
+	const char *camL ="rtsp://sonar:7070/cam3";	//argv[1];//	
+	const char *camR ="rtsp://sonar:7070/cam0";	//argv[2];	
+	float IOD = 1.5;//atof(argv[3]);
 
 	STREAM camara1;						//  	create an stream object
 	
