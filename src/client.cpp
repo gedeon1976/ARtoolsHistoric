@@ -119,9 +119,11 @@ int STREAM::initCodecs()
 	pCodecCtx->width=720;//768
 	pCodecCtx->height=576;//576
 	pCodecCtx->bit_rate = 1000000;	//	bit rate?
+
 	//MPEG4 global header used for decode the frames
 	//pCodecCtx->extradata = (void*)"000001b0f5000001b509000001000000012000c888b0e0e0fa62d089028307";	//	info given by Leopold Avellaneda
 	//pCodecCtx->extradata_size= 62;
+
 //	look for truncated bitstreams
 
 //	if(pCodec->capabilities&&CODEC_CAP_TRUNCATED)
@@ -248,6 +250,7 @@ int STREAM::create_Thread()
 		param.sched_priority = 10;
 		//printf("setup thread scope \n");
 					//	set priority to 10; max priority is = ?
+					// in linux the threads are created with the maximum priority, equal to the kernel
 	else{
 		printf("error: %d \n", errno);
 	}	
@@ -319,8 +322,8 @@ void STREAM::set_Semaphore(int sem)
 	switch(sem)
 	{
 	case 1:
-		if (sem_post(&Sem1)==-1)	//	start semaphore to i value
-					//	2d parameter = 0; only shared by threads in this process(class)
+		if (sem_post(&Sem1)==-1)	
+					//	increase semaphore 
 		{
 			printf("Failed to unlock or increase the semaphore %d in camera %d",Sem1,ID);
 		}else
@@ -331,9 +334,9 @@ void STREAM::set_Semaphore(int sem)
 	
 		break;
 	case 2:
-		if (sem_post(&Sem2)==-1)	//	start semaphore to i value
-					//	2d parameter = 0; only shared by threads in this process(class)
-		{
+		if (sem_post(&Sem2)==-1)
+					//	increase semaphore 
+							{
 			printf("Failed to unlock or increase the semaphore %d in camera %d",Sem2,ID);
 		}else{
 			printf("camera: %d  Semaphore: %d\n",ID,Sem2);
@@ -348,7 +351,8 @@ void STREAM::init_Semaphore(int sem,int i)
 	switch(sem)
 	{
 	case 1:
-		if (sem_init(&Sem1,0,i)==-1)	//	start semaphore to i value
+		if (sem_init(&Sem1,0,i)==-1)	
+					//	start semaphore to i value
 					//	2d parameter = 0; only shared by threads in this process(class)
 		{
 			printf("Failed to initialize the semaphore %d in camera %d",Sem1,ID);
@@ -357,7 +361,8 @@ void STREAM::init_Semaphore(int sem,int i)
 	
 		break;
 	case 2:
-		if (sem_init(&Sem2,0,i)==-1)	//	start semaphore to i value
+		if (sem_init(&Sem2,0,i)==-1)	
+					//	start semaphore to i value
 					//	2d parameter = 0; only shared by threads in this process(class)
 		{
 			printf("Failed to initialize the semaphore %d in camera %d",Sem2,ID);
@@ -375,8 +380,9 @@ void STREAM::wait_Semaphore(int sem)
 	switch(sem)
 	{
 	case 1:
-		if (sem_wait(&Sem1)==-1)	//	start semaphore to i value
-					//	2d parameter = 0; only shared by threads in this process(class)
+		if (sem_wait(&Sem1)==-1)	
+					//	decrease semaphore value
+					
 		{
 			printf("Failed to lock or decrease the semaphore %d in camera %d",Sem1,ID);
 		}else
@@ -387,8 +393,8 @@ void STREAM::wait_Semaphore(int sem)
 	
 		break;
 	case 2:
-		if (sem_wait(&Sem2)==-1)	//	start semaphore to i value
-					//	2d parameter = 0; only shared by threads in this process(class)
+		if (sem_wait(&Sem2)==-1)	
+					//	decrease semaphore value
 		{
 			printf("Failed to lock or decrease the semaphore %d in camera %d",Sem2,ID);
 		}else{
@@ -1186,7 +1192,7 @@ catch(...)
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //		MAIN PROGRAM
-//		user input: .\client rtsp://sonar:7070/cam1 rtsp://sonar:7070/cam2
+//		user input: .\client rtsp://sonar:7070/cam1 rtsp://sonar:7070/cam2 IOD
 
 /**
  * 
@@ -1209,8 +1215,8 @@ try{
 	//;	channel 0 and 3
 	//;
 	const char *camL =argv[1];//"rtsp://sonar:7070/cam3";	//	
-	const char *camR =argv[2];//"rtsp://sonar:7070/cam0"	
-	float IOD =atof(argv[3]);
+	const char *camR =argv[2];//"rtsp://sonar:7070/cam0";	//	
+	float IOD = atof(argv[3]);
 
 	STREAM camara1;						//  	create an stream object
 	

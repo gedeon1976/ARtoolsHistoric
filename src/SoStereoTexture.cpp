@@ -161,27 +161,29 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	static GLuint texName;			//	texture name
 	GLuint bufferID[2];			//	PBO (pixel_buffer_object) name	
 	void *pboMemoryL,*pboMemoryR;
-	GLboolean isPBO;
+	GLboolean isPBO,*isStereo;		//	boolean flags
 	GLXDrawable glXSurface;			//	glX variables to do the SwapBuffer
-	Display *pDisplay;			
+	Display *pDisplay;	
+		
 	//	Quad Buffer TEST
 	//**********************************************************************************
 	
-	float depthZ = 150.0;                          // depth of the object model
+	float depthZ = 150.0;                           // depth of the object model
 
       //double fovy =  45;                              // field of view in y-axis, 
-	double theta = 46;
+	double theta = 46;				// aperture angle as FOV
 	double aspect = double(720)/double(576);  	// screen aspect ratio
-	double nearZ = 75.0;                             // near clipping plane
-	double farZ = 400.0;                           // far clipping plane
+	double nearZ = 75.0;                            // near clipping plane
+	double farZ = 400.0;                            // far clipping plane
 	double screenZ =100.0;                          // screen projection plane
 	//double IOD = 5.0;                             // intraocular distance
 	double beta;					// vergence angle
 	double l,r,b,t,K;				// limits for glfrustum delimitation	
 	
+	//	frustum calculation for glFrustum
 	beta = 2*atan(IOD.getValue()/(2*screenZ));	// get vergence angle from IOD
-	t =  nearZ*tan(theta/2);				// top coordinate
-	b = -nearZ*tan(theta/2);				// bottom coordinate
+	t =  nearZ*tan(theta/2);			// top coordinate
+	b = -nearZ*tan(theta/2);			// bottom coordinate
 	K = (0.5*IOD.getValue()*nearZ)/screenZ;		// to get l and r values
 	//***********************************************************************************
 	// ask if this should be rendered
@@ -196,7 +198,11 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 	isPBO = isExtensionSupported("GL_EXT_pixel_buffer_object");	//	is PBO supported?
 
-	
+	//	check if stereo is supported
+
+	glGetBooleanv(GL_STEREO,isStereo);
+	//*isStereo = GL_FALSE;	
+
 	//	openGL code for textures
 
 	//	using PBO according to the extension specification
@@ -425,6 +431,7 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 
 }else
 {
+	//	using gl_RectangleNV parameter for textures, very fast 
 
 	glPushMatrix();
 	
@@ -456,115 +463,151 @@ if (isPBO == GL_FALSE)	// GL_TRUE
 	size.setValue(720,576);
 	components=3;
 
-	//*******************************************************************************
-	//	QUAD BUFFER INITIALIZATION
-	glViewport (0, 0, 1000, 800);            		// sets drawing viewport
-/*
-	TOE-IN method for rendering	
 
- 	glMatrixMode(GL_PROJECTION);
-  	glLoadIdentity();
-	//glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	// set frustum to see
-  	gluPerspective(fovy, aspect, nearZ, farZ);              // sets frustum using gluPerspective
-*/
-	// Off-axis method for rendering
+	//	check for stereo support
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	r = aspect*t - K;	
-	l = aspect*b - K;
-	glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+	if(*isStereo == GL_TRUE)	
+	{
+		//*******************************************************************************
+		//	QUAD BUFFER INITIALIZATION
+		glViewport (0, 0, 1000, 800);            		// sets drawing viewport
+	/*
+		TOE-IN method for rendering	
 
-  	glMatrixMode(GL_MODELVIEW);
-  	glDrawBuffer(GL_BACK_LEFT);           			// draw into back left buffer
-  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
+ 		glMatrixMode(GL_PROJECTION);
+  		glLoadIdentity();
+		//glFrustum(576.0,576.0,720.0,720.0,nearZ,farZ);	// set frustum to see
+  		gluPerspective(fovy, aspect, nearZ, farZ);              // sets frustum using gluPerspective
+	*/
+		// Off-axis method for rendering
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		r = aspect*t - K;	
+		l = aspect*b - K;
+		glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+
+  		glMatrixMode(GL_MODELVIEW);
+  		glDrawBuffer(GL_BACK_LEFT);           			// draw into back left buffer
+  		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
   	                             
-  	glLoadIdentity();                                        // reset modelview matrix
+  		glLoadIdentity();                                        // reset modelview matrix
 
+		gluLookAt(-IOD.getValue()/2,0.0,0.0,	//set camera position  x=-IOD/2
+            		  -IOD.getValue()/2,0.0,screenZ,//set camera "look at" x=0.0
+            				0.0,1.0,0.0);   //set camera up vector
 
-	gluLookAt(-IOD.getValue()/2,                                        //set camera position  x=-IOD/2
-            0.0,                                           //                     y=0.0
-            0.0,                                           //                     z=0.0
-            -IOD.getValue()/2,                                           //set camera "look at" x=0.0
-            0.0,                                           //                     y=0.0
-            screenZ,                                       //                     z=screenplane
-            0.0,                                           //set camera up vector x=0.0
-            1.0,                                           //                     y=1.0
-            0.0);                                          //                     z=0.0
-	//*******************************************************************************
-	glPushMatrix();
-	glTranslatef(0.0,0.0,depthZ);
-	//	DRAW THE LEFT IMAGE
+		//*******************************************************************************
+		glPushMatrix();
+		glTranslatef(0.0,0.0,depthZ);
 
-	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
-	//	modifying for stereo
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0,0.0);
-			glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
-		glTexCoord2f(0.0,heigh.getValue());	
-			glVertex3f( width.getValue()/2.0,-heigh.getValue()/2.0 ,screenZ);
-		glTexCoord2f(width.getValue(),heigh.getValue());
-			glVertex3f( -width.getValue()/2.0, -heigh.getValue()/2.0,screenZ);
-		glTexCoord2f(width.getValue(),0.0);
-			glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
-	glEnd();
+		//	DRAW THE LEFT IMAGE
 
-	glPopMatrix();
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
+		//	modifying for stereo
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+				glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
+			glTexCoord2f(0.0,heigh.getValue());	
+				glVertex3f( width.getValue()/2.0,-heigh.getValue()/2.0 ,screenZ);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( -width.getValue()/2.0, -heigh.getValue()/2.0,screenZ);
+			glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
+		glEnd();
+
+		glPopMatrix();
 	//**************************************************************************
 	// Off-axis method for rendering
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	r = aspect*t + K;	
-	l = aspect*b + K;
-	glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		r = aspect*t + K;	
+		l = aspect*b + K;
+		glFrustum(l,r,b,t,nearZ,farZ);				// delimits the frustum perspective
 
 	//	Draw right Image in buffer
-	glDrawBuffer(GL_BACK_RIGHT);                             //draw into back right buffer
-  	glMatrixMode(GL_MODELVIEW);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
-  	glLoadIdentity();    
+
+		glDrawBuffer(GL_BACK_RIGHT);                            //draw into back right buffer
+	  	glMatrixMode(GL_MODELVIEW);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
+  		glLoadIdentity();    
 
 	/*
 		rendering methods
 	
-	1) Toe-in: the left and rght cameras look at the center of vergence at the screen
-			plane, this method introduce vertical parallax
+	1) Toe-in: the left and right cameras look at the center of vergence at the screen
+			plane, this method introduces a vertical parallax
 
-	2)Off-axis: correct rendering method for screen surfaces, it does not introduces 		vertical parallax to a better stereo effect, the kleft and right 		cameras point at two different points but that are parallel one to other.
+	2)Off-axis: correct rendering method for planar screen surfaces, it does not introduces 		vertical parallax for a better stereo effect, the left and right 		cameras point to two different points but that are parallel one to other.
 
 	*/
-	gluLookAt(IOD.getValue()/2, 0.0, 0.0, IOD.getValue()/2, 0.0, screenZ,            //as for left buffer with camera position at:
-            0.0, 1.0, 0.0);     
-                                   //reset modelview matrix
+		//as for the left buffer but with camera position at:
+		gluLookAt(IOD.getValue()/2, 0.0, 0.0, 
+			  IOD.getValue()/2, 0.0, screenZ,            
+            			       0.0, 1.0, 0.0);
 	//**************************************************************************
 
-	glPushMatrix();
-	glTranslatef(0.0,0.0,depthZ);
+		glPushMatrix();
+		glTranslatef(0.0,0.0,depthZ);
+
 	//	DRAW THE RIGHT IMAGE
 
-	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0,0.0);
-			glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
-		glTexCoord2f(0.0,heigh.getValue());	
-			glVertex3f( width.getValue()/2.0,-heigh.getValue()/2.0 ,screenZ);
-		glTexCoord2f(width.getValue(),heigh.getValue());
-			glVertex3f( -width.getValue()/2.0, -heigh.getValue()/2.0,screenZ);
-		glTexCoord2f(width.getValue(),0.0);
-			glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
-	glEnd();
-	glPopMatrix();
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+				glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
+			glTexCoord2f(0.0,heigh.getValue());	
+				glVertex3f( width.getValue()/2.0,-heigh.getValue()/2.0 ,screenZ);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( -width.getValue()/2.0, -heigh.getValue()/2.0,screenZ);
+			glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
+		glEnd();
+		glPopMatrix();
+	}
 	//*******************************************************************************
 	//	swap Buffers
 	//	see the openGL programming Guide appendix C
 	
-	//  glXSwapBuffers(glXGetCurrentDisplay(),glXGetCurrentDrawable());
+	//glXSwapBuffers(glXGetCurrentDisplay(),glXGetCurrentDrawable());
 	//glReadBuffer(GL_BACK_LEFT);
 	//glDrawBuffer(GL_FRONT_LEFT);
 	//glCopyPixels(0, 0, 720, 576, GL_COLOR);
 	//*******************************************************************************
+	else{	// if stereo is not supported, draw the two videos separately
 
+	//	DRAW THE LEFT IMAGE
+
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
+		//	modifying for stereo
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+				glVertex3f( -width.getValue(), heigh.getValue()/2.0,0.0);
+			glTexCoord2f(0.0,heigh.getValue());	
+				glVertex3f( -width.getValue(),-heigh.getValue()/2.0 ,0.0);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
+			glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
+		glEnd();
+
+	//	DRAW THE RIGHT IMAGE
+
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
+		glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+				glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
+			glTexCoord2f(0.0,heigh.getValue());	
+				glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
+			glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
+		glEnd();
+		
+
+	}
 	glPopMatrix();
 		
 }
