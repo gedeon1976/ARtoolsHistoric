@@ -97,7 +97,7 @@
 #include <sys/timex.h>					//	ntp time
 #include "time.h"
 //*********************************************************************************		
-#define  RTPDataSize 	70000				//	size of RTP data read
+#define  RTPDataSize 	90000				//	size of RTP data read
 using namespace std;
 
 enum IMAGE {CUT_IMAGE=0,NORMAL_IMAGE=1};
@@ -107,7 +107,9 @@ enum IMAGE {CUT_IMAGE=0,NORMAL_IMAGE=1};
 struct dataFrame{
 	
 	unsigned long timestamp;
-	unsigned char *data;		//	compressed data
+	//unsigned char *data;		//	compressed data
+	unsigned char data[70000];
+
 	int size;			//	size of compressed frame
 	unsigned char *image;		//	data decoded
 	struct timeval time;		//	save the time with good resolution (microseconds)
@@ -191,7 +193,7 @@ myfunctor(TStream* _p2object,Export_Frame (TStream::*m)())
 virtual Export_Frame Execute()
 {
 	Export_Frame t;
-	t= (*clase.*method)();			//secure way for calling the corresponding method
+	t = (*clase.*method)();			//secure way for calling the corresponding method according to papers found
 	return t;
 }
 
@@ -301,7 +303,8 @@ char const *URL3;
 unsigned char *MP4H;
 char const *MP4Header;						//	mp4 VOP header?
 int MP4Hsize;							//	size of mp4 header
-unsigned char *dataRTP;						//	allocate buffer memory
+unsigned char dataRTP[70000];					//	TESTING
+//unsigned char *dataRTP;						//	allocate buffer memory
 //static int MP4FrameSize;					//	size of frame
 unsigned int maxRTPDataSize;					//	length of RTP data to be read
 unsigned timestampFreq;						//	timestamp clock

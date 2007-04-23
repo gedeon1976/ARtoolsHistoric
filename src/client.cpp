@@ -58,10 +58,11 @@ ID=0;
 m_global_flag = -1;					//	flag to start semaphore synchronization
 
 
-//	Allocation of  memory to save the compressed and uncompressed frames
-	
-dataRTP = new unsigned char[70000];			// 	compressed frame
-data_RTP.data = new unsigned char[70000];		//	uncompressed frames with MPEG4 Headers
+//	Allocation of memory to save the compressed and uncompressed frames
+
+//unsigned char dataRTP[70000];	
+//dataRTP = new unsigned char[RTPDataSize];		// 	compressed frame
+//data_RTP.data = new unsigned char[RTPDataSize];		//	uncompressed frames with MPEG4 Headers
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,8 +70,8 @@ data_RTP.data = new unsigned char[70000];		//	uncompressed frames with MPEG4 Hea
 STREAM::~ STREAM()
 {
 	//	free resources
-	delete dataRTP;
-	delete data_RTP.data;
+	//delete dataRTP;
+	//delete data_RTP.data;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void STREAM::set_ID()		//	increase ID at each created object
@@ -141,7 +142,7 @@ int STREAM::initCodecs()
 	pFrame = avcodec_alloc_frame();
 	pFrameCrop = avcodec_alloc_frame();
 //	allocate memory to save a RGB frame
-	pFrameRGBA= avcodec_alloc_frame();
+	pFrameRGBA = avcodec_alloc_frame();
 	if(pFrameRGBA==NULL)
 	return -1;	//	cannot allocate memory
 
@@ -174,7 +175,7 @@ timeval STREAM::timeNow() //
 	{
 		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
 		//printf("time arrival of frame %d was:%li.%06li\n",frameCounter,t.tv_sec,t.tv_usec);
-//	printf("time of capture was:%li.%06li from camera %d\n",t.tv_sec,t.tv_usec,ID);
+	printf("time of capture was:%li.%06li from camera %d\n",t.tv_sec,t.tv_usec,ID);
 		//return t;
 	}else{
 		printf("error was:%i\n",errno);
@@ -443,10 +444,10 @@ try{
 	//printf("Subsession ID: %s\n",Subsession->sessionId);
 	if (dataBuffer.data == NULL)
 	{ 
-		//printf("%s \n","data was not read");
+		printf("%s \n","data was not read");
 	}else{
 		
-	//	printf("Data size: %i\n",dataBuffer.size);
+		printf("Data size: %i\n",dataBuffer.size);
 		//printf("%i\n",strlen(dataBuffer.data));
 	}
 }
@@ -478,13 +479,14 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 	
 	//STREAM *ps = (STREAM*)clientData;
 	//ps = ps->
-	bind_object();
+	//   bind_object();	// not required now, early way of assign a correct object to call
+				//  their methods
 	
-	unsigned int maxSize = 70000;			//	max size of the got frame
+	unsigned int maxSize = RTPDataSize;		//	max size of the got frame
 	//test size of frame
-	if(framesize>=maxSize)				//	maxRTPDataSize
+	if(framesize >= maxSize)				//	maxf
 	{
-	printf("framesize: %d is greater that maxRTPDATASize: %i\n",framesize,maxSize);
+		printf("framesize: %d is greater that maxRTPDATASize: %i\n",framesize,maxSize);
 	}else{
 	       //printf("Data read is: %d\n",framesize);
 		
@@ -748,7 +750,7 @@ try{
 	
 	readOKFlag = 0;						 //	schedule read                         	
 	TaskScheduler& scheduler = Subsession->readSource()->envir().taskScheduler();//&
-	scheduler.doEventLoop(&readOKFlag);
+	scheduler.doEventLoop(&readOKFlag);		// waits for the frame
 	//printf("readOKFlag is: %i\n",readOKFlag );
 	//timeNow();
 	frameCounter++;					//	increase frame counter
@@ -784,6 +786,7 @@ try{
 			//	img_crop((AVPicture*)pFrameCrop,(AVPicture*)pFrame,pCodecCtx->pix_fmt,0,208);//208
 	//			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,720,576);//RGB24
 	//		}else{
+
 		//	convert the image from his format to RGB
 			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,720,576);//RGB24
 	//		}	
@@ -800,9 +803,9 @@ try{
 			//frameCounter++;	
 			printf("there was an error while decoding the frame %d in the camera %d\n",frameCounter,ID);
 			data_RTP.pFrame = pFrameRGBA;
-			throw pFrameRGBA;
-		}
-	//}
+			//throw pFrameRGBA;
+		//}
+	}
 }
 catch(...)
 {	
@@ -848,7 +851,7 @@ void *STREAM::Entry_Point(void *pthis)
 	try{
 		STREAM *pS = (STREAM*)pthis;	//	convert to class Stream to allow correct thread work
 		pS->rtsp_getData();
-		return 0;
+		//return 0;
 	}
 	catch(...)
 	{
@@ -866,14 +869,15 @@ void STREAM::rtsp_getData()
 	double s;
 
 try{			
-	while(1)	//	threads are always in execution
+	while(1)			//	threads are always in execution
 	{
 		//usleep(delay);	//	delay
-	if (m_global_flag==0)
+ 	if (m_global_flag==0)
 	{
 		wait_Semaphore(1);
 	}
 
+	
 	//	LOCK THE RESOURCE
 		cod = lock_mutex();
 		                           
@@ -883,20 +887,20 @@ try{
 			}
 		else{
 	
-		//conditaugustion
+		//condition
 			
 			rtsp_getFrame();
-		//	printf("start decoding, camera %d\n",ID);
-		//	timeNow();		//	true capture time
+			printf("start decoding, camera %d\n",ID);
+			timeNow();		//	true capture time
 			rtsp_decode(data_RTP);
-		//	timeNow();
-		//	printf("finish decoding, camera %d\n",ID);		
+			timeNow();
+			printf("finish decoding, camera %d\n",ID);		
 			//sem_post(&sem);
-
+			
 			if(InputBuffer.empty() | InputBuffer.size()>= 1 )
 			{
 				InputBuffer.push_back(data_RTP);	//	save data
-				//printf("writing frame %d from the camera %d \n",frameCounter,ID);
+				printf("writing frame %d from the camera %d \n",frameCounter,ID);
 				//set_Semaphore();			//	increase the semaphore
 			}
 
@@ -914,7 +918,7 @@ try{
 			//	limit the size of FIFO buffer
 			
 			
-			if(InputBuffer.size() >= 50)
+			if(InputBuffer.size() >= 2)
 			{ 
 				InputBuffer.pop_front();		//	delete head frame in th FIFO
 				//wait_Semaphore();			//	decrease semaphore
@@ -922,7 +926,7 @@ try{
 			
 			//counter++;
 			//T.push(counter);
-			printf("writing frame %d from the camera %d \n",frameCounter,ID);
+		//	printf("writing frame %d from the camera %d \n",frameCounter,ID);
 		//	printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
 		
 
@@ -937,11 +941,11 @@ try{
 		if (cod!=0)	
 			{printf("%s\n","Error unlocking get RTP data");}
 	
-	if(m_global_flag==0)
+	 if(m_global_flag==0)
 		{
 			set_Semaphore(1);
-		}
-	}
+		} 
+	} 
 	//return 0;
 }
 catch(...)
@@ -965,9 +969,9 @@ try{
 	initCodecs();					//	init codecs
 	////////////////////////////////////////////////////////////////////////
 	//	Start threads and semaphores
-	//init_Semaphore(1);				//	start semaphores with a  value of 0 = blocked
+	//	start semaphores with a  value of 1 
 	init_Semaphore(1,1);				//	writing semaphore
-	init_Semaphore(2,1);				//	reading semaphore
+	//init_Semaphore(2,1);				//	reading semaphore
 	init_mutex();					//	start mutex for exclusion of buffers
 	
 	//int cod;					//	not used			
@@ -1003,12 +1007,11 @@ return 0;
 catch(int status)
 {
 	cout<<"Video not available, review if the server is working\n"<<endl;
-	
 
 }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-Export_Frame STREAM::getImage()//dataFrame
+ Export_Frame STREAM::getImage()//dataFrame
 {
 Export_Frame I_Frame;
 int cod;
@@ -1019,14 +1022,15 @@ if (m_global_flag == -1)
 }
 
 if (m_global_flag==0)
-{				
-	wait_Semaphore(1);				//	look for semaphore, test if it is green to get the image		
+{	
+  			
+	wait_Semaphore(1);				//	look for semaphore, test if it is in green to get the image		
 							//	from the network
 	//Export_Frame I_Frame;
 	char *ID_cam[2]={"LEFT","RIGTH"};
-/*	
+ 	
 	//	LOCK THE RESOURCE
-	cod = lock_mutex();
+/*	cod = lock_mutex();
 		                           
 if (cod!=0)	
 {
@@ -1039,7 +1043,7 @@ else{
 					
 		ReceivedFrame = InputBuffer.front();	//	get the frame from the FIFO buffer 
 
-		I_Frame.pData = ReceivedFrame.pFrame;	//	save image
+		I_Frame.pData = ReceivedFrame.pFrame;	//	save image within a frame structure
 		I_Frame.h=720;				//	width of image
 		I_Frame.w=576;				//	height of image
  	
@@ -1053,13 +1057,14 @@ else{
 	else
 	{
 			printf("Empty buffer from  %s camera, Size = %d\n",ID_cam[ID],InputBuffer.size());
+			I_Frame.pData = pFrameRGBA;		//	to avoid empty frame
 	}	
-/*
-}
+
+/*}
 cod = unlock_mutex();
 if (cod!=0)	
 {printf("%s\n","Error unlocking get RTP data");}
-*/	
+*/ 	
 	
 	set_Semaphore(1);		//	send signal increase semaphore
 }
@@ -1151,6 +1156,7 @@ try{
 	SoStereoTexture *Stereo = (SoStereoTexture*)data;
 	//	calculus for get the video frames rate per second
 	/////////////////////////////////////////////////////////////////////////////////////////
+	/*
 	if (FirstL==0)
 	{
 		t1L = getTime();
@@ -1170,6 +1176,7 @@ try{
 	//FpsL->setValue(fpsL);
 	t1L = t2L;				//	update last time for the next frame arrival
 	}
+	*/
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// return a structure that contain the image, size, width and height
 	FrL=C1->Execute();
@@ -1225,14 +1232,14 @@ try{
 								//	getImage function of camara1 object
 	C1 =&D1;						//	C1 is a abstract class base for myfunctor class
 	//set_format=CUT_IMAGE;					//	with a virtual method to overload
-	set_format=CUT_IMAGE;
+	set_format=NORMAL_IMAGE;
 	camara1.Init_Session(camL,set_format);			//	start connection with url
 								//	set the format of the image
 								//	for the camera 
 	STREAM camara2;
 	myfunctor<STREAM> D2(&camara2,&STREAM::getImage);	//	do the same for the right camera
 	C2 =&D2;
-	set_format=NORMAL_IMAGE;
+	set_format=CUT_IMAGE;
 	camara2.Init_Session(camR,set_format);
 	// ******************************************************************************************** 
 	//		Graphics Scene
@@ -1586,7 +1593,7 @@ try{
     	
     	root->unref();
 		
-return 0;
+return 0;			// from main function
 }
 catch(exception& e)
 {

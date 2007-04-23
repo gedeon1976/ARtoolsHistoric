@@ -196,8 +196,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 	// 	look for Extension supported
 
-	isPBO = isExtensionSupported("GL_EXT_pixel_buffer_object");	//	is PBO supported?
-
+	//isPBO = isExtensionSupported("GL_EXT_pixel_buffer_object");	//	is PBO supported?
+	isPBO = GL_FALSE;
 	//	check if stereo is supported
 
 	glGetBooleanv(GL_STEREO,isStereo);

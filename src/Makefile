@@ -88,7 +88,7 @@ CPPFLAGS = -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1
 CXX = g++
 CXXCPP = g++ -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g -O2
+CXXFLAGS = -O0 -g3
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
