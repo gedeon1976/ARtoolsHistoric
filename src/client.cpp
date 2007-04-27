@@ -101,7 +101,7 @@ STREAM* STREAM::bind_object()
 //	init libavcodec
 int STREAM::initCodecs()
 {
-	pCodecCtx=NULL;
+	pCodecCtx = NULL;
 	
 //	initialize the codecs
 	av_register_all();
@@ -341,6 +341,7 @@ void STREAM::set_Semaphore(int sem)
 			printf("Failed to unlock or increase the semaphore %d in camera %d",Sem2,ID);
 		}else{
 			printf("camera: %d  Semaphore: %d\n",ID,Sem2);
+			printf("No deberia entrar aqui\n");
 		}
 
 		break;
@@ -479,7 +480,7 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 	
 	//STREAM *ps = (STREAM*)clientData;
 	//ps = ps->
-	//   bind_object();	// not required now, early way of assign a correct object to call
+	//bind_object();	// not required now, early way of assign a correct object to call
 				//  their methods
 	
 	unsigned int maxSize = RTPDataSize;		//	max size of the got frame
@@ -787,7 +788,7 @@ try{
 	//			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrameCrop,pCodecCtx->pix_fmt,720,576);//RGB24
 	//		}else{
 
-		//	convert the image from his format to RGB
+		//	convert the image from its format to RGB
 			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,720,576);//RGB24
 	//		}	
 		
@@ -803,7 +804,7 @@ try{
 			//frameCounter++;	
 			printf("there was an error while decoding the frame %d in the camera %d\n",frameCounter,ID);
 			data_RTP.pFrame = pFrameRGBA;
-			//throw pFrameRGBA;
+			throw pFrameRGBA;
 		//}
 	}
 }
@@ -821,7 +822,7 @@ catch(...)
 //		one appropiate frame
 
 //		At start it can save n frames to be used like a buffer to let smooth the rate
-//		of showinf frames  and too to decrease the network jitter of packets
+//		of showing frames  and too to decrease the network jitter of packets
 //		here, this decouples the reception part of the showing part
 int STREAM::rtsp_Buffering(int n)
 {
@@ -859,7 +860,6 @@ void *STREAM::Entry_Point(void *pthis)
 	}
 }
 
-
 //////////////////////////////////////////
 //	Getting data thread function
 
@@ -876,7 +876,6 @@ try{
 	{
 		wait_Semaphore(1);
 	}
-
 	
 	//	LOCK THE RESOURCE
 		cod = lock_mutex();
@@ -890,13 +889,16 @@ try{
 		//condition
 			
 			rtsp_getFrame();
-			printf("start decoding, camera %d\n",ID);
-			timeNow();		//	true capture time
+			//printf("start decoding, camera %d\n",ID);
+			//timeNow();		//	true capture time
 			rtsp_decode(data_RTP);
-			timeNow();
-			printf("finish decoding, camera %d\n",ID);		
+			//timeNow();
+			//printf("finish decoding, camera %d\n",ID);		
 			//sem_post(&sem);
 			
+			
+
+
 			if(InputBuffer.empty() | InputBuffer.size()>= 1 )
 			{
 				InputBuffer.push_back(data_RTP);	//	save data
@@ -918,7 +920,7 @@ try{
 			//	limit the size of FIFO buffer
 			
 			
-			if(InputBuffer.size() >= 2)
+			if(InputBuffer.size() >= 5)
 			{ 
 				InputBuffer.pop_front();		//	delete head frame in th FIFO
 				//wait_Semaphore();			//	decrease semaphore
@@ -926,20 +928,20 @@ try{
 			
 			//counter++;
 			//T.push(counter);
-		//	printf("writing frame %d from the camera %d \n",frameCounter,ID);
+			//printf("writing frame %d from the camera %d \n",frameCounter,ID);
 		//	printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
-		
-
+		}
+		cod = unlock_mutex();
+		if (cod!=0)	
+			{printf("%s\n","Error unlocking get RTP data");}
 		//	WAKE UP THE OTHER THREAD: SHOW DATA THREAD
 			
 			//sem_post(&sem);
 	
 	//	 	set_Semaphore();		//	send signal
 			
-		}
-		cod = unlock_mutex();
-		if (cod!=0)	
-			{printf("%s\n","Error unlocking get RTP data");}
+		//}
+		
 	
 	 if(m_global_flag==0)
 		{
@@ -1011,7 +1013,7 @@ catch(int status)
 }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
- Export_Frame STREAM::getImage()//dataFrame
+Export_Frame STREAM::getImage()//dataFrame
 {
 Export_Frame I_Frame;
 int cod;
@@ -1038,6 +1040,7 @@ if (cod!=0)
 }
 else{	
 */
+
 	if(!InputBuffer.empty())			//	check if buffer is not empty
 	{
 					
@@ -1056,19 +1059,20 @@ else{
 	}
 	else
 	{
-			printf("Empty buffer from  %s camera, Size = %d\n",ID_cam[ID],InputBuffer.size());
-			I_Frame.pData = pFrameRGBA;		//	to avoid empty frame
+		printf("Empty buffer from  %s camera, Size = %d\n",ID_cam[ID],InputBuffer.size());
+		I_Frame.pData = pFrameRGBA;		//	to avoid empty frame
 	}	
-
-/*}
+/*
+}
 cod = unlock_mutex();
 if (cod!=0)	
 {printf("%s\n","Error unlocking get RTP data");}
-*/ 	
+ */	
 	
 	set_Semaphore(1);		//	send signal increase semaphore
 }
 		//return ReceivedFrame.image;				//	return the last frame
+
 	 return I_Frame;
 	
 }
@@ -1180,9 +1184,21 @@ try{
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// return a structure that contain the image, size, width and height
 	FrL=C1->Execute();
-	Stereo->imageL.setValue(SbVec2s(720,576),3,FrL.pData->data[0]);
+	if (FrL.pData->data[0]!=NULL)
+	{
+		Stereo->imageL.setValue(SbVec2s(720,576),3,FrL.pData->data[0]);
+	}else
+	{
+		printf("%s\n","There aren't image from left buffer");
+	}
 	FrR=C2->Execute();			//	call getImage() using a functor
-	Stereo->imageR.setValue(SbVec2s(720,576),3,FrR.pData->data[0]);
+	if (FrR.pData->data[0]!=NULL)
+	{
+		Stereo->imageR.setValue(SbVec2s(720,576),3,FrR.pData->data[0]);
+	}else
+	{
+		printf("%s\n","There aren't image from right buffer");
+	}
 	//Stereo->imageL = Fr.pData->data[0];	
 	//leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB 4 = RGBA
 		
@@ -1232,30 +1248,31 @@ try{
 								//	getImage function of camara1 object
 	C1 =&D1;						//	C1 is a abstract class base for myfunctor class
 	//set_format=CUT_IMAGE;					//	with a virtual method to overload
-	set_format=NORMAL_IMAGE;
+	set_format=LEFT_IMAGE;
 	camara1.Init_Session(camL,set_format);			//	start connection with url
 								//	set the format of the image
 								//	for the camera 
 	STREAM camara2;
 	myfunctor<STREAM> D2(&camara2,&STREAM::getImage);	//	do the same for the right camera
 	C2 =&D2;
-	set_format=CUT_IMAGE;
+	set_format=RIGHT_IMAGE;
 	camara2.Init_Session(camR,set_format);
 	// ******************************************************************************************** 
 	//		Graphics Scene
 	// Initializes SoQt library (and implicitly also the Coin and Qt
     	// libraries). Returns a top-level / shell Qt window to use.
-    	QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
-	//QWidget * mainwin = SoQt::init(argv[0]);
+    	//QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
+	QWidget * mainwin = SoQt::init(argv[0]);
 	if (mainwin==NULL) exit(1);
 	
 	//	initialize the new nodes, required
 	SoStereoTexture::initClass();
 
 	//	create global variable to show a text with the fps value for each stream
+/*
 	SoSFFloat *FpsL = (SoSFFloat*)SoDB::createGlobalField(SbName("FpsL"),SoSFFloat::getClassTypeId());
 	SoSFFloat *FpsR = (SoSFFloat*)SoDB::createGlobalField(SbName("FpsR"),SoSFFloat::getClassTypeId());
-	
+*/	
 	SoSeparator *root = new SoSeparator;
     	root->ref();
 

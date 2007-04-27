@@ -97,10 +97,11 @@
 #include <sys/timex.h>					//	ntp time
 #include "time.h"
 //*********************************************************************************		
-#define  RTPDataSize 	90000				//	size of RTP data read
+#define  RTPDataSize 	90000				//	size of
+// RTP data read
 using namespace std;
 
-enum IMAGE {CUT_IMAGE=0,NORMAL_IMAGE=1};
+enum IMAGE {LEFT_IMAGE=0,RIGHT_IMAGE=1};
 
 
 //	MAIN DATA STRUCTURES
@@ -209,6 +210,7 @@ public:
 virtual void operator()(void* clientData)=0;	//	function to call using () operator
 virtual void method(void* clientData)=0;	//	method to call
 //TFunctorClose();
+
 virtual ~TFunctorClose()
 { }
 
@@ -304,7 +306,7 @@ unsigned char *MP4H;
 char const *MP4Header;						//	mp4 VOP header?
 int MP4Hsize;							//	size of mp4 header
 unsigned char dataRTP[70000];					//	TESTING
-//unsigned char *dataRTP;						//	allocate buffer memory
+//unsigned char *dataRTP;						//	allocate buffer memory, this is the main reception buffer in the software
 //static int MP4FrameSize;					//	size of frame
 unsigned int maxRTPDataSize;					//	length of RTP data to be read
 unsigned timestampFreq;						//	timestamp clock
@@ -319,6 +321,7 @@ int cam;							//	cameras to read
 int ID;								//	camera ID
 int delay;
 static int ID1;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //	LIBAVCODEC libraries
 

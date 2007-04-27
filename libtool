@@ -328,7 +328,7 @@ link_all_deplibs=no
 sys_lib_search_path_spec=" /usr/lib/gcc/i486-linux-gnu/4.1.2/ /usr/lib/gcc/i486-linux-gnu/4.1.2/ /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../i486-linux-gnu/lib/i486-linux-gnu/4.1.2/ /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../i486-linux-gnu/lib/ /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../i486-linux-gnu/4.1.2/ /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../ /lib/i486-linux-gnu/4.1.2/ /lib/ /usr/lib/i486-linux-gnu/4.1.2/ /usr/lib/"
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/X11R6/lib /lib/i486-linux-gnu /usr/lib/i486-linux-gnu /usr/lib/atlas "
+sys_lib_dlsearch_path_spec="/lib /usr/lib /lib/i486-linux-gnu /usr/lib/i486-linux-gnu /usr/lib/atlas "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""
@@ -6976,7 +6976,7 @@ link_all_deplibs=no
 sys_lib_search_path_spec=" /usr/lib/gcc/i486-linux-gnu/4.1.2/ /usr/lib/gcc/i486-linux-gnu/4.1.2/ /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../i486-linux-gnu/lib/i486-linux-gnu/4.1.2/ /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../../i486-linux-gnu/lib/ /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../i486-linux-gnu/4.1.2/ /usr/lib/gcc/i486-linux-gnu/4.1.2/../../../ /lib/i486-linux-gnu/4.1.2/ /lib/ /usr/lib/i486-linux-gnu/4.1.2/ /usr/lib/"
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/X11R6/lib /lib/i486-linux-gnu /usr/lib/i486-linux-gnu /usr/lib/atlas "
+sys_lib_dlsearch_path_spec="/lib /usr/lib /lib/i486-linux-gnu /usr/lib/i486-linux-gnu /usr/lib/atlas "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""
@@ -7284,7 +7284,7 @@ link_all_deplibs=no
 sys_lib_search_path_spec=" /usr/lib/gcc/i486-linux-gnu/3.4.6/ /usr/lib/gcc/i486-linux-gnu/3.4.6/ /usr/lib/gcc/i486-linux-gnu/3.4.6/../../../../i486-linux-gnu/lib/i486-linux-gnu/3.4.6/ /usr/lib/gcc/i486-linux-gnu/3.4.6/../../../../i486-linux-gnu/lib/ /usr/lib/gcc/i486-linux-gnu/3.4.6/../../../i486-linux-gnu/3.4.6/ /usr/lib/gcc/i486-linux-gnu/3.4.6/../../../ /lib/i486-linux-gnu/3.4.6/ /lib/ /usr/lib/i486-linux-gnu/3.4.6/ /usr/lib/"
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/X11R6/lib /lib/i486-linux-gnu /usr/lib/i486-linux-gnu /usr/lib/atlas "
+sys_lib_dlsearch_path_spec="/lib /usr/lib /lib/i486-linux-gnu /usr/lib/i486-linux-gnu /usr/lib/atlas "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""

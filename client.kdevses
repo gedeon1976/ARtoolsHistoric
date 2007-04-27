@@ -1,19 +1,31 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 <!DOCTYPE KDevPrjSession>
 <KDevPrjSession>
- <DocsAndViews NumberOfDocuments="4" >
-  <Doc0 NumberOfViews="1" URL="file:///home/portilla/3Dnodes/src/client.h" >
-   <View0 Type="Source" />
+ <DocsAndViews NumberOfDocuments="8" >
+  <Doc0 NumberOfViews="1" URL="file:///home/portilla/ARToolDevelopment/RTSPClient/branches/3Dvision/src/client.cpp" >
+   <View0 line="1587" Type="Source" />
   </Doc0>
-  <Doc1 NumberOfViews="1" URL="file:///home/portilla/3Dnodes/src/client.cpp" >
-   <View0 Type="Source" />
+  <Doc1 NumberOfViews="1" URL="file:///home/portilla/ARToolDevelopment/RTSPClient/branches/3Dvision/src/client.h" >
+   <View0 line="196" Type="Source" />
   </Doc1>
-  <Doc2 NumberOfViews="1" URL="file:///home/portilla/3Dnodes/src/SoStereoTexture.h" >
+  <Doc2 NumberOfViews="1" URL="file:///home/portilla/ARToolDevelopment/RTSPClient/branches/3Dvision/src/SoStereoTexture.h" >
    <View0 Type="Source" />
   </Doc2>
-  <Doc3 NumberOfViews="1" URL="file:///home/portilla/3Dnodes/src/SoStereoTexture.cpp" >
-   <View0 line="176" Type="Source" />
+  <Doc3 NumberOfViews="1" URL="file:///home/portilla/ARToolDevelopment/RTSPClient/branches/3Dvision/src/SoStereoTexture.cpp" >
+   <View0 line="201" Type="Source" />
   </Doc3>
+  <Doc4 NumberOfViews="1" URL="file:///usr/include/c%2B%2B/4.1.2/bits/stl_deque.h" >
+   <View0 line="232" Type="Source" />
+  </Doc4>
+  <Doc5 NumberOfViews="1" URL="file:///usr/include/c%2B%2B/4.1.2/bits/deque.tcc" >
+   <View0 line="410" Type="Source" />
+  </Doc5>
+  <Doc6 NumberOfViews="1" URL="file:///usr/include/c%2B%2B/4.1.2/ext/new_allocator.h" >
+   <View0 line="93" Type="Source" />
+  </Doc6>
+  <Doc7 NumberOfViews="1" URL="file:///home/portilla/Live/live/UsageEnvironment/include/UsageEnvironment.hh" >
+   <View0 line="53" Type="Source" />
+  </Doc7>
  </DocsAndViews>
  <pluginList>
   <kdevdebugger>
@@ -69,9 +81,6 @@
     <breakpoint16 location="/home/portilla/KDEV/client/src/client.cpp:968" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint16>
-    <breakpoint17 location="s" type="2" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
-     <tracedExpressions/>
-    </breakpoint17>
    </breakpointList>
   </kdevdebugger>
   <kdevbookmarks>
@@ -80,6 +89,14 @@
      <mark line="1045" />
      <mark line="962" />
      <mark line="915" />
+    </bookmark>
+    <bookmark url="/home/portilla/ARToolDevelopment/RTSPClient/branches/3Dvision/src/client.cpp" >
+     <mark line="310" />
+     <mark line="873" />
+     <mark line="756" />
+     <mark line="149" />
+     <mark line="1016" />
+     <mark line="812" />
     </bookmark>
     <bookmark url="/home/portilla/KDEV/client/src/client.cpp" >
      <mark line="1077" />
@@ -95,7 +112,7 @@
   </kdevsubversion>
   <kdevvalgrind>
    <executable path="" params="" />
-   <valgrind path="/usr/bin/valgrind" params="--tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --leak-check=yes" />
+   <valgrind path="/usr/bin/valgrind" params="--tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --tool=memcheck --leak-check=yes" />
    <calltree path="calltree" params="" />
    <kcachegrind path="/usr/bin/kcachegrind" />
   </kdevvalgrind>

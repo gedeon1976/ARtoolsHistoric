@@ -50,8 +50,8 @@ SoStereoTexture::SoStereoTexture()
 	//SO_NODE_ADD_FIELD(imageL,(NULL));
 	//SO_NODE_ADD_FIELD(imageR,(NULL));
 	SO_NODE_ADD_FIELD(IOD,(6.0));
-	pthis->image_L = NULL;
-	pthis->image_R = NULL;
+	//pthis->image_L = NULL;
+	//pthis->image_R = NULL;
 
 	//	initialise pointers to extension
 	glBindBufferARB=NULL;
@@ -158,7 +158,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	// access the state from the  action
 	//SoState *state = action->getState();
 	
-	static GLuint texName;			//	texture name
+	//static GLuint texName;		//	texture name
 	GLuint bufferID[2];			//	PBO (pixel_buffer_object) name	
 	void *pboMemoryL,*pboMemoryR;
 	GLboolean isPBO,*isStereo;		//	boolean flags
@@ -198,6 +198,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 	//isPBO = isExtensionSupported("GL_EXT_pixel_buffer_object");	//	is PBO supported?
 	isPBO = GL_FALSE;
+	
 	//	check if stereo is supported
 
 	glGetBooleanv(GL_STEREO,isStereo);
