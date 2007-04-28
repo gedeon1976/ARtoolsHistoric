@@ -70,7 +70,8 @@ m_global_flag = -1;					//	flag to start semaphore synchronization
 STREAM::~ STREAM()
 {
 	//	free resources
-	//delete dataRTP;
+	//delete dataRTP;		// to avoid double free or corruption
+					// don't use this form to free the memory	
 	//delete data_RTP.data;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -427,12 +428,12 @@ try{
 	data_RTP.size = dataBuffer.size;					//	use an extradata global header previously got from 
 										//	read the fmtp field in the SDP protocol.
 	//	resize  buffer to save data
-	
+	//printf("%s\n","saved frame1");
    	memcpy(data_RTP.data,MP4H,MP4Hsize);				   	//	save frame in memory
 	memmove(data_RTP.data + MP4Hsize, dataRTP, dataBuffer.size);
 	memcpy(data_RTP.data, dataRTP, dataBuffer.size);
 	//data_RTP.data=dataRTP;
-	
+	//printf("%s\n","saved frameFin");
 										
 	data_RTP.timestamp = Subsession->rtpSource()->curPacketRTPTimestamp();	//	save timestamp
  	data_RTP.time = timeNow();						//	capture time used as arrival time
@@ -443,14 +444,14 @@ try{
 	//actualRTPtimestamp = 
 	//printf("current RTP timestamp %lu\n",data_RTP.timestamp);
 	//printf("Subsession ID: %s\n",Subsession->sessionId);
-	if (dataBuffer.data == NULL)
+	/*if (dataBuffer.data == NULL)
 	{ 
 		printf("%s \n","data was not read");
 	}else{
-		
+	*/	
 		printf("Data size: %i\n",dataBuffer.size);
 		//printf("%i\n",strlen(dataBuffer.data));
-	}
+	//}
 }
 catch(...)
 {
@@ -494,7 +495,7 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 		
 		//ps->ProcessFrame(framesize);
 		ProcessFrame(framesize,presentationTime);
-		readOKFlag = ~0;
+		//readOKFlag = ~0;//~0
 		//ps->readOKFlag = ~0;			//	set flag to new data   before ~0
 		//STREAM *ps= (STREAM*)temp;		// 	Auxiliar object to make reference to the actual 
 							//	being used
@@ -502,7 +503,7 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 		//printf("%s\n","OK");
 		
 	       }
-	readOKFlag = ~0;	
+	readOKFlag = ~0;//~0	
 	//ps->readOKFlag=~0;
 	      // delete Data;
 }
@@ -513,11 +514,22 @@ void STREAM::onClose(void* clientData)
 {
 	//STREAM *ps =(STREAM*)clientData;
 	//ps->readOKFlag = ~0;	//	set flag to new data
-	readOKFlag=~0;
+	readOKFlag=~0;//~0
 
 
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//	function to check readOKflag when receiving frames, it allows to run other task
+//	while execute other tasks
 
+void  STREAM::checkFunc(void* clientData)
+{
+	//STREAM *ps =(STREAM*)clientData;
+	//ps->readOKFlag = ~0;	//	set flag to new data
+	readOKFlag= 0;//~0
+
+
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /*	this function calculates the skew  between sender/receiver
 //	to know if the sender or  the receiver is fastest that other
@@ -698,6 +710,20 @@ void Zclose(void* clientData)
 	A->method(clientData);
 
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// This function will be used as callback function in rtsp_getNextFrame
+// because their signature is like the signature required by the live555 library
+void ZcheckFlag(void* clientData)
+{
+	STREAM *ps = (STREAM*)clientData;
+	
+	closeFunctor<STREAM> *close = new closeFunctor<STREAM>;
+	close->setClass(ps);
+	close->setMethod(&STREAM::checkFunc);
+	TFunctorClose *A = close;
+	A->method(clientData);
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // This function will be used as callback function in rtsp_getNextFrame
@@ -734,7 +760,7 @@ try{
 	
 	onRead = Zread;			//	assign functions to the pointers
 	onClosing = Zclose;		//	to be used as callbacks functions
-
+	onCheckFunc = ZcheckFlag;		//	
 	//	get the data from rtp source
 
 	//	IMPORTANT: the this pointer is very important because is passed as the afterGettingData parameter
@@ -748,9 +774,15 @@ try{
 	//	wait until the data is available, it allows for other task to be performed
 	//	while we wait data from rtp source					                                                        	
 	//	HERE WE GET THE FRAME FROM REMOTE SOURCE
-	
-	readOKFlag = 0;						 //	schedule read                         	
+	//readOKFlag = 0;	
+						 //	schedule read                         	
 	TaskScheduler& scheduler = Subsession->readSource()->envir().taskScheduler();//&
+ 	/*
+	unsigned usecsToDelay = 10; // 1 ms
+     	scheduler.scheduleDelayedTask(usecsToDelay,
+                                             onCheckFunc,(void*)this);
+	*/
+	readOKFlag = 0;	
 	scheduler.doEventLoop(&readOKFlag);		// waits for the frame
 	//printf("readOKFlag is: %i\n",readOKFlag );
 	//timeNow();
@@ -772,6 +804,7 @@ int STREAM::rtsp_decode(Frame dataCompress)
 {
 	//	decode the video frame using libavcodec
 try{
+	//printf("%s\n","decode frame");
 	decodeOK = avcodec_decode_video(pCodecCtx,pFrame,&frameFinished,dataCompress.data,dataCompress.size);
 		
 	//if(decodeOK!=0)
@@ -791,12 +824,12 @@ try{
 		//	convert the image from its format to RGB
 			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,720,576);//RGB24
 	//		}	
-		
 			//pCodecCtx->width,pCodecCtx->height);
 			//	save to a buffer
 			data_RTP.image = pFrameRGBA->data[0];	//	save RGB frame
 			data_RTP.pFrame = pFrameRGBA;		//	save frame to export
-			//printf("frame %d was decoded\n",frameCounter);
+
+			//printf("frame %d from camera %d was decoded\n",frameCounter,ID);
 			//	get the timestamp of the frame
 			//break;
 		}
@@ -804,9 +837,9 @@ try{
 			//frameCounter++;	
 			printf("there was an error while decoding the frame %d in the camera %d\n",frameCounter,ID);
 			data_RTP.pFrame = pFrameRGBA;
-			throw pFrameRGBA;
+			//throw pFrameRGBA;
 		//}
-	}
+		}
 }
 catch(...)
 {	
@@ -920,7 +953,7 @@ try{
 			//	limit the size of FIFO buffer
 			
 			
-			if(InputBuffer.size() >= 5)
+			if(InputBuffer.size() >= 2)
 			{ 
 				InputBuffer.pop_front();		//	delete head frame in th FIFO
 				//wait_Semaphore();			//	decrease semaphore
@@ -1257,6 +1290,7 @@ try{
 	C2 =&D2;
 	set_format=RIGHT_IMAGE;
 	camara2.Init_Session(camR,set_format);
+
 	// ******************************************************************************************** 
 	//		Graphics Scene
 	// Initializes SoQt library (and implicitly also the Coin and Qt
@@ -1299,6 +1333,7 @@ try{
 	
 	// read the tx90 model
 
+/*
 	SoInput TX90;
 	SoSeparator *tx = new SoSeparator;
 		
@@ -1306,7 +1341,7 @@ try{
 	{
 		tx = SoDB::readAll(&TX90);
 	}
-
+*/
 	
     
 	//	MAKE A PLANE FOR IMAGE 
@@ -1448,6 +1483,7 @@ try{
 	root->addChild(cube);
 	*/
 
+/*
 	SoTransparencyType *Trans1 = new SoTransparencyType;
 	Trans1->value.setValue(SoTransparencyType::ADD);
 	SoMaterial *mat = new SoMaterial;
@@ -1468,7 +1504,7 @@ try{
 	SoCylinder *cyl = new SoCylinder;
 	cyl->radius.setValue(68.0f);
 	cyl->height.setValue(200.0);
-	
+*/	
 	//SoSeparator *OverlayL = new SoSeparator;
 	//SoPerspectiveCamera *CamL = new SoPerspectiveCamera;
 
@@ -1482,7 +1518,7 @@ try{
 	//Color1->rgb.setValue(0.0,1.0,0.0);
 
 
-
+/*
 
 	SoSeparator *OverlayL = new SoSeparator;
 	SoTransform *T1 = new SoTransform;
@@ -1530,7 +1566,7 @@ try{
 //	root->addChild(OverlayL);
 //	root->addChild(OverlayR);
 
-
+*/
 
 //	SoTransform *tRobot = new SoTransform;
 	//SoTransform *r1 = new SoTransform;

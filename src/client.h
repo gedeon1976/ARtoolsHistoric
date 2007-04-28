@@ -97,7 +97,7 @@
 #include <sys/timex.h>					//	ntp time
 #include "time.h"
 //*********************************************************************************		
-#define  RTPDataSize 	90000				//	size of
+#define  RTPDataSize 	70000				//	size of
 // RTP data read
 using namespace std;
 
@@ -108,7 +108,8 @@ enum IMAGE {LEFT_IMAGE=0,RIGHT_IMAGE=1};
 struct dataFrame{
 	
 	unsigned long timestamp;
-	//unsigned char *data;		//	compressed data
+	//unsigned char data[]="";	//	compressed data
+	//unsigned char *data;
 	unsigned char data[70000];
 
 	int size;			//	size of compressed frame
@@ -135,7 +136,9 @@ typedef ExportFrame Export_Frame;		//	export to Ingrid Program
 //	callback functions
 typedef void (afterReading)(void *clientData,unsigned framesize,unsigned numTruncatedBytes,
 				struct timeval presentationTime,unsigned durationInMicroseconds);
-typedef void (Close)(void *clientData);		
+typedef void (Close)(void *clientData);	
+typedef void Check(void *clientData);
+	
 
 // timeval structure : used for get the time of arrival of frames
 typedef timeval TIME;
@@ -209,6 +212,7 @@ public:
 //typedef void (onclose)(void* clientData);
 virtual void operator()(void* clientData)=0;	//	function to call using () operator
 virtual void method(void* clientData)=0;	//	method to call
+//virtual void* method2(void* clientData)=0;	//      method to call bur with void* as return
 //TFunctorClose();
 
 virtual ~TFunctorClose()
@@ -222,11 +226,12 @@ class closeFunctor:public TFunctorClose	//	derived class
 {
 public:
 typedef void (TStream::*Constant_method)(void* clientData);
+//typedef void* (TStream::*Constant_method2)(void* clientData);
 
 private:
 TStream* T;				//	save class
 Constant_method  method_k;		//	save method to access from the early class
-
+//Constant_method2 method_c;		//	save method to access from earlier class
 //void (TStream::*fpt)(void*);		//	pointer to member function
 //TStream *p2object;			//	pointer to object
 
@@ -234,8 +239,9 @@ public:
 
 //	constructor
 closeFunctor(){
-	T = 0;
+	T = 0;				//	start pointers
 	method_k=0;
+	//method_c=0;
 }
 ~closeFunctor(){}
 //	methods
@@ -246,10 +252,22 @@ void setClass(TStream* IncomeClass)	//	assign kind of class to use
 
 void setMethod(Constant_method method_to_call)
 {
-	method_k =method_to_call;
+	method_k = method_to_call;	//	set the methos to call
 }
+/*
+void* setMethod(Constant_method2 method_to_call)
+{
+	method_c = method_to_call;	//	set the methos to call
+}*/
 
 //protected:
+
+/*void* method2(void* clientData)
+{
+	(T->*method_c)(clientData);
+}*/
+
+
 void method(void* clientData)
 {
 	(T->*method_k)(clientData);
@@ -306,6 +324,7 @@ unsigned char *MP4H;
 char const *MP4Header;						//	mp4 VOP header?
 int MP4Hsize;							//	size of mp4 header
 unsigned char dataRTP[70000];					//	TESTING
+//unsigned char dataRTP[]="  ";
 //unsigned char *dataRTP;						//	allocate buffer memory, this is the main reception buffer in the software
 //static int MP4FrameSize;					//	size of frame
 unsigned int maxRTPDataSize;					//	length of RTP data to be read
@@ -394,6 +413,7 @@ void ProcessFrame(unsigned framesize, TIME presentationTime);//void *clientData
 //THESE function are used with live555 GetNextFrame function
 //************************************************************************************************
 //	pointer to function
+Check *onCheckFunc;			// it is used to wait in the sockets for data
 Close* onClosing;			// on close function pointer	
 afterReading* onRead;		 	// function pointer for process the frame after its capture 	
 //************************************************************************************************
@@ -433,6 +453,8 @@ void set_Semaphore(int sem);		//	set the semaphore signal
 void wait_Semaphore(int sem);	//	wait and lock the semaphore 
 
 //	
+void checkFunc(void *clientData);	//	to check flag of received frames from live555
+					//	taskScheduler.ScheduleDelayedTask()
 void onClose(void *clientData);		//	on close after reading frame
 void afterR(void *clientData,unsigned framesize,unsigned numTruncatedBytes,
 				struct timeval presentationTime,unsigned durationInMicroseconds);	
