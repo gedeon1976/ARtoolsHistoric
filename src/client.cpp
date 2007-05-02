@@ -176,7 +176,7 @@ timeval STREAM::timeNow() //
 	{
 		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
 		//printf("time arrival of frame %d was:%li.%06li\n",frameCounter,t.tv_sec,t.tv_usec);
-	printf("time of capture was:%li.%06li from camera %d\n",t.tv_sec,t.tv_usec,ID);
+	printf("time of capture was:%u.%06li from camera %d\n",t.tv_sec + 0x83AA7E80,t.tv_usec,ID);
 		//return t;
 	}else{
 		printf("error was:%i\n",errno);
@@ -327,10 +327,10 @@ void STREAM::set_Semaphore(int sem)
 		if (sem_post(&Sem1)==-1)	
 					//	increase semaphore 
 		{
-			printf("Failed to unlock or increase the semaphore %d in camera %d",Sem1,ID);
+			//printf("Failed to unlock or increase the semaphore %d in camera %d",Sem1,ID);
 		}else
 		{
-			printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+			//printf("camera: %d  Semaphore: %d\n",ID,Sem1);
 		}
 		
 	
@@ -339,7 +339,7 @@ void STREAM::set_Semaphore(int sem)
 		if (sem_post(&Sem2)==-1)
 					//	increase semaphore 
 							{
-			printf("Failed to unlock or increase the semaphore %d in camera %d",Sem2,ID);
+			//printf("Failed to unlock or increase the semaphore %d in camera %d",Sem2,ID);
 		}else{
 			printf("camera: %d  Semaphore: %d\n",ID,Sem2);
 			printf("No deberia entrar aqui\n");
@@ -390,7 +390,7 @@ void STREAM::wait_Semaphore(int sem)
 			printf("Failed to lock or decrease the semaphore %d in camera %d",Sem1,ID);
 		}else
 		{
-			printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+			//printf("camera: %d  Semaphore: %d\n",ID,Sem1);
 		}
 		
 	
@@ -402,6 +402,7 @@ void STREAM::wait_Semaphore(int sem)
 			printf("Failed to lock or decrease the semaphore %d in camera %d",Sem2,ID);
 		}else{
 			printf("camera: %d  Semaphore: %d\n",ID,Sem2);
+			printf("No deberia entrar aqui\n");
 		}
 
 		break;
@@ -418,7 +419,12 @@ void STREAM::wait_Semaphore(int sem)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void STREAM::ProcessFrame(unsigned framesize, TIME presentationTime)
 {
-	
+unsigned long SSRC;	// Synchronization source = source of the images data	
+			// variables to save NTP time in timestamps format
+			// NTPmswrtp = NTPmsw*90000;
+double NTPmswrtp,NTPlswrtp;
+unsigned long R = 90000; // Clock for MPEG4 video, here it is 90000 units per second
+struct timeval lastSR;
 try{
 	//dataBuffer.data = (unsigned char*)clientData;
 	dataBuffer.size = framesize;
@@ -434,9 +440,69 @@ try{
 	memcpy(data_RTP.data, dataRTP, dataBuffer.size);
 	//data_RTP.data=dataRTP;
 	//printf("%s\n","saved frameFin");
+
 										
+	SSRC = Subsession->rtpSource()->lastReceivedSSRC();			// 	last SSRC received
+	
+	RTPSource* src = Subsession->rtpSource();				//	read NTP times
+	RTPReceptionStats *Statistics = src->receptionStatsDB().lookup(SSRC);
+
+	data_RTP.NTPmsw = Statistics->lastReceivedSR_NTPmsw();
+	data_RTP.NTPlsw = Statistics->lastReceivedSR_NTPlsw();
+	
+	// convert NTP to timestamp units
+	
+	// convert NTP timestamp to usec
+	unsigned int NTPusec = (double)(((double)data_RTP.NTPlsw*15625.0)/0x4000000);
+	NTPmswrtp = (double)data_RTP.NTPmsw*90000;
+	NTPlswrtp = (double)NTPusec*0.09;	// 90000/1000000 usec
+	
+	//printf("NTPmswrtp: %u\n",NTPmswrtp);
+	//printf("NTPlswrtp: %u\n",NTPlswrtp);
+	
+	lastSR = Statistics->lastReceivedSR_time();
+
+
+	if (data_RTP.NTPmsw != data_RTP.lastNTPmsw)
+	{
+				// convert NTPlsw timestamp to usec according to Spook formula
+		//  its meaning is not clear yet, I think that it is to convert 
+		//  to 32 bits format
+		unsigned int usec2 = (double)(((double)data_RTP.NTPlsw*15625.0)/0x4000000);
+
+		printf("SSRC: %u\n",SSRC);
+		printf("NTP sec: %u.%06li\n",data_RTP.NTPmsw,usec2);
+		printf("current timestamp: %u\n",data_RTP.timestamp);
+		printf("Msr timestamp: %u\n",data_RTP.Msr);
+		//printf("NTP usec: %06u\n",data_RTP.NTPlsw);	// print 32bits NTPlsw timestamp
+		//printf("NTP usec: %06u\n",usec2);		// from spook code
+
+		// calculate the Ts to syncronize the streams
+		//printf("NTPmswrtp: %u\n",NTPmswrtp);
+		//printf("NTPlswrtp: %u\n",NTPlswrtp);//NTPlswrtp +
+		data_RTP.Ts = (double)((NTPmswrtp + (double)(data_RTP.timestamp - data_RTP.Msr))/R);
+		printf("Ts mapped to remote site is: %u.%06u\n",data_RTP.Ts,NTPusec);
+		
+		
+		//unsigned int usec= (double)( (double)lastSR.tv_usec * (double)0x4000000 ) / 15625.0;
+		//unsigned int usec3 = (double)(((double)usec*15625.0)/0x4000000);
+		
+		//printf("last SR original time: %u.%06li\n",(lastSR.tv_sec + 0x83AA7E80),lastSR.tv_usec);
+		//printf("last SR check time: %u.%06li\n",(lastSR.tv_sec + 0x83AA7E80),usec3);
+		//printf("last SR 32bits time: %u.%06li\n",(lastSR.tv_sec + 0x83AA7E80),usec);
+		
+		//	0x83AA7E80 seconds is added to get the time since 1/01/1900 UNIX times
+		//	see page 108 colin perkins's book and spook rtp.c code
+ 		data_RTP.time = timeNow();   //	capture time used as arrival time
+		//	this timestamp is used as SR timestamp
+		data_RTP.Msr = 	Subsession->rtpSource()->curPacketRTPTimestamp();				
+	}
+	//	save NTP times to see interval times of SR sended by the Spook Server
+
+	data_RTP.lastNTPmsw = data_RTP.NTPmsw;
+	data_RTP.lastNTPlsw = data_RTP.NTPmsw;
 	data_RTP.timestamp = Subsession->rtpSource()->curPacketRTPTimestamp();	//	save timestamp
- 	data_RTP.time = timeNow();						//	capture time used as arrival time
+
 	//	print presentation Time
 //	cout<<"presentation time:"<<presentationTime.tv_sec<<"."<<presentationTime.tv_usec<<" camera "<<ID<<endl;
 
@@ -449,8 +515,8 @@ try{
 		printf("%s \n","data was not read");
 	}else{
 	*/	
-		printf("Data size: %i\n",dataBuffer.size);
-		//printf("%i\n",strlen(dataBuffer.data));
+		//printf("Data size: %i\n",dataBuffer.size);
+		   //printf("%i\n",strlen(dataBuffer.data));
 	//}
 }
 catch(...)
@@ -610,6 +676,7 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 	//	create a subsession for the RTP receiver (only video for now)
 	
 	
+	
 	MediaSubsessionIterator iter(*Session);// iter;
 	//iter(*Session);
 
@@ -675,6 +742,7 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 				return -1;
 			}else{
 				printf("%s", "PLAY command sent\n");
+				
 			}
 		}else{
 			printf("%s", "CLIENT PROBLEMS");
@@ -935,7 +1003,7 @@ try{
 			if(InputBuffer.empty() | InputBuffer.size()>= 1 )
 			{
 				InputBuffer.push_back(data_RTP);	//	save data
-				printf("writing frame %d from the camera %d \n",frameCounter,ID);
+				//printf("writing frame %d from the camera %d \n",frameCounter,ID);
 				//set_Semaphore();			//	increase the semaphore
 			}
 
@@ -953,7 +1021,7 @@ try{
 			//	limit the size of FIFO buffer
 			
 			
-			if(InputBuffer.size() >= 2)
+			if(InputBuffer.size() >= 1)
 			{ 
 				InputBuffer.pop_front();		//	delete head frame in th FIFO
 				//wait_Semaphore();			//	decrease semaphore
@@ -1086,13 +1154,13 @@ else{
 		InputBuffer.pop_front();		//	delete the head frame from the FIFO buffer
 		
 		//printf("FIFO size: %d\n",InputBuffer.size());
-		printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
+		//printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
 		
 		
 	}
 	else
 	{
-		printf("Empty buffer from  %s camera, Size = %d\n",ID_cam[ID],InputBuffer.size());
+	//	printf("Empty buffer from  %s camera, Size = %d\n",ID_cam[ID],InputBuffer.size());
 		I_Frame.pData = pFrameRGBA;		//	to avoid empty frame
 	}	
 /*

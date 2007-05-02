@@ -549,6 +549,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 
 		//	DRAW THE LEFT IMAGE
 
+
 		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
 		//	modifying for stereo
 		glBegin(GL_QUADS);

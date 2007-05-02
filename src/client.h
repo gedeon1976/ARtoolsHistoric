@@ -115,6 +115,16 @@ struct dataFrame{
 	int size;			//	size of compressed frame
 	unsigned char *image;		//	data decoded
 	struct timeval time;		//	save the time with good resolution (microseconds)
+	//	spook uses unsigned int for these times
+	//	SR times useful for synchronization
+	unsigned long NTPmsw;		//	NTP time in seconds since 1/1/1900 UNIX time
+	unsigned long NTPlsw;		//	NTP time in fraction of seconds
+	//	synchronization variables
+	unsigned long Msr;		//	last SR timestamp
+	unsigned long Ts;		//	save the TS mapped time, see pag 217 perkins
+
+	unsigned long lastNTPmsw,lastNTPlsw; //      used to compare SR NTP times in development phase
+
 	long timeArrival;		//	time of arrival of frame
 	long playoutTime;		//	time of render
 	int width;			
