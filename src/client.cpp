@@ -174,9 +174,11 @@ timeval STREAM::timeNow() //
 	time = gettimeofday(&t,&tz);
 	if (time==0)
 	{
-		//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
+	t.tv_sec = t.tv_sec + 0x83AA7E80;	//	time from 1/1/1900 UNIX time	
+	//printf("time of arrival was:%li.%06li\n",ntpTime.time.tv_sec,ntpTime.time.tv_usec);
 		//printf("time arrival of frame %d was:%li.%06li\n",frameCounter,t.tv_sec,t.tv_usec);
-	printf("time of capture was:%u.%06li from camera %d\n",t.tv_sec + 0x83AA7E80,t.tv_usec,ID);
+	//printf("time of capture was:%u.%06li from camera %d\n",t.tv_sec,t.tv_usec,ID);
+	
 		//return t;
 	}else{
 		printf("error was:%i\n",errno);
@@ -423,8 +425,15 @@ unsigned long SSRC;	// Synchronization source = source of the images data
 			// variables to save NTP time in timestamps format
 			// NTPmswrtp = NTPmsw*90000;
 double NTPmswrtp,NTPlswrtp;
-unsigned long R = 90000; // Clock for MPEG4 video, here it is 90000 units per second
+double R = 90000; 	// Clock for MPEG4 video, here it is 90000 units per second
+unsigned long LOCALmsw, LOCALlsw;
+double A,B,C,D,E,F,X;
+			// see paper AR tools for enhanced teleoperation portilla&basañez'07
+
+//double Dstream;		// used to calculate the relative difference in the stream
+//double Delta;		// used to calculate the amount of delay between streams	
 struct timeval lastSR;
+
 try{
 	//dataBuffer.data = (unsigned char*)clientData;
 	dataBuffer.size = framesize;
@@ -440,7 +449,7 @@ try{
 	memcpy(data_RTP.data, dataRTP, dataBuffer.size);
 	//data_RTP.data=dataRTP;
 	//printf("%s\n","saved frameFin");
-
+	data_RTP.time = timeNow();   //	capture time used as arrival time
 										
 	SSRC = Subsession->rtpSource()->lastReceivedSSRC();			// 	last SSRC received
 	
@@ -456,7 +465,9 @@ try{
 	unsigned int NTPusec = (double)(((double)data_RTP.NTPlsw*15625.0)/0x4000000);
 	NTPmswrtp = (double)data_RTP.NTPmsw*90000;
 	NTPlswrtp = (double)NTPusec*0.09;	// 90000/1000000 usec
+
 	
+
 	//printf("NTPmswrtp: %u\n",NTPmswrtp);
 	//printf("NTPlswrtp: %u\n",NTPlswrtp);
 	
@@ -465,7 +476,15 @@ try{
 
 	if (data_RTP.NTPmsw != data_RTP.lastNTPmsw)
 	{
-				// convert NTPlsw timestamp to usec according to Spook formula
+		
+		//  print the limits of different types
+	/*	
+		//printf("the limits are %f:\n",std::numeric_limits<float>::infinity());
+		std::cout << "Max " << std::numeric_limits<float>::max() << std::endl;
+		std::cout << "Min " << std::numeric_limits<float>::min() << std::endl;
+		std::cout << "Epsilon " << std::numeric_limits<float>::epsilon() << std::endl;
+	*/
+		//  convert NTPlsw timestamp to usec according to Spook formula
 		//  its meaning is not clear yet, I think that it is to convert 
 		//  to 32 bits format
 		unsigned int usec2 = (double)(((double)data_RTP.NTPlsw*15625.0)/0x4000000);
@@ -478,12 +497,52 @@ try{
 		//printf("NTP usec: %06u\n",usec2);		// from spook code
 
 		// calculate the Ts to syncronize the streams
-		//printf("NTPmswrtp: %u\n",NTPmswrtp);
-		//printf("NTPlswrtp: %u\n",NTPlswrtp);//NTPlswrtp +
-		data_RTP.Ts = (double)((NTPmswrtp + (double)(data_RTP.timestamp - data_RTP.Msr))/R);
-		printf("Ts mapped to remote site is: %u.%06u\n",data_RTP.Ts,NTPusec);
 		
+		//printf("NTPmswrtp: %f\n",NTPmswrtp);
+		//printf("NTPlswrtp: %f\n",NTPlswrtp);//
+		C = (double)(data_RTP.timestamp - data_RTP.Msr);
+		//printf(" C is %f\n",C);
+
+		//(data_RTP.timestamp - data_RTP.Msr)
+		data_RTP.Ts = ((NTPmswrtp + NTPlswrtp + C )/R);
+		printf("Ts mapped to remote site is: %f\n",data_RTP.Ts);
 		
+		// calculate Tm, useful to map Trtp to local reference clock
+		// see pag 220 perkins's book
+		LOCALmsw = data_RTP.time.tv_sec;
+		LOCALlsw =data_RTP.time.tv_usec;
+		A = (double)LOCALmsw*90000;
+		B = (double)LOCALlsw*0.09;
+
+		//LOCALmsw = data_RTP.time.tv_sec;
+		//LOCALlsw =data_RTP.time.tv_usec;
+		//printf(" sec time %u\n",LOCALmsw);
+		//printf(" usec time %u\n",LOCALlsw);
+		
+		/*
+		printf(" A is %f\n",A);
+		printf(" B is %f\n",B);
+		//X = (double)(data_RTP.timestamp - data_RTP.Msr);
+
+		printf(" C is %f\n",C);
+		D = (double)(A + B + C);
+		printf("D is: %f\n",D);
+		
+		E = (double)(D/R);
+		printf("E is: %f\n",E);
+		F = (double)(D/90000.0);
+		printf("F is: %f\n",F);
+		//(data_RTP.timestamp - data_RTP.Msr)
+		*/
+
+		data_RTP.Tm = ((A + B + C )/R);
+		printf("Tm mapped to local site is: %f\n",data_RTP.Tm);
+
+		//	calculate the relative difference between local and remote site
+
+		data_RTP.Dstream = data_RTP.Tm - data_RTP.Ts;
+		printf("Dstream %i was: %f ms\n",ID,data_RTP.Dstream*1000);
+
 		//unsigned int usec= (double)( (double)lastSR.tv_usec * (double)0x4000000 ) / 15625.0;
 		//unsigned int usec3 = (double)(((double)usec*15625.0)/0x4000000);
 		
@@ -493,7 +552,7 @@ try{
 		
 		//	0x83AA7E80 seconds is added to get the time since 1/01/1900 UNIX times
 		//	see page 108 colin perkins's book and spook rtp.c code
- 		data_RTP.time = timeNow();   //	capture time used as arrival time
+ 		
 		//	this timestamp is used as SR timestamp
 		data_RTP.Msr = 	Subsession->rtpSource()->curPacketRTPTimestamp();				
 	}
@@ -1338,8 +1397,8 @@ try{
 
 	//;	channel 0 and 3
 	//;
-	const char *camL ="rtsp://sonar:7070/cam3";	//argv[1];//	
-	const char *camR ="rtsp://sonar:7070/cam0";	//argv[2];	
+	const char *camL =argv[1];//"rtsp://sonar:7070/cam3"	
+	const char *camR =argv[2];//"rtsp://sonar:7070/cam0"	
 	float IOD = 1.5;//atof(argv[3]);
 
 	STREAM camara1;						//  	create an stream object
@@ -1684,6 +1743,7 @@ try{
 
 	SoQtExaminerViewer * eviewer = new SoQtExaminerViewer(mainwin);
    	eviewer->setSceneGraph(root);
+	eviewer->setFeedbackVisibility(true);
 //	eviewer->setStereoViewing(TRUE);
 //	eviewer->setQuadBufferStereo(TRUE);	//	set stereo mode = QUAD BUFFER = page flipping
 

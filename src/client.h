@@ -14,6 +14,11 @@
 #ifndef _CLIENT_H_
 #define _CLIENT_H_
 //********************************************************************************
+//	verify the range of the different types of variables
+#include <limits>
+
+
+//********************************************************************************
 //	include the libraries used
 //********************************************************************************
 //	libavcodec libraries
@@ -121,7 +126,8 @@ struct dataFrame{
 	unsigned long NTPlsw;		//	NTP time in fraction of seconds
 	//	synchronization variables
 	unsigned long Msr;		//	last SR timestamp
-	unsigned long Ts;		//	save the TS mapped time, see pag 217 perkins
+	double Ts;			//	save the TS mapped time, see pag 217 perkins
+	double Tm;			//	to map Trtp to local reference clock
 
 	unsigned long lastNTPmsw,lastNTPlsw; //      used to compare SR NTP times in development phase
 
