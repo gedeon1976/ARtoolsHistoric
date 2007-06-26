@@ -68,7 +68,7 @@ configure:2534: g++ -V >&5
 g++: '-V' option must have argument
 configure:2537: $? = 1
 configure:2560: checking for C++ compiler default output file name
-configure:2587: g++ -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a  -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec  conftest.cpp  >&5
+configure:2587: g++  -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -L/usr/share/qt3/lib -L/usr/X11R6/lib   /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec  conftest.cpp  >&5
 configure:2590: $? = 0
 configure:2628: result: a.out
 configure:2645: checking whether the C++ compiler works
@@ -78,15 +78,15 @@ configure:2675: result: yes
 configure:2682: checking whether we are cross compiling
 configure:2684: result: no
 configure:2687: checking for suffix of executables
-configure:2694: g++ -o conftest -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a  -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec  conftest.cpp  >&5
+configure:2694: g++ -o conftest  -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -L/usr/share/qt3/lib -L/usr/X11R6/lib   /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec  conftest.cpp  >&5
 configure:2697: $? = 0
 configure:2721: result: 
 configure:2727: checking for suffix of object files
-configure:2753: g++ -c -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.cpp >&5
+configure:2753: g++ -c  -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.cpp >&5
 configure:2756: $? = 0
 configure:2779: result: o
 configure:2783: checking whether we are using the GNU C++ compiler
-configure:2812: g++ -c -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.cpp >&5
+configure:2812: g++ -c  -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.cpp >&5
 configure:2818: $? = 0
 configure:2835: result: yes
 configure:2840: checking whether g++ accepts -g
@@ -191,7 +191,7 @@ configure: failed program was:
 configure:5163: checking for ANSI C header files
 configure:5193: gcc -c -g -O2 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.c >&5
 configure:5199: $? = 0
-configure:5298: gcc -o conftest -g -O2 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a  -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec  conftest.c  >&5
+configure:5298: gcc -o conftest -g -O2 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -L/usr/share/qt3/lib -L/usr/X11R6/lib   /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec  conftest.c  >&5
 configure:5301: $? = 0
 configure:5307: ./conftest
 configure:5310: $? = 0
@@ -332,11 +332,11 @@ configure:6015: result: yes
 configure:6045: checking the maximum length of command line arguments
 configure:6154: result: 32768
 configure:6165: checking command to parse /usr/bin/nm -B output from gcc object
-configure:6270: g++ -c -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.cpp >&5
+configure:6270: g++ -c -g -O2 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.cpp >&5
 configure:6273: $? = 0
 configure:6277: /usr/bin/nm -B conftest.o \| sed -n -e 's/^.*[ 	]\([ABCDGIRSTW][ABCDGIRSTW]*\)[ 	][ 	]*\([_A-Za-z][_A-Za-z0-9]*\)$/\1 \2 \2/p' \> conftest.nm
 configure:6280: $? = 0
-configure:6332: g++ -o conftest -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a  -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec  conftest.cpp conftstm.o >&5
+configure:6332: g++ -o conftest -g -O2 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -L/usr/share/qt3/lib -L/usr/X11R6/lib   /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec  conftest.cpp conftstm.o >&5
 configure:6335: $? = 0
 configure:6373: result: ok
 configure:6377: checking for objdir
@@ -394,18 +394,18 @@ configure:10672: checking if the linker (/usr/bin/ld) is GNU ld
 configure:10687: result: yes
 configure:10738: checking whether the g++ linker (/usr/bin/ld) supports shared libraries
 configure:11672: result: yes
-configure:11690: g++ -c -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.cpp >&5
+configure:11690: g++ -c -g -O2 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 conftest.cpp >&5
 configure:11693: $? = 0
 configure:11812: checking for g++ option to produce PIC
 configure:12086: result: -fPIC
 configure:12094: checking if g++ PIC flag -fPIC works
-configure:12112: g++ -c -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -fPIC -DPIC conftest.cpp >&5
+configure:12112: g++ -c -g -O2 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -fPIC -DPIC conftest.cpp >&5
 configure:12116: $? = 0
 configure:12129: result: yes
 configure:12157: checking if g++ static flag -static works
 configure:12185: result: no
 configure:12195: checking if g++ supports -c -o file.o
-configure:12216: g++ -c -O0 -g3 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -o out/conftest2.o conftest.cpp >&5
+configure:12216: g++ -c -g -O2 -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1 -o out/conftest2.o conftest.cpp >&5
 configure:12220: $? = 0
 configure:12242: result: yes
 configure:12268: checking whether the g++ linker (/usr/bin/ld) supports shared libraries
@@ -480,8 +480,8 @@ ac_cv_env_CPP_set=
 ac_cv_env_CPP_value=
 ac_cv_env_CXXCPP_set=
 ac_cv_env_CXXCPP_value=
-ac_cv_env_CXXFLAGS_set=set
-ac_cv_env_CXXFLAGS_value='-O0 -g3'
+ac_cv_env_CXXFLAGS_set=
+ac_cv_env_CXXFLAGS_value=
 ac_cv_env_CXX_set=
 ac_cv_env_CXX_value=
 ac_cv_env_F77_set=
@@ -489,7 +489,7 @@ ac_cv_env_F77_value=
 ac_cv_env_FFLAGS_set=
 ac_cv_env_FFLAGS_value=
 ac_cv_env_LDFLAGS_set=set
-ac_cv_env_LDFLAGS_value='-L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a  -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec '
+ac_cv_env_LDFLAGS_value='-L/usr/share/qt3/lib -L/usr/X11R6/lib   /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec '
 ac_cv_env_LIBS_set=
 ac_cv_env_LIBS_value=
 ac_cv_env_build_alias_set=
@@ -579,7 +579,7 @@ CPPFLAGS='-I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -Wall -DBSD=1'
 CXX='g++'
 CXXCPP='g++ -E'
 CXXDEPMODE='depmode=gcc3'
-CXXFLAGS='-O0 -g3'
+CXXFLAGS='-g -O2'
 CYGPATH_W='echo'
 DEFS='-DHAVE_CONFIG_H'
 DEPDIR='.deps'
@@ -596,7 +596,7 @@ INSTALL_DATA='${INSTALL} -m 644'
 INSTALL_PROGRAM='${INSTALL}'
 INSTALL_SCRIPT='${INSTALL}'
 INSTALL_STRIP_PROGRAM='${SHELL} $(install_sh) -c -s'
-LDFLAGS='-L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a  -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec '
+LDFLAGS='-L/usr/share/qt3/lib -L/usr/X11R6/lib   /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec '
 LIBOBJS=''
 LIBS=''
 LIBTOOL='$(SHELL) $(top_builddir)/libtool'
@@ -688,3 +688,21 @@ target_alias=''
 #define HAVE_DLFCN_H 1
 
 configure: exit 0
+
+## ---------------------- ##
+## Running config.status. ##
+## ---------------------- ##
+
+This file was extended by config.status, which was
+generated by GNU Autoconf 2.61.  Invocation command line was
+
+  CONFIG_FILES    = 
+  CONFIG_HEADERS  = 
+  CONFIG_LINKS    = 
+  CONFIG_COMMANDS = 
+  $ ./config.status src/Makefile depfiles
+
+on kazan
+
+config.status:660: creating src/Makefile
+config.status:927: executing depfiles commands

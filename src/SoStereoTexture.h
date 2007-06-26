@@ -55,6 +55,9 @@ SoSFImage	imageR;
 unsigned char   *image_L;	//	left image in unsigned char format
 unsigned char   *image_R;	//	right image
 SoSFFloat	IOD;		//	inter-ocular distance
+SoSFFloat	timetoSynchronize;
+				//	time that must be waited to
+				//	synchronize the render of two video streams
 
 // Initialize the class
 static void initClass();	//	to define the type of information of the class

@@ -174,10 +174,9 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 # set the include path found by configure
-INCLUDES = -I/usr/include/Inventor/Qt -I/usr/share/qt3/include \
-	-I/usr/include/qt3 -I/home/portilla/Live/live/BasicUsageEnvironment/include \
-	-I/home/portilla/Live/live/liveMedia/include -I//home/portilla/Live/live/groupsock/include \
-	-I//home/portilla/Live/live/UsageEnvironment/include
+INCLUDES = -I//home/portilla/Live/live/UsageEnvironment/include \
+	-I//home/portilla/Live/live/groupsock/include -I/home/portilla/Live/live/BasicUsageEnvironment/include \
+	-I/home/portilla/Live/live/liveMedia/include -I/usr/include/Inventor/Qt -I/usr/include/qt3 -I/usr/share/qt3/include
 
 
 # the library search path.

@@ -4,7 +4,7 @@
 //	Author:		Henry Portilla
 //	Date:		June/2006
 //	modified:	december/2006
-//	Thanks
+//	Thanks		God
 
 //	Description:	This program use the live555 libraries for make a RTSP
 			client
@@ -34,6 +34,9 @@
 int members=0;
 int ID1=0;
 TFunctor *C1,*C2;					//	pointers to abstract class
+TFunctor *tdiffL,*tdiffR;
+double last_Delta;					//	global flag
+
 
 TIME t1L,t2L,t1R,t2R;
 //long int fpsL=0;
@@ -430,7 +433,7 @@ unsigned long LOCALmsw, LOCALlsw;
 double A,B,C,D,E,F,X;
 			// see paper AR tools for enhanced teleoperation portilla&basañez'07
 
-//double Dstream;		// used to calculate the relative difference in the stream
+//double Dstream;	// used to calculate the relative difference in the stream
 //double Delta;		// used to calculate the amount of delay between streams	
 struct timeval lastSR;
 
@@ -489,10 +492,13 @@ try{
 		//  to 32 bits format
 		unsigned int usec2 = (double)(((double)data_RTP.NTPlsw*15625.0)/0x4000000);
 
+		/*	TEMPORAL DISABLED
 		printf("SSRC: %u\n",SSRC);
 		printf("NTP sec: %u.%06li\n",data_RTP.NTPmsw,usec2);
 		printf("current timestamp: %u\n",data_RTP.timestamp);
 		printf("Msr timestamp: %u\n",data_RTP.Msr);
+		*/
+		
 		//printf("NTP usec: %06u\n",data_RTP.NTPlsw);	// print 32bits NTPlsw timestamp
 		//printf("NTP usec: %06u\n",usec2);		// from spook code
 
@@ -505,7 +511,7 @@ try{
 
 		//(data_RTP.timestamp - data_RTP.Msr)
 		data_RTP.Ts = ((NTPmswrtp + NTPlswrtp + C )/R);
-		printf("Ts mapped to remote site is: %f\n",data_RTP.Ts);
+//		printf("Ts mapped to remote site is: %f\n",data_RTP.Ts);
 		
 		// calculate Tm, useful to map Trtp to local reference clock
 		// see pag 220 perkins's book
@@ -536,12 +542,12 @@ try{
 		*/
 
 		data_RTP.Tm = ((A + B + C )/R);
-		printf("Tm mapped to local site is: %f\n",data_RTP.Tm);
+//		printf("Tm mapped to local site is: %f\n",data_RTP.Tm);
 
 		//	calculate the relative difference between local and remote site
 
 		data_RTP.Dstream = data_RTP.Tm - data_RTP.Ts;
-		printf("Dstream %i was: %f ms\n",ID,data_RTP.Dstream*1000);
+//		printf("Dstream %i was: %f ms\n",ID,data_RTP.Dstream*1000);
 
 		//unsigned int usec= (double)( (double)lastSR.tv_usec * (double)0x4000000 ) / 15625.0;
 		//unsigned int usec3 = (double)(((double)usec*15625.0)/0x4000000);
@@ -707,7 +713,7 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 		return -1;}
 	//	create a RTSP client
 	client =  RTSPClient::createNew(*env,verbosityLevel,name,tunnelOverHTTPPortNum); 	
-	;
+	
 	if (client==NULL)
 		{printf("error %s\n"," rtsp client was not created");
 		return -1;}
@@ -1236,6 +1242,15 @@ if (cod!=0)
 	 return I_Frame;
 	
 }
+///////////////////////////////////////////////////////////////////////////////////
+//	get the relative difference between remote and local site
+//	see phD Tesis page X
+double STREAM::getDiffStream()
+{
+	return data_RTP.Dstream;	//   return Tm - Ts
+	
+}
+///////////////////////////////////////////////////////////////////////////////////
 TIME getTime()
 {
 	//timeval t;
@@ -1313,6 +1328,7 @@ void updateL(void *data,SoSensor*)	//	this function updates the texture based on
 {
 	//	get the video frames
 	long int AL,BL,diffL;//fpsL
+	double DstreamL,DstreamR,Delta;
 	//float diffL;
 	Export_Frame FrL,FrR;		//	struct for save the frame
 try{
@@ -1344,6 +1360,10 @@ try{
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// return a structure that contain the image, size, width and height
 	FrL=C1->Execute();
+	//	used to get the relative difference from left Stream, it will be used
+	//	for synchronization
+	DstreamL = tdiffL->getDiffStream();	//	
+
 	if (FrL.pData->data[0]!=NULL)
 	{
 		Stereo->imageL.setValue(SbVec2s(720,576),3,FrL.pData->data[0]);
@@ -1351,7 +1371,24 @@ try{
 	{
 		printf("%s\n","There aren't image from left buffer");
 	}
+
 	FrR=C2->Execute();			//	call getImage() using a functor
+
+	//	used to get the relative difference from right Stream, it will be used
+	//	for synchronization
+	DstreamR = tdiffR->getDiffStream();
+	//	calculate the difference between streams, if these are synchronized Delta must be
+	//	0, Delta = 0, if not one stream must to wait the other to be show together.
+	
+	//	Get the delta time needed to synchronize two streams
+	Delta = DstreamR-DstreamL;
+	Stereo->timetoSynchronize.setValue(float(Delta*1000));	//	time in milliseconds
+
+	if (last_Delta != Delta )
+	{
+	//	printf("Delta is %f ms\n",Delta*1000);
+	}
+
 	if (FrR.pData->data[0]!=NULL)
 	{
 		Stereo->imageR.setValue(SbVec2s(720,576),3,FrR.pData->data[0]);
@@ -1361,7 +1398,7 @@ try{
 	}
 	//Stereo->imageL = Fr.pData->data[0];	
 	//leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB 4 = RGBA
-		
+	last_Delta = Delta;	
 	//printf("fps %f from left camera \n",fpsL);
 	//timeNow2();
 	
@@ -1399,22 +1436,26 @@ try{
 	//;
 	const char *camL =argv[1];//"rtsp://sonar:7070/cam3"	
 	const char *camR =argv[2];//"rtsp://sonar:7070/cam0"	
-	float IOD = 1.5;//atof(argv[3]);
+	float IOD = atof(argv[3]);//1.5;//
 
 	STREAM camara1;						//  	create an stream object
 	
+	myfunctor<STREAM> TdifL(&camara1,&STREAM::getDiffStream);
 	myfunctor<STREAM> D1(&camara1,&STREAM::getImage);	//	this is a functor, some as a pointer to 
 								//	a member function, here points to the
 								//	getImage function of camara1 object
 	C1 =&D1;						//	C1 is a abstract class base for myfunctor class
+	tdiffL = &TdifL;
 	//set_format=CUT_IMAGE;					//	with a virtual method to overload
 	set_format=LEFT_IMAGE;
 	camara1.Init_Session(camL,set_format);			//	start connection with url
 								//	set the format of the image
 								//	for the camera 
 	STREAM camara2;
+	myfunctor<STREAM> TdifR (&camara2,&STREAM::getDiffStream);
 	myfunctor<STREAM> D2(&camara2,&STREAM::getImage);	//	do the same for the right camera
 	C2 =&D2;
+	tdiffR = &TdifR;
 	set_format=RIGHT_IMAGE;
 	camara2.Init_Session(camR,set_format);
 

@@ -50,6 +50,8 @@ SoStereoTexture::SoStereoTexture()
 	//SO_NODE_ADD_FIELD(imageL,(NULL));
 	//SO_NODE_ADD_FIELD(imageR,(NULL));
 	SO_NODE_ADD_FIELD(IOD,(6.0));
+	SO_NODE_ADD_FIELD(timetoSynchronize,(0.0));
+
 	pthis->image_L = NULL;
 	pthis->image_R = NULL;
 

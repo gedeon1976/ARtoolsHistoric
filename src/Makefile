@@ -105,7 +105,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = ${SHELL} $(install_sh) -c -s
-LDFLAGS = -L/usr/share/qt3/lib -L/usr/X11R6/lib /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a  -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec 
+LDFLAGS = -L/usr/share/qt3/lib -L/usr/X11R6/lib   /home/portilla/Live/live/liveMedia/libliveMedia.a  /home/portilla/Live/live/groupsock/libgroupsock.a	 /home/portilla/Live/live/UsageEnvironment/libUsageEnvironment.a  /home/portilla/Live/live/BasicUsageEnvironment/libBasicUsageEnvironment.a -lGLU -lSoQt -lqt-mt -lXext -lX11 -lm -lpthread -lavformat -lavcodec 
 LIBOBJS = 
 LIBS = 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
@@ -174,10 +174,9 @@ sysconfdir = ${prefix}/etc
 target_alias = 
 
 # set the include path found by configure
-INCLUDES = -I/usr/include/Inventor/Qt -I/usr/share/qt3/include \
-	-I/usr/include/qt3 -I/home/portilla/Live/live/BasicUsageEnvironment/include \
-	-I/home/portilla/Live/live/liveMedia/include -I//home/portilla/Live/live/groupsock/include \
-	-I//home/portilla/Live/live/UsageEnvironment/include
+INCLUDES = -I//home/portilla/Live/live/UsageEnvironment/include \
+	-I//home/portilla/Live/live/groupsock/include -I/home/portilla/Live/live/BasicUsageEnvironment/include \
+	-I/home/portilla/Live/live/liveMedia/include -I/usr/include/Inventor/Qt -I/usr/include/qt3 -I/usr/share/qt3/include
 
 
 # the library search path.

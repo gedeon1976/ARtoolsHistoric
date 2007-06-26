@@ -128,6 +128,7 @@ struct dataFrame{
 	unsigned long Msr;		//	last SR timestamp
 	double Ts;			//	save the TS mapped time, see pag 217 perkins
 	double Tm;			//	to map Trtp to local reference clock
+	double Dstream;			//      save Tm -Ts
 
 	unsigned long lastNTPmsw,lastNTPlsw; //      used to compare SR NTP times in development phase
 
@@ -182,8 +183,9 @@ public:
 virtual ~TFunctor()
 {
 }
-					//	function to call function member getImage
-virtual Export_Frame Execute()=0;	
+					//	virtual functions to call function member 
+virtual Export_Frame Execute()=0;	// getImage
+virtual double getDiffStream()=0;	// getDiffStream
 
 };
 
@@ -194,8 +196,11 @@ class myfunctor :public TFunctor
 private:
 
 Export_Frame (TStream::*method)();		//    method to call 
-						//    this is a pointer to a member function						
-TStream* clase;					//    pointer to object
+						//    this is a pointer to a member function
+						//    pointer to object
+
+double (TStream::*method2)();			//    to call the getDiffStream method							
+TStream* clase;					
 //method m;
 
 public:
@@ -205,6 +210,12 @@ myfunctor(TStream* _p2object,Export_Frame (TStream::*m)())
 	clase = _p2object;
 	method = m;
 }
+// constructor no 2
+myfunctor(TStream* _p2object, double (TStream::*m2)())
+{
+	clase = _p2object;
+	method2 =m2;
+}
 ~myfunctor()
 {
 }
@@ -213,10 +224,18 @@ myfunctor(TStream* _p2object,Export_Frame (TStream::*m)())
 virtual Export_Frame Execute()
 {
 	Export_Frame t;
-	t = (*clase.*method)();			//secure way for calling the corresponding method according to papers found
+	t = (*clase.*method)();			//secure way for calling the corresponding method according to the papers found
 	return t;
 }
+//	override GetDiffStream function
+virtual double getDiffStream()
+{
 
+	double tdiff;
+	tdiff = (*clase.*method2)();
+	return tdiff;
+	
+}
 
 
 };
@@ -228,7 +247,7 @@ public:
 //typedef void (onclose)(void* clientData);
 virtual void operator()(void* clientData)=0;	//	function to call using () operator
 virtual void method(void* clientData)=0;	//	method to call
-//virtual void* method2(void* clientData)=0;	//      method to call bur with void* as return
+//virtual void* method2(void* clientData)=0;	//      method to call but with void* as return
 //TFunctorClose();
 
 virtual ~TFunctorClose()
@@ -460,7 +479,7 @@ STREAM();
 ~STREAM();
 
 Export_Frame getImage();		//	get the last frame available from the FIFO Buffer
-
+double getDiffStream();			//      get the relative difference between local and remote mapping
 int Init_Session(char const *URL,int ID);//	Setup the connection 
 static void *Entry_Point(void*);	//	to make a thread function, Create a thread to get data from the RTSP Server
 
