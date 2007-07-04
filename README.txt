@@ -47,10 +47,17 @@ A. you need add the following arguments in the executable line
 	$  ./ARtools  rtsp-path1 rtsp-path2 IOD_distance
 
 	$ ./ARtools rtsp://sonar:7070/cam0 rtsp://sonar:7070/cam3 1.5
-	note:  you can try from cam0 to cam3
 
-B. Don forget that you need to be running a video server based on rtsp and rtp
+	note:  you can try from cam0 to cam3.
+	the number 7070 is the port number
+	opened by the server sonar
+
+B. Don't forget that you need to be running a video server based on rtsp and rtp to use this code
 
 	Note:
 	In this case we are using spook from www.litech.org in a different machine
-	with a mpeg4 capture card
+	with a MPEG24IP capture card from Addlink company
+
+C. If you want to see the fps from the cameras in Coin add the following environment variable to kdevelop in Project/run options
+
+	COIN_SHOW_FPS_COUNTER=1

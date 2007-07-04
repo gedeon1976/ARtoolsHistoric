@@ -1226,7 +1226,7 @@ else{
 		I_Frame.h=720;				//	width of image
 		I_Frame.w=576;				//	height of image
  	
-		InputBuffer.pop_front();		//	delete the head frame from the FIFO buffer
+	//	InputBuffer.pop_front();		//	delete the head frame from the FIFO buffer
 		
 		//printf("FIFO size: %d\n",InputBuffer.size());
 		printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
@@ -1458,8 +1458,8 @@ try{
 
 	//;	channel 0 and 3
 	//;
-	const char *camL ="rtsp://sonar:7070/cam3";//argv[1];//	
-	const char *camR ="rtsp://sonar:7070/cam0";//argv[2];//	
+	const char *camL ="rtsp://sonar:7000/cam2";//argv[1];//	
+	const char *camR ="rtsp://sonar:7000/cam0";//argv[2];//	
 	float IOD = 1.5;//atof(argv[3]);////
 
 	STREAM camara1;						//  	create an stream object
