@@ -34,6 +34,12 @@ the instructions to generates an executable from this dir are
 	Example:
 	myFolder/build$ cmake -G KDevelop3 ../
 
+	Additional note:
+	If you want to generate a debug build version use instead
+
+	myFolder/build$ cmake -DCMAKE_BUILD_TYPE:STRING=Debug
+	-G KDevelop3 ../
+
 4. Open the generated project with kdevelop and then you will have a copy 
    ready to build and to work with it
 
