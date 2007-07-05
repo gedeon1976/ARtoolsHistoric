@@ -746,7 +746,10 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 	
 	Session = MediaSession::createNew(*env,getDescription);		//	create session
 	if (Session==NULL)
-		{printf("error %s\n","Session was not created");
+		{
+		cout<<"error: Session was not created"<<endl;
+		cout<<"check your connection"<<endl;
+		
 		return -1;}
 	
 	//	create a subsession for the RTP receiver (only video for now)
@@ -907,7 +910,7 @@ try{
 	//	get the data from rtp source
 
 	//	IMPORTANT: the this pointer is very important because is passed as the afterGettingData parameter
-	//	if not is used in this form the program will not work!
+	//	if it isn't used in this form the program will not work!
 
 	//	the data is saved in the dataRTP buffer
 	Subsession->readSource()->getNextFrame(dataRTP,maxRTPDataSize,
@@ -1096,7 +1099,7 @@ try{
 			//	limit the size of FIFO buffer
 			
 			
-			if(InputBuffer.size() >= 1)
+			if(InputBuffer.size() >= 10)
 			{ 
 				InputBuffer.pop_front();		//	delete head frame in th FIFO
 				//wait_Semaphore();			//	decrease semaphore
@@ -1158,7 +1161,10 @@ try{
 	//	connect to RTSP server
 
 	status = rtsp_Init();			//	Init RTSP Clients for the camera
-	//throw status;
+	if (status==-1)
+	{
+	throw status;
+	}
 	/////////////////////////////////////////////////////////////////////////
 	//	START TO READ THE DATA FROM CAMERA
 
@@ -1185,7 +1191,7 @@ return 0;
 catch(int status)
 {
 	cout<<"Video not available, review if the server is working\n"<<endl;
-
+	exit(0);		//	exit from application
 }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1226,7 +1232,7 @@ else{
 		I_Frame.h=720;				//	width of image
 		I_Frame.w=576;				//	height of image
  	
-	//	InputBuffer.pop_front();		//	delete the head frame from the FIFO buffer
+		InputBuffer.pop_front();		//	delete the head frame from the FIFO buffer
 		
 		//printf("FIFO size: %d\n",InputBuffer.size());
 		printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
