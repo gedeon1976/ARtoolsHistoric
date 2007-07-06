@@ -628,7 +628,7 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 	
 	unsigned int maxSize = RTPDataSize;		//	max size of the got frame
 	//test size of frame
-	if(framesize >= maxSize)				//	maxf
+	if(framesize >= maxSize)			//	maxf
 	{
 		printf("framesize: %d is greater that maxRTPDATASize: %i\n",framesize,maxSize);
 	}else{
@@ -645,7 +645,7 @@ void STREAM::SaveFrame(void *clientData, unsigned framesize)
 		//printf("%s\n","OK");
 		
 	       }
-	readOKFlag = ~0;//~0	
+	readOKFlag = ~0;//~0				//	ready to next frame
 	//ps->readOKFlag=~0;
 	      // delete Data;
 }
@@ -787,12 +787,12 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 		timestampFreq = Subsession->rtpSource()->timestampFrequency();
 		printf("timestamp frequency %u\n",timestampFreq);
 
-		//	config line, VOL header or  VOP header?
+		//	config line, VOL header or  VOP header for MPEG4?
 		MP4Header = Subsession->fmtp_config();
 		MP4Hsize = strlen(MP4Header);
 		//	convert to unsigned char
 		MP4H = reinterpret_cast<unsigned char*>(const_cast<char*>(MP4Header));
-		printf("Mp4 header: %s\n",MP4H);			//	print MPEG4 header
+		printf("MPEG4 header: %s\n",MP4H);			//	print MPEG4 header
 		
 		//	send SETUP command
 
@@ -906,11 +906,12 @@ try{
 	
 	onRead = Zread;			//	assign functions to the pointers
 	onClosing = Zclose;		//	to be used as callbacks functions
-	onCheckFunc = ZcheckFlag;		//	
+	onCheckFunc = ZcheckFlag;	//	because it is the way how was defined by the live555 libraries
 	//	get the data from rtp source
 
 	//	IMPORTANT: the this pointer is very important because is passed as the afterGettingData parameter
 	//	if it isn't used in this form the program will not work!
+	//	for details see the ReadSource member in the MediaSubsession class in the live555 documentation
 
 	//	the data is saved in the dataRTP buffer
 	Subsession->readSource()->getNextFrame(dataRTP,maxRTPDataSize,
@@ -1014,8 +1015,8 @@ int STREAM::rtsp_Buffering(int n)
 		
 		if (i>1)
 			{
-			dataFrame N = InputBuffer.at(i);
-			dataFrame N_1 = InputBuffer.at(i-1);
+			dataFrame N = InputBuffer.at(i);	//	get the skew
+			dataFrame N_1 = InputBuffer.at(i-1);	//	between 2 frames
 			s = skew(N,N_1);
 			//printf("skew : %06f\n",s);	
 			}
@@ -1163,7 +1164,7 @@ try{
 	status = rtsp_Init();			//	Init RTSP Clients for the camera
 	if (status==-1)
 	{
-	throw status;
+		throw status;			//	throw error
 	}
 	/////////////////////////////////////////////////////////////////////////
 	//	START TO READ THE DATA FROM CAMERA
@@ -1235,13 +1236,13 @@ else{
 		InputBuffer.pop_front();		//	delete the head frame from the FIFO buffer
 		
 		//printf("FIFO size: %d\n",InputBuffer.size());
-		printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
+		//printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
 		
 		
 	}
 	else
 	{
-		printf("Empty buffer from  %s camera, Size = %d\n",ID_cam[ID],InputBuffer.size());
+		//printf("Empty buffer from  %s camera, Size = %d\n",ID_cam[ID],InputBuffer.size());
 		I_Frame.pData = pFrameRGBA;		//	to avoid empty frame
 	}	
 /*
