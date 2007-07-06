@@ -65,8 +65,12 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
   if (newSocket < 0) {
     socketErr(env, "unable to create datagram socket: ");
     return newSocket;
+  }else{
+	// changed
+	printf("UDP socket created\n");
   }
-  
+	//
+
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");
@@ -156,7 +160,11 @@ int setupStreamSocket(UsageEnvironment& env,
   if (newSocket < 0) {
     socketErr(env, "unable to create stream socket: ");
     return newSocket;
+  }else{
+	// changed
+	printf("TCP socket created\n");
   }
+	//
   
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
