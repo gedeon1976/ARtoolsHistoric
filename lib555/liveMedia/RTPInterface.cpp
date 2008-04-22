@@ -185,6 +185,10 @@ Boolean RTPInterface::handleRead(unsigned char* buffer,
   if (fNextTCPReadStreamSocketNum < 0) {
     // Normal case: read from the (datagram) 'groupsock':
     readSuccess = fGS->handleRead(buffer, bufferMaxSize, bytesRead, fromAddress);
+	//changed
+	//printf("reading from UDP\n");
+
+	//
   } else {
     // Read from the TCP connection:
     bytesRead = 0;

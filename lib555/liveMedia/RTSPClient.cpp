@@ -1097,7 +1097,18 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
       // Arrange to handle incoming requests sent by the server
       envir().taskScheduler().turnOnBackgroundReadHandling(fInputSocketNum,
 	   (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
+	
+	// changed
+	printf("RTP over UDP\n");
+	//
     }
+
+	// changed
+	else{
+	printf("RTP over TCP\n");
+
+	}
+	//
 
     delete[] cmd;
     return True;

@@ -76,6 +76,7 @@ void FramedSource::getNextFrame(unsigned char* to, unsigned maxSize,
   fIsCurrentlyAwaitingData = True;
 
   doGetNextFrame();
+
 }
 // ##### The following is for backwards-compatibility; remove it eventually:
 #ifdef BACKWARDS_COMPATIBLE_WITH_OLD_AFTER_GETTING_FUNC

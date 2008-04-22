@@ -115,6 +115,13 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
       closeSocket(newSocket);
       return -1;
     }
+	// changed
+	else{
+	
+	printf("the port binded to this UDP socket in the server was: %d \n",port.num());
+		
+	}
+	//
 #if defined(__WIN32__) || defined(_WIN32)
 #else
   }
@@ -205,6 +212,12 @@ int setupStreamSocket(UsageEnvironment& env,
       closeSocket(newSocket);
       return -1;
     }
+// changed
+	else{
+	
+	printf("the port binded to this TCP socket in the server was: %d \n",port.num());
+		
+	}
 #if defined(__WIN32__) || defined(_WIN32)
 #else
   }

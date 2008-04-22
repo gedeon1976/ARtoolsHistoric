@@ -102,7 +102,7 @@
 #include <sys/timex.h>					//	ntp time
 #include "time.h"
 //*********************************************************************************		
-#define  RTPDataSize 	70000				//	size of
+#define  RTPDataSize 	80000				//	size of
 // RTP data read
 using namespace std;
 
@@ -115,7 +115,7 @@ struct dataFrame{
 	unsigned long timestamp;
 	//unsigned char data[]="";	//	compressed data
 	//unsigned char *data;
-	unsigned char data[70000];
+	unsigned char data[80000];
 
 	int size;			//	size of compressed frame
 	unsigned char *image;		//	data decoded
@@ -358,7 +358,8 @@ char const *URL3;
 unsigned char *MP4H;
 char const *MP4Header;						//	mp4 VOP header?
 int MP4Hsize;							//	size of mp4 header
-unsigned char dataRTP[70000];					//	TESTING
+
+unsigned char dataRTP[80000];					//	TESTING
 //unsigned char dataRTP[]="  ";
 //unsigned char *dataRTP;						//	allocate buffer memory, this is the main reception buffer in the software
 //static int MP4FrameSize;					//	size of frame

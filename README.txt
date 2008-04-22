@@ -7,7 +7,7 @@
 #	place		Barcelona, Spain
 #	date		july/1/2007
 #	Special 
-#	Grant
+#	Grant		God
 #
 ####################################################
 #	Project information
@@ -19,7 +19,7 @@ This project use cmake utility to generate makefiles
 on linux systems by now, but can be extended to windows
 systems.
 
-the instructions to generates an executable from this dir are
+the instructions to generate an executable from this dir are
 
 1. Do a checkout from the right folder in the repository in your console
 

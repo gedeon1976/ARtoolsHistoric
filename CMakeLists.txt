@@ -45,6 +45,7 @@ IF(NOT AV_FORMAT_LIBRARY)
 	MESSAGE("Error: avformat library was not found ") 
 ENDIF(NOT AV_FORMAT_LIBRARY)
 
+
 ####################################################
 #      Add subdirectories within the build directory
 #	1. src
@@ -54,6 +55,7 @@ ADD_SUBDIRECTORY(lib555/liveMedia)
 ADD_SUBDIRECTORY(lib555/groupsock)
 ADD_SUBDIRECTORY(lib555/UsageEnvironment)
 ADD_SUBDIRECTORY(lib555/BasicUsageEnvironment)
+ADD_SUBDIRECTORY(openvidia)
 ADD_SUBDIRECTORY(src)
 
 MESSAGE(STATUS "SRC_dir: " ${CMAKE_SOURCE_DIR})

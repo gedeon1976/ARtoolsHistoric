@@ -1,4 +1,4 @@
-# Install script for directory: /home/portilla/ProjectTest/lib555/liveMedia
+# Install script for directory: /home/portilla/ProjectTest/ipv6_client/lib555/liveMedia
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)

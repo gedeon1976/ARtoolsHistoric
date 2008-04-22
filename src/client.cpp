@@ -433,7 +433,7 @@ double R = 90000; 	// Clock for MPEG4 video, here it is 90000 units per second
 unsigned long LOCALmsw, LOCALlsw;
 double A,B,C,D,E,F,X;
 
-			// see paper AR tools for enhanced teleoperation portilla&basañez'07
+			// see paper AR tools for enhanced teleoperation portilla&basaï¿½ez'07
 
 //double Dstream;	// used to calculate the relative difference in the stream
 //double Delta;		// used to calculate the amount of delay between streams	
@@ -1465,9 +1465,9 @@ try{
 
 	//;	channel 0 and 3
 	//;
-	const char *camL ="rtsp://sonar:7000/cam2";//argv[1];//	
-	const char *camR ="rtsp://sonar:7000/cam0";//argv[2];//	
-	float IOD = 1.5;//atof(argv[3]);////
+	const char *camL =argv[1];//"rtsp://sonar:7000/cam3";//	
+	const char *camR =argv[2];//"rtsp://sonar:7000/cam0";//	
+	float IOD = atof(argv[3]);//1.5;////
 
 	STREAM camara1;						//  	create an stream object
 	
@@ -1654,13 +1654,10 @@ try{
 	//****************************************************************************
 	//	setup timer sensor for recursive image updating 
 
-
-
 	SoTimerSensor *timerL = new SoTimerSensor(updateL,Stereo);//leftImage
 	timerL->setBaseTime(SbTime::getTimeOfDay()); 	//	useconds resolution
 	timerL->setInterval(1.0/25.0);//	 	//	interval 40 ms = 25fps
 	timerL->schedule();				//	enable timer		
-
 
 /*
 	SoTimerSensor *timerR = new SoTimerSensor(updateR,rightImage);//
@@ -1670,8 +1667,8 @@ try{
 	timerR->schedule();				//	enable timer
 	
 	//****************************************************************************
-
-	/*
+*/
+/*	
 	SoTransform *t1 = new SoTransform;
 	t1->translation.setValue(-128,0,0);
 	root->addChild(t1);
@@ -1680,7 +1677,8 @@ try{
 	cube->width = 200;
 	cube->height = 200;
 	root->addChild(cube);
-	*/
+*/
+	
 
 /*
 	SoTransparencyType *Trans1 = new SoTransparencyType;
@@ -1774,7 +1772,10 @@ try{
 //	r1->rotation.setValue(0.0,1.0,0.0,30*(M_PI/180));
 //	root->addChild(tRobot);
 	//root->addChild(r1);
-//	root->addChild(tx);			// load robot model
+
+// 	root->addChild(tx);			// load robot model
+
+
 /*
 	//	CAMERA TEST
 	//	set camera position to parallel configuration
