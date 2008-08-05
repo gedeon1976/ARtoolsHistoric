@@ -74,7 +74,6 @@ TARGET_LINK_LIBRARIES(ARtools ${QT_LIBRARY}
 				BasicUsageEnvironment
 				UsageEnvironment
 				GLU
-				CgGL
 				m
 				pthread
 				avformat

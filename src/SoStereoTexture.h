@@ -28,8 +28,8 @@
 #include <GL/glext.h>				// 	GL extensions
 #include <GL/glx.h>				//	Binding extensions with pointers to opengl in linux
 						//	see opengl red book pag 715 in the 5th edition
-#include <Cg/cgGL.h>				//	Cg API for OpenGL
-#include <Cg/cg.h>				// 	Cg Language runtime for compiling and 								run cg programs
+//#include <Cg/cgGL.h>				//	Cg API for OpenGL
+//#include <Cg/cg.h>				// 	Cg Language runtime for compiling and 								run cg programs
 #include <assert.h>				//	to evaluate expressions
 
 #include  <Inventor/SbLinear.h>			//	vectors, planes and others
@@ -57,7 +57,7 @@ public:
 // Cg interface
 
 typedef void Cg_Callback();	//	define a callback signature function
-
+/*
 Cg_Callback* onCgError;		//	make a function pointer to call
 				//	cg error function, this is done because the signature
 				//	of the callback function doesn't fit to 
@@ -74,7 +74,7 @@ typedef const char *Image_Filter;	//	edge cg code source program
 
 Image_Filter Filter; 		//	to save filters cg code
 Image_Filter Filters[7];
-								   
+*/								   
 
 //unsigned char *resultCg;
 //GLvoid *resultCg;

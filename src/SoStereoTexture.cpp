@@ -33,7 +33,7 @@
 
 void SoStereoTexture::checkForCgError()
 {
-	CGerror error;
+/*	CGerror error;
 	const char *string = cgGetLastErrorString(&error);
 	
 	if (error != CG_NO_ERROR) {
@@ -43,14 +43,14 @@ void SoStereoTexture::checkForCgError()
 			printf("%s\n", cgGetLastListing(cgContext));
 		}
 	//exit(1);
-	}
+	}*/
 }
 
-static CGcontext ErrContext;
+//static CGcontext ErrContext;
 
 void cgCallback()
 {
-	//	this method is called in the case of a Cg error
+/*	//	this method is called in the case of a Cg error
 	const char *Listing;
 	CGerror lastError = cgGetError();
 
@@ -63,7 +63,7 @@ void cgCallback()
 		printf("\n--------------------------------------\n");
 		printf("Cg Error!\n");
 		
-	}
+	}*/
 	
 }
 
@@ -130,7 +130,7 @@ SoStereoTexture::SoStereoTexture()
 	//	Cg Filters
 
 //	Laplacian
-
+/*
 Filters[0] = 
 
 	"half4 edges(half2 coords : TEX0,				     \n"
@@ -280,7 +280,7 @@ Filters[5] =
 	"return dxdy;                                             \n"
 	"}                                                        \n";
 						
-
+*/
 
 	//	Initialize the cg variables
 	//g_cgProfile = CG_PROFILE_FP40;
@@ -289,9 +289,10 @@ Filters[5] =
 //	cgSetErrorCallback(onCgError);		//	enable Cg error information
 	
 	//g_cgProfile = CG_PROFILE_FP30;
+/*
 	cgContext = cgCreateContext();		//	create a container for the Cg programs
 	checkForCgError();
-		
+*/		
 		
 						     
 
@@ -349,8 +350,8 @@ Filters[5] =
 //	Destructor
 SoStereoTexture::~SoStereoTexture()
 {
-	cgDestroyProgram(fragmentProgram);
-	cgDestroyContext(cgContext);
+//	cgDestroyProgram(fragmentProgram);
+//	cgDestroyContext(cgContext);
 }
 //	Methods
 
@@ -508,14 +509,14 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 	////////////////////////
 	//	Cg Setup
-
+/*
 	//	get profile for fragment processor
 	cgProfile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
 	checkForCgError();
 	//	optimize the choosen profile for this hardware
 	cgGLSetOptimalOptions(cgProfile);
 	checkForCgError();
-
+*/
 	//	Quad Buffer TEST
 	//**********************************************************************************
 	
@@ -1035,7 +1036,8 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 
 		
 */	
-	
+
+/*	
 		// create the edge detection cg program 
 		fragmentProgram = cgCreateProgram(cgContext, CG_SOURCE,
 			Filters[5],cgProfile,"edges",NULL);
@@ -1112,7 +1114,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 		//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
 		//glDeleteFramebuffersEXT(1,&fbo);
 		
-		
+*/		
 	//	DRAW THE RIGHT IMAGE
 /*
 		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
@@ -1143,7 +1145,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 	//glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,0,0,720,576);
 	
 	glActiveTextureARB(GL_TEXTURE0_ARB);
-	glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[1]);
+	glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[0]);
 	
 	glEnable(GL_TEXTURE_RECTANGLE_NV);
 
