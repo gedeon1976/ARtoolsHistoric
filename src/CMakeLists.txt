@@ -6,6 +6,7 @@
 #	author		Henry Portilla
 #	place		Barcelona, Spain
 #	date		june/22/2007
+#	modified	august/2008
 #	Special 
 #	Grant		GOD
 #
@@ -33,8 +34,8 @@ INCLUDE_DIRECTORIES(${QT_INCLUDE_DIR}
 ###################################################
 #	Include the source files
 ###################################################
-SET(ARTOOLS_h client.h SoStereoTexture.h)
-SET(ARTOOLS_src client.cpp SoStereoTexture.cpp)
+SET(ARTOOLS_h augmentedreality.h client.h SoStereoTexture.h)
+SET(ARTOOLS_src main.cpp augmentedreality.cpp client.cpp SoStereoTexture.cpp)
 ###################################################
 #	Search for the live555 libraries directories
 ###################################################

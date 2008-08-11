@@ -1294,131 +1294,23 @@ TIME getTime()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	update function show the frame from cameras
 
-void updateR(void *data,SoSensor*)	//	this function updates the texture based on the frame got
-					//	from the video stream
+void updateL(void *data,SoSensor*)	//	this function updates the texture based on the 						//	frame got from the video stream
 {
-	long int AR,BR,diffR;//,fpsR;
 	
-	Export_Frame Fr;		//	struct for save the frame
+	Export_Frame FrL;		//	struct for save the frame
 try{
-	
-	SoTexture2 *rightImage = (SoTexture2*)data;
-	//	calculus for get the video frames rate per second
-	/////////////////////////////////////////////////////////////////////////////////////////
-	if (FirstR==0)
-	{
-		t1R = getTime();
-		FirstR=-1;
-	}
-	else{
-	t2R = getTime();
-	AR = (t2R.tv_sec - t1R.tv_sec);		//	seconds
-	BR = (t2R.tv_usec - t1R.tv_usec);	//	microseconds
-
-	diffR =(AR*1000000 + BR);			//	get the difference in microseconds
-	//printf("the difference in time was sec:%li ,usec:%li, diff:%li\n",A,B,diffL);
-	fpsR = 1000000/(diffR);			//	fps
-	((SoSFFloat*)SoDB::getGlobalField("FpsR"))->setValue(fpsR);
-	t1R = t2R;				//	update last time for next frame arrival
-	}
-	/////////////////////////////////////////////////////////////////////////////////////////
-
-	// return a structure that contain the image, size, width and height
-	Fr=C2->Execute();	//	call getImage() using a functor	
-	rightImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB, 4 = RGBA
-		
-	//printf("fps %03f from right camera \n",fpsR);
-		
-
-	}
-catch(...)
-{
-	cout<<"error not viewer";
-}	
-
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	update function show the frame from cameras
-
-void updateL(void *data,SoSensor*)	//	this function updates the texture based on the frame got
-					//	from the video stream
-{
-	//	get the video frames
-	long int AL,BL,diffL;//fpsL
-	double DstreamL,DstreamR,Delta;
-	//float diffL;
-	Export_Frame FrL,FrR;		//	struct for save the frame
-try{
-	//SoTexture2 *leftImage = (SoTexture2*)data;
 	SoStereoTexture *Stereo = (SoStereoTexture*)data;
-	//	calculus for get the video frames rate per second
-	/////////////////////////////////////////////////////////////////////////////////////////
-	/*
-	if (FirstL==0)
-	{
-		t1L = getTime();
-		FirstL=-1;
-	}
-	else{
-	t2L = getTime();
-	AL = (t2L.tv_sec - t1L.tv_sec);		//	seconds
-	BL = (t2L.tv_usec - t1L.tv_usec);	//	microseconds
-
-	diffL =(AL*1000000 + BL);		//	get the difference in microseconds
-
-	//printf("the difference in time was sec:%li ,usec:%li, diff:%li\n",A,B,diffL);
-
-	fpsL = 1000000/(diffL);			//	fps
-	((SoSFFloat*)SoDB::getGlobalField("FpsL"))->setValue(fpsL);
-	//FpsL->setValue(fpsL);
-	t1L = t2L;				//	update last time for the next frame arrival
-	}
-	*/
-	/////////////////////////////////////////////////////////////////////////////////////////
+	
 	// return a structure that contain the image, size, width and height
 	FrL=C1->Execute();
-	//	used to get the relative difference from left Stream, it will be used
-	//	for synchronization
-	DstreamL = tdiffL->getDiffStream();	//	
 
 	if (FrL.pData->data[0]!=NULL)
 	{
 		Stereo->imageL.setValue(SbVec2s(720,576),3,FrL.pData->data[0]);
 	}else
 	{
-		printf("%s\n","There aren't image from left buffer");
+		printf("%s\n","There aren't image from the buffer");
 	}
-
-	FrR=C2->Execute();			//	call getImage() using a functor
-
-	//	used to get the relative difference from right Stream, it will be used
-	//	for synchronization
-	DstreamR = tdiffR->getDiffStream();
-	//	calculate the difference between streams, if these are synchronized Delta must be
-	//	0, Delta = 0, if not one stream must to wait the other to be show together.
-	
-	//	Get the delta time needed to synchronize two streams
-	Delta = DstreamR-DstreamL;
-	Stereo->timetoSynchronize.setValue(float(Delta*1000));	//	time in milliseconds
-
-	if (last_Delta != Delta )
-	{
-	//	printf("Delta is %f ms\n",Delta*1000);
-	}
-
-	if (FrR.pData->data[0]!=NULL)
-	{
-		Stereo->imageR.setValue(SbVec2s(720,576),3,FrR.pData->data[0]);
-	}else
-	{
-		printf("%s\n","There aren't image from right buffer");
-	}
-	//Stereo->imageL = Fr.pData->data[0];	
-	//leftImage->image.setValue(SbVec2s(512,512),3,Fr.pData->data[0]);// 3 components = RGB 4 = RGBA
-	last_Delta = Delta;	
-	//printf("fps %f from left camera \n",fpsL);
-	//timeNow2();
-	
 	
 }
 catch(...)
@@ -1427,171 +1319,7 @@ catch(...)
 }	
 	
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//		MAIN PROGRAM
-//		user input: .\client rtsp://sonar:7070/cam1 rtsp://sonar:7070/cam2 IOD
 
-/**
- * 
- * @param argc 
- * @param argv rtsp://sonar:7070
- * @return 
- */
-int main(int argc,char **argv)
-{
-try{	
-	IMAGE set_format;					/*	set the format to use in the image
-									there are 2 formats:
-									CUT_IMAGE 
-									where the left part of the image
-									is cutted, and
-									NORMAL_IMAGE 
-									where the image kept the original size
-								*/	
-	/*
-	if (argc < 3)
-	{
-		printf("The arguments are:\n");
-		cout<<"rtsp address 1 : camera 1"<<endl;
-		cout<<"rtsp address 2 : camera 2"<<endl;
-		cout<<"IOD distance   : parallax angle for stereo"<<endl;
-		cout<<""<<endl;
-		cout<<"Example"<<endl;
-		cout<<"./ARtools rtsp://sonar:7070/cam0 "
-		<<"rtsp://sonar:7070/cam3 1.5"<<endl;
-		return(0);
-	}
-	*/
-
-	//;	channel 0 and 3
-	//;
-	const char *camL =argv[1];//"rtsp://sonar:7000/cam3";//	
-	const char *camR =argv[2];//"rtsp://sonar:7000/cam0";//	
-	float IOD = atof(argv[3]);//1.5;////
-
-	STREAM camara1;						//  	create an stream object
-	
-	myfunctor<STREAM> TdifL(&camara1,&STREAM::getDiffStream);
-	myfunctor<STREAM> D1(&camara1,&STREAM::getImage);	//	this is a functor, some as a pointer to 
-								//	a member function, here points to the
-								//	getImage function of camera1 object
-	C1 =&D1;						//	C1 is a abstract class base for myfunctor class
-	tdiffL = &TdifL;
-	//set_format=CUT_IMAGE;					//	with a virtual method to overload
-	set_format=LEFT_IMAGE;
-	camara1.Init_Session(camL,set_format);			//	start connection with url
-								//	set the format of the image
-								//	for the camera 
-	STREAM camara2;
-	myfunctor<STREAM> TdifR (&camara2,&STREAM::getDiffStream);
-	myfunctor<STREAM> D2(&camara2,&STREAM::getImage);	//	do the same for the right camera
-	C2 =&D2;
-	tdiffR = &TdifR;
-	set_format=RIGHT_IMAGE;
-	camara2.Init_Session(camR,set_format);
-
-	// ******************************************************************************************** 
-	//		Graphics Scene
-	// Initializes SoQt library (and implicitly also the Coin and Qt
-    	// libraries). Returns a top-level / shell Qt window to use.
-    	//QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
-	QWidget * mainwin = SoQt::init(argv[0]);
-	if (mainwin==NULL) exit(1);
-	
-	//	initialize the new nodes, required
-	SoStereoTexture::initClass();
-
-	SoSeparator *root = new SoSeparator;
-    	root->ref();
-
-	//	add  camera and lights
-/*
-	SoPerspectiveCamera *mycam = new SoPerspectiveCamera;
-	SoDirectionalLight *Light = new SoDirectionalLight;
-
-	root->addChild(mycam);
-	root->addChild(Light);
-*/
-	//	add Stereo node
-	
-	SoStereoTexture *Stereo = new SoStereoTexture;
-	Stereo->width.setValue(720);
-	Stereo->heigh.setValue(576);
-	Stereo->IOD.setValue(IOD);
-
-	root->addChild(Stereo);
-
-	//****************************************************************************
-	//	setup timer sensor for recursive image updating 
-
-	SoTimerSensor *timerL = new SoTimerSensor(updateL,Stereo);//leftImage
-	timerL->setBaseTime(SbTime::getTimeOfDay()); 	//	useconds resolution
-	timerL->setInterval(1.0/25.0);//	 	//	interval 40 ms = 25fps
-	timerL->schedule();				//	enable timer		
-
-/*
-	SoTimerSensor *timerR = new SoTimerSensor(updateR,rightImage);//
-	//
-	timerR->setBaseTime(SbTime::getTimeOfDay());	//	useconds resolution
-	timerR->setInterval(1.0/25.0);			//	set interval 40 ms = 25fps
-	timerR->schedule();				//	enable timer
-	
-	//****************************************************************************
-*/
-	SbColor color(10, 0.5,0.5);
-	// Use one of the convenient SoQt viewer classes.
-
-	SoQtExaminerViewer * eviewer = new SoQtExaminerViewer(mainwin);
-   	eviewer->setSceneGraph(root);
-	eviewer->setFeedbackVisibility(true);
-//	eviewer->setStereoViewing(TRUE);
-//	eviewer->setQuadBufferStereo(TRUE);	//	set stereo mode = QUAD BUFFER = page flipping
-
-/*
-	eviewer->setOverlaySceneGraph(S1);
-	eviewer->setOverlayColorMap(1,1,&color);
-	eviewer->setTitle("Overlay Plane");
-*/
-	/*
-	//***********************************************
-	//	test for rendering bottleneck
-	//***********************************************
-	SoSwitch *renderOff = new SoSwitch;
-	renderOff->ref();
-	renderOff->addChild(root);
-	eviewer->setSceneGraph(renderOff);
-	//***********************************************
-	*/
-
-    	eviewer->show();
-	// Pop up the main window.
-    	SoQt::show(mainwin);
-    	// Loop until exit.
-    	SoQt::mainLoop();
-	delete eviewer;
-
-	// 			Clean up resources.				  
-    	
-    	root->unref();
-		
-return 0;			// from main function
-}
-catch(exception& e)
-{
- 	cout<<e.what()<<endl;
-
-
-}
-catch(bad_exception& e)
-{
-	cout<<"error"<<e.what()<<endl;
-
-}  
-catch(...)
-{
-	cout<<"unknow error\n"<<endl;
-}
-}	
 
 
 
