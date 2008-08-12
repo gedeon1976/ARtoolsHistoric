@@ -22,20 +22,23 @@ SET(LIVE555_DIR ${CMAKE_SOURCE_DIR}/lib555/liveMedia/include
 ${CMAKE_SOURCE_DIR}/lib555/groupsock/include
 ${CMAKE_SOURCE_DIR}/lib555/UsageEnvironment/include
 ${CMAKE_SOURCE_DIR}/lib555/BasicUsageEnvironment/include)
+#SET(CMAKE_INSTALL_PREFIX /home/portilla/QooliViewer/lib)
 
 #SET(OPENVIDIA_DIR ${CMAKE_SOURCE_DIR}/openvidia/include)
 
 INCLUDE_DIRECTORIES(${QT_INCLUDE_DIR}
 		    ${COIN_INCLUDE_DIR}
 		    ${SOQT_INCLUDE_DIR}
-		    ${LIVE555_DIR})
-		    #${OPENVIDIA_DIR})		
+		    ${LIVE555_DIR}
+		    ${CMAKE_CURRENT_BINARY_DIR})
+		    		
 		
 ###################################################
 #	Include the source files
 ###################################################
 SET(ARTOOLS_h augmentedreality.h client.h SoStereoTexture.h)
-SET(ARTOOLS_src main.cpp augmentedreality.cpp client.cpp SoStereoTexture.cpp)
+SET(ARTOOLS_src main.cpp augmentedreality.cpp HenryViewer.cpp client.cpp SoStereoTexture.cpp)
+QT4_AUTOMOC(augmentedreality.cpp HenryViewer.cpp)
 ###################################################
 #	Search for the live555 libraries directories
 ###################################################
@@ -78,6 +81,7 @@ TARGET_LINK_LIBRARIES(ARtools ${QT_LIBRARY}
 				m
 				pthread
 				avformat
-				avcodec)
+				avcodec
+				qooliv)
 
 ###################################################

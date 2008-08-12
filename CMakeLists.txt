@@ -17,15 +17,21 @@ PROJECT(ARTools)
 
 ####################################################
 #	load  libraries
-#	1. QT3
+#	1. QT4
 #	2. Coin
 #	3. SoQt
 #	4. avcodec/avformat
 ####################################################
 
-FIND_PACKAGE(Qt3 REQUIRED)
+FIND_PACKAGE(Qt4 REQUIRED)
+SET(QT_USE_OPENGL_TRUE)
+INCLUDE(${QT_USE_FILE})
 INCLUDE(${CMAKE_SOURCE_DIR}/Modules/FindCoin.cmake)
-INCLUDE(${CMAKE_SOURCE_DIR}/Modules/FindSoQt.cmake)
+INCLUDE(${CMAKE_SOURCE_DIR}/Modules/FindSoQt4.cmake)
+# qooliv library
+SET(qooliv_DIR ${CMAKE_INSTALL_PREFIX}/lib/qooliv)
+FIND_PACKAGE(qooliv REQUIRED)
+INCLUDE(${qooliv_USE_FILE})
 
 FIND_LIBRARY(AV_CODEC_LIBRARY avcodec
 		usr/lib

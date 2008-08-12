@@ -479,7 +479,10 @@ void SoStereoTexture::dataToTexture(const unsigned char *data,int width,int heig
 	//	mainly was though for image loading
 	
 	glBindTexture(GL_TEXTURE_RECTANGLE_NV,texID);
-	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,data);
+	if(data!= 0)
+	{
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,data);
+	}
 
 }
 

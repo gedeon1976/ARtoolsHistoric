@@ -1082,7 +1082,7 @@ try{
 			if(InputBuffer.empty() | InputBuffer.size()>= 1 )
 			{
 				InputBuffer.push_back(data_RTP);	//	save data
-				//printf("writing frame %d from the camera %d \n",frameCounter,ID);
+				printf("writing frame %d from the camera %d \n",frameCounter,ID);
 				//set_Semaphore();			//	increase the semaphore
 			}
 
