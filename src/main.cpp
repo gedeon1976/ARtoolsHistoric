@@ -10,7 +10,7 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
-/*
+
 #include "augmentedreality.h"
 
 #include <Inventor/Qt/SoQt.h>
@@ -47,9 +47,9 @@ int main(int argc, char** argv)
     	root->unref();
 	return 0;
 
-}*/
+}
 
-
+/*
 #include <QApplication>
 #include "HenryViewer.h"
 
@@ -66,4 +66,4 @@ int main(int argc, char *argv[])
 
     mainWin.show();
     return app.exec();
-}
+}*/
