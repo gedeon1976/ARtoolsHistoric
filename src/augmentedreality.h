@@ -18,8 +18,7 @@
 				//	the STREAM class used to conect to a remote 
 				//	server using RTSP, RTP,RTCP, SDP and other protocols
 				//	through the lib555 libraries
-#include "SoStereoTexture.h"	//	Custom Inventor node, this node has several 						// 	modifications to support 720*576 video, besides 
-				//	it allows a faster drawing of the data
+#include "SoStereoTexture.h"	//	Custom Inventor node, this node has several 						// 	modifications to support until 720*576 video size, 					//	besides it allows a faster drawing of the data
 #include <QObject>
 /**
 	@author 
@@ -36,19 +35,16 @@ public:
 
 	void playVideo(bool Estado);
 	Export_Frame getImage();
-	//static void update(void *data, SoSensor*);
-	
+		
 private slots:
 	void update();
 
 private:
 	IMAGE set_format;	//	set the format to use in the image	
 	STREAM camara;		//  	create an stream object
-	TFunctor *C1;		//	pointers to abstract class
 	QTimer *timer;		//	Qt timer
 	SoStereoTexture *videoCell;	//	Video Node 
-public:
-	//SoTimerSensor *timer;	//	timer for get frames under Coin3D 
+	
 
 };
 

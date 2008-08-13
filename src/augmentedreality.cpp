@@ -18,31 +18,6 @@ AugmentedReality::AugmentedReality()
 {
 }
 
-/*
-void AugmentedReality::update(void *data,SoSensor*)
-{
-	//	this function updates the texture based on the 				//	frame got from the video stream
-
-	
-	Export_Frame FrL;		//	struct for save the frame
-	AugmentedReality AR;
-
-	SoStereoTexture *Stereo = (SoStereoTexture*)data;
-
-		
-	// return a structure that contain the image, size, width and height
-	//FrL = C1->Execute();
-	FrL = AR.getImage();
-
-	if (FrL.pData->data[0]!=NULL)
-	{
-		Stereo->imageL.setValue(SbVec2s(720,576),3,FrL.pData->data[0]);
-	}else
-	{
-		printf("%s\n","There aren't image from the buffer");
-	}
-
-}*/
 void AugmentedReality::update()
 {
 	// this function updates the texture based on the 				//	frame got from the video stream
@@ -51,12 +26,11 @@ void AugmentedReality::update()
 	Export_Frame FrL;		//	struct for save the frame
 	
 	// return a structure that contain the image, size, width and height
-	//FrL = C1->Execute();
 	FrL = getImage();
 
 	if (FrL.pData->data[0]!=NULL)
 	{
-		videoCell->imageL.setValue(SbVec2s(720,576),3,FrL.pData->data[0]);
+		videoCell->imageL.setValue(SbVec2s(videoCell->w,videoCell->h),3,FrL.pData->data[0]);
 		cout<<"function update"<<endl;
 	}else
 	{
@@ -67,11 +41,6 @@ void AugmentedReality::update()
 
 AugmentedReality::AugmentedReality(SoSeparator* videoNode, const char *URLcam)
 {
-	//myfunctor<STREAM> D1(&camara,&STREAM::getImage);	
-				//	this is a functor, some as a pointer to 
-				//	a member function, here points to the
-				//	getImage function of camara object
-	//C1 = &D1;		//	C1 is a abstract class			
 	set_format = LEFT_IMAGE;
 	camara.Init_Session(URLcam, set_format);	
 				//	start connection with url address
@@ -85,6 +54,8 @@ AugmentedReality::AugmentedReality(SoSeparator* videoNode, const char *URLcam)
 	videoCell = new SoStereoTexture;
 	videoCell->width.setValue(720);
 	videoCell->heigh.setValue(576);
+	//videoCell->w = 720;
+	//videoCell->h = 576;
 				//	add StereoNode to main node
 	videoNode->addChild(videoCell);
 				//	add timer to get each image from buffer
@@ -93,11 +64,7 @@ AugmentedReality::AugmentedReality(SoSeparator* videoNode, const char *URLcam)
 	timer = new QTimer(this);
      	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
      	timer->start(40);
-/*
-	timer = new SoTimerSensor(update,videoCell);
-	timer->setBaseTime(SbTime::getTimeOfDay()); 	//	useconds resolution
-	timer->setInterval(1.0/25.0); 			//	interval 40 ms = 25fps
-	timer->schedule();				//	enable timer*/
+
 
 }
 
@@ -113,7 +80,6 @@ void AugmentedReality::playVideo(bool Estado)
 			timer->stop();
 		break;
 	}
-
 
 }
 

@@ -84,6 +84,8 @@ SoSFFloat	width;		//	width of images
 SoSFFloat	heigh;		//	heigh of images
 SoSFImage	imageL;
 SoSFImage	imageR;
+int 		w;		//	save image size in integers
+int		h;
 unsigned char   *image_L;	//	left image in unsigned char format
 unsigned char   *image_R;	//	right image
 SoSFFloat	IOD;		//	inter-ocular distance

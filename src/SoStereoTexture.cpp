@@ -97,6 +97,7 @@ SoStereoTexture::SoStereoTexture()
 	pthis->image_L = NULL;
 	pthis->image_R = NULL;
 
+	
 	//	initialise pointers to PBO extension
 	
 	glBindBufferARB=NULL;
@@ -124,7 +125,7 @@ SoStereoTexture::SoStereoTexture()
 	//	setup opengl extensions
 	if (SO_NODE_IS_FIRST_INSTANCE())
 	{
-
+		
 	//	CG SETUP	
 
 	//	Cg Filters
@@ -510,6 +511,12 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	GLXDrawable glXSurface;			//	glX variables to do the SwapBuffer
 	Display *pDisplay;
 
+	//	initializes this variables to use after in the openGL internal code
+	//	this give a desired behavior at the time of configure the
+	//	openGL textures
+	w = (int)width.getValue();
+	h = (int)heigh.getValue();
+
 	////////////////////////
 	//	Cg Setup
 /*
@@ -527,7 +534,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
         //double fovy =  45;                            // field of view in y-axis, 
 	double theta = 46;				// aperture angle as FOV
-	double aspect = double(720)/double(576);  	// screen aspect ratio
+	double aspect = double(width.getValue())/double(heigh.getValue()); 
+						 	// screen aspect ratio
 	double nearZ = 75.0;                            // near clipping plane
 	double farZ = 400.0;                            // far clipping plane
 	double screenZ =100.0;                          // screen projection plane
@@ -580,13 +588,13 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 	glGenBuffersARB(1, &bufferID[0]);
         glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, bufferID[0]);
 	//	reset contents of PBO
-	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,720*576*3,NULL,GL_DYNAMIC_DRAW_ARB);
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,w*h*3,NULL,GL_DYNAMIC_DRAW_ARB);
 
 	//	PBO RIGHT
  	glGenBuffersARB(1, &bufferID[1]);
         glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, bufferID[1]);
 	//	reset contents of PBO
-	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,720*576*3,NULL,GL_DYNAMIC_DRAW_ARB);
+	glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,w*h*3,NULL,GL_DYNAMIC_DRAW_ARB);
 
  	//glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
 	//                           GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -610,8 +618,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 	glTexParameteri(GL_TEXTURE_RECTANGLE_NV,GL_TEXTURE_MAG_FILTER,GL_NEAREST);	//	on view magnification
 	glTexParameteri(GL_TEXTURE_RECTANGLE_NV,GL_TEXTURE_MIN_FILTER,GL_NEAREST); 	//	on view mimimization
 	glEnable(GL_TEXTURE_RECTANGLE_NV);
-	glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, 720, 576, 0,
-                            GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_RECTANGLE_NV,0,GL_RGBA,w,h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	//	OPENGL 2 extension
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//			PBO SETUP
@@ -628,7 +635,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 	//	modify the data in the GPU memory
 
 	SbVec2s size; int components;
-	size.setValue(720,576);
+	size.setValue(w,h);
 	components=3;
 	
 	//	check for stereo support
@@ -679,13 +686,13 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 		//	define a pointer that maps to memory at the GPU memory card						
 		pboMemoryL = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
 		//	write data in the GPU RAM memory
-		memcpy(pboMemoryL,pthis->imageL.getValue(size,components),720*576*3);	
+		memcpy(pboMemoryL,pthis->imageL.getValue(size,components),w*h*3);	
 		//	Unmap the PBO buffer	
 		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
 
 		//	DRAW THE LEFT IMAGE
 		//	PBO usage 
-		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
 		glBegin(GL_QUADS);
 			glTexCoord2f(0.0,0.0);
 				glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
@@ -730,7 +737,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 		//	second PBO
 		pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
 		//	write data in the GPU RAM memory
-		memcpy(pboMemoryR,pthis->imageR.getValue(size,components),720*576*3);	
+		memcpy(pboMemoryR,pthis->imageR.getValue(size,components),w*h*3);	
 
 		//	Unmap the PBO buffer	
 
@@ -738,7 +745,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 
 		//	PBO usage 
 		//	DRAW THE RIGHT IMAGE
-		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
 		glBegin(GL_QUADS);
 			glTexCoord2f(0.0,0.0);
 				glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
@@ -778,13 +785,13 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 		//	define a pointer that maps to memory at the GPU memory card						
 		pboMemoryL = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
 		//	write data in the GPU RAM memory
-		memcpy(pboMemoryL,pthis->imageL.getValue(size,components),720*576*3);	
+		memcpy(pboMemoryL,pthis->imageL.getValue(size,components),w*h*3);	
 		//	Unmap the PBO buffer	
 		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
 
 		//	DRAW THE LEFT IMAGE
 		//	PBO usage 
-		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
 		glBegin(GL_QUADS);
 			glTexCoord2f(0.0,0.0);
 				glVertex3f( -width.getValue(), heigh.getValue()/2.0,0.0);
@@ -799,13 +806,13 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 		//	second PBO
 		pboMemoryR = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,GL_WRITE_ONLY);
 		//	write data in the GPU RAM memory
-		memcpy(pboMemoryR,pthis->imageR.getValue(size,components),720*576*3);	
+		memcpy(pboMemoryR,pthis->imageR.getValue(size,components),w*h*3);	
 		//	Unmap the PBO buffer	
 		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
 
 		//	PBO usage 
 		//	DRAW THE RIGHT IMAGE
-		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,BUFFER_OFFSET(0));
 		glBegin(GL_QUADS);
 			glTexCoord2f(0.0,0.0);
 				glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
@@ -867,12 +874,12 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 	//	setup textures
 	
 	SbVec2s size; int components;	//	define size of images
-	size.setValue(720,576);
+	size.setValue(w,h);
 	components=3;
 
 	for(int i=0; i<7;i++)
 	{
-		setupTexture(width.getValue(), heigh.getValue(),iTexture[i]);
+		setupTexture(w,h,iTexture[i]);
 	}
 		
 	
@@ -916,7 +923,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 		//	DRAW THE LEFT IMAGE
 
 
-		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
 		//	modifying for stereo
 		glBegin(GL_QUADS);
 			glTexCoord2f(0.0,0.0);
@@ -966,7 +973,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 
 	//	DRAW THE RIGHT IMAGE
 
-		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
 		glBegin(GL_QUADS);
 			glTexCoord2f(0.0,0.0);
 				glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
@@ -997,7 +1004,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 
 		//	load data
 
-		dataToTexture(pthis->imageL.getValue(size,components),width.getValue(), heigh.getValue(),iTexture[0]);
+		dataToTexture(pthis->imageL.getValue(size,components),w,h,iTexture[0]);
 /*	
 		//	render to screen
 		glGenFramebuffersEXT(1,&fbo);
@@ -1067,7 +1074,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 		glLoadIdentity();
 		//glPushMatrix();
 		
-		gluOrtho2D(0,720,0,576);	//	image projection
+		gluOrtho2D(0,width.getValue(),0,heigh.getValue());	//	image projection
 		//glFrustum(0.0,1.0,0.0,1.0,1.0,screenZ);	// set frustum to see
 
 		glMatrixMode(GL_MODELVIEW);
@@ -1120,7 +1127,7 @@ if (isPBO == GL_TRUE)	// if PBO is supported, use it when will be hardware suppo
 */		
 	//	DRAW THE RIGHT IMAGE
 /*
-		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,720,576,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
+		glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
 		glBegin(GL_QUADS);
 			glTexCoord2f(0.0,0.0);
 				glVertex3f( 0.0, heigh.getValue()/2.0,0.0);

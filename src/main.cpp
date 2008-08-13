@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	const char *URL = "rtsp://antlia:7070/cam3";
 	
 	AugmentedReality Video(root, URL);
-	root->addChild(new SoCube);
+	//root->addChild(new SoCube);
 
 	SoQtExaminerViewer *eviewer = new SoQtExaminerViewer(mainwin);
    	eviewer->setSceneGraph(root);

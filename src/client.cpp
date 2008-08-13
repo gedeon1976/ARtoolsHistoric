@@ -122,8 +122,8 @@ int STREAM::initCodecs()
 
 	pCodecCtx = avcodec_alloc_context();
 //	initialize width and height by now
-	pCodecCtx->width=720;//768
-	pCodecCtx->height=576;//576
+	pCodecCtx->width=720;
+	pCodecCtx->height=576;
 	pCodecCtx->bit_rate = 1000000;	//	bit rate?
 
 	//MPEG4 global header used for decode the frames
@@ -152,7 +152,7 @@ int STREAM::initCodecs()
 	return -1;	//	cannot allocate memory
 
 //	determine required buffer size for allocate buffer
-	numBytes = avpicture_get_size(PIX_FMT_RGB24,720,576);//RGB24
+	numBytes = avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width, pCodecCtx->height);//RGB24
 	buffer=new uint8_t[numBytes];	
 	printf(" size of frame in bytes : %d\n",numBytes);
 
@@ -161,7 +161,7 @@ int STREAM::initCodecs()
 //	fps = (pFormatCtx->bit_rate/1000)*(pFormatCtx->duration) / numBytes;
 	//printf(" fps  : %f\n",fps);
 //	assign appropiate parts of buffer to image planes in pFrameRGB
-	avpicture_fill((AVPicture*)pFrameRGBA,buffer,PIX_FMT_RGB24,720,576);//RGB32
+	avpicture_fill((AVPicture*)pFrameRGBA,buffer,PIX_FMT_RGB24, pCodecCtx->width, pCodecCtx->height);//RGB32
 	return 0;
 
 }
@@ -969,7 +969,7 @@ try{
 	//		}else{
 
 		//	convert the image from its format to RGB
-			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,720,576);//RGB24
+			img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,pCodecCtx->width,pCodecCtx->height);//RGB24
 	//		}	
 			//pCodecCtx->width,pCodecCtx->height);
 			//	save to a buffer
