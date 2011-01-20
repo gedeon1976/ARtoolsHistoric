@@ -17,21 +17,22 @@ ELSE (WIN32)
   #       Include the headers of the libraries  
   
   find_path(LIVE_MEDIA_INC liveMedia.hh
-	  /live/liveMedia/include)
+	  ${CMAKE_SOURCE_DIR}/live/liveMedia/include)
+message("dir: "${CMAKE_SOURCE_DIR})
   find_path(LIVE_GROUP_INC Groupsock.hh
-	  /live/groupsock/include)
+	  ${CMAKE_SOURCE_DIR}/live/groupsock/include)
   find_path(LIVE_BASIC_INC BasicUsageEnvironment.hh
-	    /live/BasicUsageEnvironment/include)
+	    ${CMAKE_SOURCE_DIR}/live/BasicUsageEnvironment/include)
   find_path(LIVE_USAGE_INC UsageEnvironment.hh
-	  /live/UsageEnvironment/include)
+	  ${CMAKE_SOURCE_DIR}/live/UsageEnvironment/include)
   set(LIVE555_INCLUDE_DIRS ${LIVE_MEDIA_INC} ${LIVE_GROUP_INC} ${LIVE_BASIC_INC} ${LIVE_USAGE_INC})
    
   #       Search for the live555 libraries directories
 
-  FIND_PATH(LIVE_MEDIA libliveMedia.a /live/liveMedia)
-  FIND_PATH(LIVE_GROUP libgroupsock.a /live/groupsock)
-  FIND_PATH(LIVE_BASIC libBasicUsageEnvironment.a /live/BasicUsageEnvironment)
-  FIND_PATH(LIVE_USAGE libUsageEnvironment.a /live/UsageEnvironment)
+  FIND_PATH(LIVE_MEDIA libliveMedia.a ${CMAKE_SOURCE_DIR}/live/liveMedia)
+  FIND_PATH(LIVE_GROUP libgroupsock.a ${CMAKE_SOURCE_DIR}/live/groupsock)
+  FIND_PATH(LIVE_BASIC libBasicUsageEnvironment.a ${CMAKE_SOURCE_DIR}/live/BasicUsageEnvironment)
+  FIND_PATH(LIVE_USAGE libUsageEnvironment.a ${CMAKE_SOURCE_DIR}/live/UsageEnvironment)
   
   set(LIVE_MEDIA_LIB ${LIVE_MEDIA}/libliveMedia.a)
   set(LIVE_GROUP_LIB ${LIVE_GROUP}/libgroupsock.a)
