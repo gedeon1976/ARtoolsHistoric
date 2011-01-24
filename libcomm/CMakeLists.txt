@@ -1,0 +1,19 @@
+ 
+
+#   	Libcomm 
+#	Author:	Alexander Perez
+#
+#
+
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+SET(Boost_USE_MULTITHREADED ON)
+	
+FILE(GLOB SRC_FILES *.cpp)
+FILE(GLOB HDR_FILES *.h *.hpp *.hxx)
+
+ADD_LIBRARY(libioccomm STATIC ${SRC_FILES} ${HDR_FILES} )
+TARGET_LINK_LIBRARIES( libioccomm ${BOOST_LIBRARY_DIRS}) 
+
+IF ( UNIX )
+  SET_TARGET_PROPERTIES( libioccomm PROPERTIES OUTPUT_NAME ioccomm )
+ENDIF( UNIX )
