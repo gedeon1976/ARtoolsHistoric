@@ -3,7 +3,7 @@
 
 //      Author:         Henry Portilla
 //      Date:           june/2006
-//      Modified:       sept/06
+//      Modified:       dec/10
 
 //      Thanks:         
 
@@ -27,8 +27,6 @@ extern "C" {
 #include <libavformat/avformat.h>                            // libavformat and libavcodec and avutil libraries
 #include <libavutil/avutil.h>
 #include <libswscale/swscale.h>				     // video scaling library	
-
-
 }
 
 //********************************************************************************

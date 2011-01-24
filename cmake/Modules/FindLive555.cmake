@@ -1,6 +1,6 @@
 # - Find live555 (live555 streaming libraries)
 #   the live555 libraries are a set of libraries used to connect
-#   to a remote server using flow trasmiision protocols as RTSP, RTP, SDP
+#   to a remote server using flow trasmission protocols as RTSP, RTP, SDP
 #
 # This module defines the following variables
 #  LIVE555_FOUND         - system has live555
@@ -44,7 +44,7 @@ message("dir: "${CMAKE_SOURCE_DIR})
   
 ENDIF (WIN32)
 
-# handle the QUIETLY and REQUIRED arguments and set QUARTER_FOUND to TRUE if 
+# handle the QUIETLY and REQUIRED arguments and set LIVE555_FOUND to TRUE if 
 # all listed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(Live555 DEFAULT_MSG LIVE555_LIBRARIES LIVE555_INCLUDE_DIRS)

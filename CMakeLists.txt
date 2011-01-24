@@ -12,11 +12,13 @@ find_package(Quarter REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(FFMPEG REQUIRED) 
 find_package(Live555 REQUIRED)
+find_package(Boost REQUIRED)
 
 # add subdirectories
 add_subdirectory(live/liveMedia)
 add_subdirectory(live/groupsock)
 add_subdirectory(live/UsageEnvironment)
 add_subdirectory(live/BasicUsageEnvironment)
+add_subdirectory(libcomm)
 add_subdirectory(src)
 

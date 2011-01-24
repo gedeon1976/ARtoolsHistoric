@@ -6,9 +6,10 @@
 #        
 #
 #       Project         ARTools
-#       author          Henry Portilla
+#       author          Henry Portilla, Adolfo Rodríguez
+#			Leo Palomo
 #       place           Barcelona, Spain
-#       date            june/25/2007
+#       date            jan/2011
 #       Special 
 #       Grant
 #
