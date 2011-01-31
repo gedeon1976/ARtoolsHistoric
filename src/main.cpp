@@ -22,8 +22,16 @@
 #include "ARtools.h"
 // Coin3D
 #include <Inventor/nodes/SoBaseColor.h>
+#include <Inventor/nodes/SoSelection.h>
 #include <Inventor/nodes/SoCone.h>
+#include <Inventor/nodes/SoOrthographicCamera.h>
 #include <Inventor/nodes/SoSeparator.h>
+#include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
+#include <Inventor/SoRenderManager.h>
+#include <Inventor/actions/SoGLRenderAction.h>
+
+#include <Inventor/Qt/SoQt.h>
+#include <Inventor/Qt/SoQtRenderArea.h>
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
 
 // Quarter viewer
@@ -39,20 +47,36 @@ using namespace SIM::Coin3D::Quarter;
 
 int main(int argc, char** argv)
 {
-    QApplication app(argc, argv);
+QApplication app(argc, argv);
     ARtools mainGUI;
     mainGUI.show();
     // initializes Quarter library (also the Qt and Coin3D libraries implicitly)  
-    Quarter::init();
+    ////Quarter::init();
     //      initialize the new nodes, required
+    
+    QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
+
+    //if (mainwin==NULL) exit(1);
+
+    
+    
     SoStereoTexture::initClass();   
+    // create a Quarter widget for displaying a scene graph
+    ////QuarterWidget *viewer = new QuarterWidget(&mainGUI);
+    
     
     // make a simple scene to test the viewer
     SoSeparator *root = new SoSeparator;
     root->ref();
+    SoSelection *selection= new SoSelection;
+    selection->ref();
+    SoOrthographicCamera *camera = new SoOrthographicCamera;
+    selection->addChild(camera);
+    
     SoBaseColor *color = new SoBaseColor;
     color->rgb = SbColor(1,1,0.5);
     root->addChild(color);
+    ////selection->addChild(color);
     
     //      add Stereo node
     
@@ -60,29 +84,53 @@ int main(int argc, char** argv)
     Stereo->width.setValue(720);
     Stereo->heigh.setValue(576);
     Stereo->IOD.setValue(5);//IOD
-  
+  ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
     root->addChild(Stereo);
+    root->addChild(new SoCone);
+    //selection->addChild(new SoCone);
+    
+    
+  
     StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);
-    QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
+    //QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
     
-    // create a Quarter widget for displaying a scene graph
-    QuarterWidget *viewer = new QuarterWidget(&mainGUI);
+    SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);
     viewer->setSceneGraph(root);
-    
+        
     // make the viewer react to inputs events similar to the good old 
     // examinerViewer
     
-    viewer->setInteractionModeEnabled(true);
-    viewer->setContextMenuEnabled(true);
-    viewer->setNavigationModeFile(QUrl("coin:///scxml/navigation/examiner.xml"));
-    viewer->move(10,40);
-    viewer->resize(800,600);
-    viewer->show();      
+    //viewer->setInteractionModeEnabled(true);
+    //viewer->setContextMenuEnabled(true);
+//    /* viewer->setNavigationModeFile(QUrl("coin:///scxml/navigation/examiner.xml"));
+//     viewer->move(10,40);
+//     viewer->resize(800,600);*/
+    //viewer->show();
+    //SoQt::show(mainwin);
+    //SoQt::mainLoop();
+//     QDockWidget* stereo_dock = new QDockWidget(viewer->getWidget(),0);
+//     stereo_dock->setAttribute(Qt::WA_DeleteOnClose);// important
+//     stereo_dock->setAllowedAreas(Qt::LeftDockWidgetArea);
+//     stereo_dock->setWidget(viewer->getWidget());
+//     mainGUI.addDockWidget(Qt::LeftDockWidgetArea,stereo_dock);
+
+      mainGUI.setCentralWidget(viewer->getWidget());
+      
+
+
+    // get Coin's render manager (code from virtualtech at google code)
+   /* 
+    SoRenderManager *renderManager = new SoRenderManager;
+    renderManager = viewer->getSoRenderManager();
+    root->GLRender(renderManager->getGLRenderAction());
+   */
     return app.exec();
     // Clean up resources.
     root->unref();
     delete viewer;
 
     Quarter::clean();
+
+
 
 }

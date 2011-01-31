@@ -15,6 +15,7 @@ Q_OBJECT
 public:
     ARtools();
     virtual ~ARtools();
+    void setCoinScene(QWidget *Widget);
   public slots:
   void show_fps();
 private:

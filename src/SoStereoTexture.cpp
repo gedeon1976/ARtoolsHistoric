@@ -858,9 +858,9 @@ if (isPBO == GL_TRUE)   // if PBO is supported, use it when will be hardware sup
 
         // Setup texture environment
         
-//      glClearColor(0.0,0.0,0.0,0.0);                  //      clear color to black when the buffers will be cleaned
-        //glShadeModel(GL_FLAT);                                //      solid colors not shading
-        //glEnable(GL_DEPTH_TEST);                      //      enable depth test?
+         glClearColor(0.0,0.0,0.0,0.0);                  //      clear color to black when the buffers will be cleaned
+         glShadeModel(GL_FLAT);                                //      solid colors not shading
+         glEnable(GL_DEPTH_TEST);                      //      enable depth test?
         //      This function configure how the pixels are unpacked from memory
         //glPixelStorei(GL_UNPACK_ALIGNMENT,1);         //      REVIEW FOR PERFORMANCE, but this use boundaries of 1 Byte
                                                         //      in test this is the better      
@@ -1201,7 +1201,7 @@ if (isPBO == GL_TRUE)   // if PBO is supported, use it when will be hardware sup
 }
 
         
-//      endSolidShape(action);
+     // endSolidShape(action);
         
 }
 //      generate triangles representing texture planes

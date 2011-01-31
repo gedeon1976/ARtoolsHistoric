@@ -26,6 +26,11 @@ void ARtools::show_fps()
   Value.setNum(frames_per_second); 
   frame_rate_label->setText(Value);
 }
+void ARtools::setCoinScene(QWidget *Widget){
+  
+   
+}
+
 float ARtools::getTimeDiff()
 {
   float timeinMsec;

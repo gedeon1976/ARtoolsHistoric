@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 # find library packages
 find_package(Qt4 REQUIRED)
+find_package(SoQt4 REQUIRED)
 find_package(Coin3D REQUIRED)
 find_package(Quarter REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -20,5 +21,6 @@ add_subdirectory(live/groupsock)
 add_subdirectory(live/UsageEnvironment)
 add_subdirectory(live/BasicUsageEnvironment)
 add_subdirectory(libcomm)
+add_subdirectory(libmt)
 add_subdirectory(src)
 
