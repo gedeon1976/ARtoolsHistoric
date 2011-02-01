@@ -2,8 +2,12 @@
 
 ARtools::ARtools()
 {
-  // start the GUI 
+  // start the GUI and start all the GUI controls
   setupUi(this);
+  setDockOptions(QMainWindow::VerticalTabs |
+		 QMainWindow::AnimatedDocks |
+		 QMainWindow::AllowTabbedDocks
+		 );
   gettimeofday(&elapsedTimeFirst,&timeZone) ;
   
 }
@@ -26,10 +30,7 @@ void ARtools::show_fps()
   Value.setNum(frames_per_second); 
   frame_rate_label->setText(Value);
 }
-void ARtools::setCoinScene(QWidget *Widget){
-  
-   
-}
+
 
 float ARtools::getTimeDiff()
 {

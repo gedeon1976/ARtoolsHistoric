@@ -56,9 +56,7 @@ QApplication app(argc, argv);
     
     QWidget * mainwin = SoQt::init(argc, argv, argv[0]);
 
-    //if (mainwin==NULL) exit(1);
-
-    
+    if (mainwin==NULL) exit(1);   
     
     SoStereoTexture::initClass();   
     // create a Quarter widget for displaying a scene graph
@@ -86,17 +84,15 @@ QApplication app(argc, argv);
     Stereo->IOD.setValue(5);//IOD
   ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
     root->addChild(Stereo);
-    root->addChild(new SoCone);
-    //selection->addChild(new SoCone);
-    
-    
+    //selection->addChild(new SoCone);    
   
     StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);
-    //QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
+    QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
     
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);
     viewer->setSceneGraph(root);
-        
+    mainGUI.setCentralWidget(viewer->getWidget());    
+    
     // make the viewer react to inputs events similar to the good old 
     // examinerViewer
     
@@ -114,7 +110,7 @@ QApplication app(argc, argv);
 //     stereo_dock->setWidget(viewer->getWidget());
 //     mainGUI.addDockWidget(Qt::LeftDockWidgetArea,stereo_dock);
 
-      mainGUI.setCentralWidget(viewer->getWidget());
+      
       
 
 
@@ -129,7 +125,7 @@ QApplication app(argc, argv);
     root->unref();
     delete viewer;
 
-    Quarter::clean();
+   // Quarter::clean();
 
 
 
