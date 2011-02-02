@@ -84,7 +84,7 @@ QApplication app(argc, argv);
     Stereo->IOD.setValue(5);//IOD
   ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
     root->addChild(Stereo);
-    //selection->addChild(new SoCone);    
+    //root->addChild(new SoCone);    
   
     StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);
     QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 

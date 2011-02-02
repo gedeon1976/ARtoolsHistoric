@@ -58,7 +58,7 @@
    <property name="minimumSize">
     <size>
      <width>276</width>
-     <height>77</height>
+     <height>84</height>
     </size>
    </property>
    <property name="maximumSize">
@@ -66,6 +66,11 @@
      <width>276</width>
      <height>524287</height>
     </size>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>9</pointsize>
+    </font>
    </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFeatureMask</set>
@@ -1108,6 +1113,9 @@
    </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFeatureMask</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>3D Video</string>
