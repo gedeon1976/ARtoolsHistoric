@@ -278,7 +278,7 @@
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel" name="label_13">
+      <widget class="QLabel" name="Xhaptic">
        <property name="geometry">
         <rect>
          <x>45</x>
@@ -294,7 +294,7 @@
         <string>value</string>
        </property>
       </widget>
-      <widget class="QLabel" name="label_14">
+      <widget class="QLabel" name="Yhaptic">
        <property name="geometry">
         <rect>
          <x>45</x>
@@ -307,7 +307,7 @@
         <string>value</string>
        </property>
       </widget>
-      <widget class="QLabel" name="label_15">
+      <widget class="QLabel" name="Zhaptic">
        <property name="geometry">
         <rect>
          <x>46</x>
@@ -371,7 +371,7 @@
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel" name="label_18">
+      <widget class="QLabel" name="gammahaptic">
        <property name="geometry">
         <rect>
          <x>176</x>
@@ -384,7 +384,7 @@
         <string>value</string>
        </property>
       </widget>
-      <widget class="QLabel" name="label_17">
+      <widget class="QLabel" name="betahaptic">
        <property name="geometry">
         <rect>
          <x>175</x>
@@ -397,7 +397,7 @@
         <string>value</string>
        </property>
       </widget>
-      <widget class="QLabel" name="label_16">
+      <widget class="QLabel" name="alphaHaptic">
        <property name="geometry">
         <rect>
          <x>175</x>

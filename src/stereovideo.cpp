@@ -98,6 +98,18 @@ void StereoVideo::update()
      emit updatedone(); 
 }
 
+void StereoVideo::set_haptic_data(ioc_comm::vecData hapticData)
+{
+    // set the haptic values to the StereoNode
+    if(hapticData.size() > 0)
+      {
+	ioc_comm::baseData& temp = hapticData[0];
+	realNode->X_haptic = temp._data[0];
+	realNode->Y_haptic = temp._data[1];
+	realNode->Z_haptic = temp._data[2];
+      }
+}
+
 
 #include "stereovideo.moc"
 

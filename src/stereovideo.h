@@ -26,7 +26,8 @@
 // Stream class: to connect to the remote video server
 // using RTSP, RTP, RTCP, SDP and other protocols
 #include "client.h"
-
+// include IOCCOMM communications library
+#include "../libcomm/client.h"
 
 /**
     @author
@@ -50,6 +51,7 @@ class StereoVideo:public QObject
     
   private slots:
     void update();
+    void set_haptic_data(ioc_comm::vecData hapticData);
   signals:
     void updatedone();
    

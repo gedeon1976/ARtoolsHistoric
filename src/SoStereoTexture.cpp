@@ -87,7 +87,7 @@ SoStereoTexture::SoStereoTexture()
         //      add the fields with default values
         SO_NODE_ADD_FIELD(width,(20));          
         SO_NODE_ADD_FIELD(heigh,(20));
-        SO_NODE_ADD_FIELD(imageL,(SbVec2s(0,0),3,0));
+	SO_NODE_ADD_FIELD(imageL,(SbVec2s(0,0),3,0));
         SO_NODE_ADD_FIELD(imageR,(SbVec2s(0,0),3,0));
         //SO_NODE_ADD_FIELD(imageL,(NULL));
         //SO_NODE_ADD_FIELD(imageR,(NULL));
@@ -937,6 +937,17 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			    glTexCoord2f(width.getValue(),0.0);
 				    glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
 		    glEnd();
+		    
+		    // draw 3d scene
+		    // move to tha actual position given by the haptic
+		    glTranslatef(X_haptic,Y_haptic,Z_haptic);
+		    // drawing a 3D pointer
+		    GLUquadric* quadL = gluNewQuadric();
+		    GLdouble radius = 20;
+		    GLdouble slices = 40;
+		    GLdouble stacks = 40;
+		    gluSphere(quadL,radius,slices,stacks);
+		    
 
 		    glPopMatrix();
 	    //**************************************************************************
@@ -986,6 +997,13 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			    glTexCoord2f(width.getValue(),0.0);
 				    glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
 		    glEnd();
+		    // draw 3d scene
+		    // move to tha actual position given by the haptic
+		    glTranslatef(X_haptic,Y_haptic,Z_haptic);
+		    // drawing a 3D pointer
+		    GLUquadric* quadR = gluNewQuadric();
+		    gluSphere(quadR,radius,slices,stacks);
+		    
 		    glPopMatrix();
 	    }
 	    //*******************************************************************************
@@ -1184,10 +1202,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		glEnd();
 		glDisable(GL_TEXTURE_RECTANGLE_NV);	
 		
-		
-		
-
-
+		  
 
 	    }
 

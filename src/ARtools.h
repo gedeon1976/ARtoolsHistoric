@@ -8,6 +8,9 @@
 #include <sys/time.h>		// to measure update frequency
 #include <time.h>
 
+// include IOCCOMM communications library
+#include "../libcomm/client.h"
+
 // using multiple inheritance approach
 class ARtools : public QMainWindow, private Ui::MainWindow
 {
@@ -18,6 +21,7 @@ public:
     
   public slots:
   void show_fps();
+  void show_haptic_data(ioc_comm::vecData hapticData);
 private:
    float getTimeDiff();
    timeval elapsedTimeFirst;	// timing structures

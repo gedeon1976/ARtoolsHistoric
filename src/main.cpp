@@ -42,6 +42,10 @@
 #include "SoStereoTexture.h"
 // Stereo video
 #include "stereovideo.h"
+// haptic connection
+#include "hapticConnection.h"
+#include <QTimer>
+
 
 using namespace SIM::Coin3D::Quarter;
 
@@ -86,8 +90,26 @@ QApplication app(argc, argv);
     root->addChild(Stereo);
     //root->addChild(new SoCone);    
   
-    StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);
-    QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
+     StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);
+//     QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
+    // timer for update the image every 40 ms = 25fps
+    QTimer* timer = new QTimer;
+    timer->setInterval(40);
+    timer->start();  
+    QObject::connect(timer,SIGNAL(timeout()),&mainGUI,SLOT(show_fps())); 
+    
+    // add haptic connection
+    const char* URLserver = "147.83.37.31";
+    const char* port = "5000";
+    hapticConnection hapticDevice(URLserver,port);
+    hapticDevice.startConnection();
+    
+    QObject::connect(timer,SIGNAL(timeout()),&hapticDevice,SLOT(enable_haptic_readings()));
+    QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
+		     &mainGUI,SLOT(show_haptic_data(ioc_comm::vecData)));
+    // send the haptic values to the virtual pointer
+    QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
+		     &video,SLOT(set_haptic_data(ioc_comm::vecData)));
     
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);
     viewer->setSceneGraph(root);

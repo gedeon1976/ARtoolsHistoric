@@ -86,6 +86,9 @@ SoSFImage       imageL;
 SoSFImage       imageR;
 int             w;              //      save image size in integers
 int             h;
+int		X_haptic;	// 	Haptic position values
+int		Y_haptic;
+int		Z_haptic;
 unsigned char   *image_L;       //      left image in unsigned char format
 unsigned char   *image_R;       //      right image
 SoSFFloat       IOD;            //      inter-ocular distance
