@@ -16,7 +16,9 @@
 //********************************************************************************
 //      verify the range of the different types of variables
 #include <limits>
-
+#if _WIN32
+	#include <WinSock2.h>			// to include timeval structure
+#endif
 
 //********************************************************************************
 //      include the libraries used
@@ -24,7 +26,7 @@
 //      libavcodec libraries
 extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>                            // libavformat and libavcodec and avutil libraries
+#include <libavformat/avformat.h>                // libavformat and libavcodec and avutil libraries
 #include <libavutil/avutil.h>
 #include <libswscale/swscale.h>				     // video scaling library	
 }

@@ -29,9 +29,9 @@ hapticConnection::~hapticConnection()
 {
 
 }
-int hapticConnection::startConnection(void)
+void hapticConnection::startConnection(void)
 {
- 
+  
   hapticClient->start();  
   // set initial values to the force to be send
   forceOnHaptic.time_stamp.assign(ioc_comm::cal_time_stamp());
@@ -44,7 +44,7 @@ int hapticConnection::startConnection(void)
   // send initial force values
   sendingData.push_back(forceOnHaptic);
   hapticClient->setSendingData(sendingData);
-  
+    
 }
 void hapticConnection::closeConnection(void )
 {

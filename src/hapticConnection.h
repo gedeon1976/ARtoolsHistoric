@@ -34,7 +34,7 @@ class hapticConnection:public QObject{
     //hapticConnection();
     hapticConnection(const std::string& URLserver,const std::string& port);
     ~hapticConnection();    
-    int startConnection(void);
+    void startConnection(void);
     void getHapticPosition(void);
     void closeConnection(void);
   private:

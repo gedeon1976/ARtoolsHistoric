@@ -1,7 +1,26 @@
  
-
+#pragma once
 #ifndef IOC_COMM_CLIENT_H
 #define IOC_COMM_CLIENT_H
+
+#if _WIN32
+
+
+//#ifndef WIN32_LEAN_AND_MEAN
+//#define WIN32_LEAN_AND_MEAN
+//#endif
+//#define _WINSOCKAPI_ 
+
+//#include <windows.h>
+//#include <winSock2.h>
+//#include <ws2tcpip.h>
+//#include <iphlpapi.h>
+//#pragma comment(lib, "wininet.lib")
+//#pragma comment (lib, "Ws2_32.lib")
+//#pragma comment (lib, "Mswsock.lib")
+//#pragma comment (lib, "AdvApi32.lib")
+
+#endif
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -12,6 +31,8 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include "exchanged_data.hpp"
+
+
 
 namespace ioc_comm {
 

@@ -27,6 +27,7 @@
 
 
 
+
 //#include "openvidia32.h"
 
 //      Extra functions
@@ -87,7 +88,7 @@ SoStereoTexture::SoStereoTexture()
         //      add the fields with default values
         SO_NODE_ADD_FIELD(width,(20));          
         SO_NODE_ADD_FIELD(heigh,(20));
-	SO_NODE_ADD_FIELD(imageL,(SbVec2s(0,0),3,0));
+		SO_NODE_ADD_FIELD(imageL,(SbVec2s(0,0),3,0));
         SO_NODE_ADD_FIELD(imageR,(SbVec2s(0,0),3,0));
         //SO_NODE_ADD_FIELD(imageL,(NULL));
         //SO_NODE_ADD_FIELD(imageR,(NULL));
@@ -116,7 +117,7 @@ SoStereoTexture::SoStereoTexture()
 
         //      initialize pointers for Multitexture extension
 
-        glActiveTextureARB = NULL;
+        pglActiveTextureARB = NULL;
         glMultiTexCoord2fARB = NULL;
         glClientActiveTextureARB = NULL;
 
@@ -302,8 +303,51 @@ Filters[5] =
         //      define procedures for PBO according to glext.h
         //      use glx.h to do the correct binding through glXGetProcAddress(GLubyte*) in linux
         //      and to enable the use of opengl extensions
+		//		and for windows use wglext.h to do the correct binding through wglGetProcAddress(GLubyte*)
         
+		#ifdef _WIN32
         //      PBO extension opengl function binding
+
+        // define a glGenBufferARB according to opengl Extensions procedures
+                glGenBuffersARB = (PFNGLGENBUFFERSPROC)wglGetProcAddress("glGenBuffersARB");      
+        // define an association function for the PBO (pixel buffer object)
+                glBindBufferARB = (PFNGLBINDBUFFERPROC)wglGetProcAddress("glBindBufferARB");      
+        // define load of data procedure
+                glBufferDataARB = (PFNGLBUFFERDATAPROC)wglGetProcAddress("glBufferDataARB");      
+        // delete the object
+                glDeleteBuffersARB = (PFNGLDELETEBUFFERSPROC)wglGetProcAddress("glDeleteBuffersARB");
+        // pointer to memory of the PBO
+                glMapBufferARB = (PFNGLMAPBUFFERPROC)wglGetProcAddress("glMapBufferARB");         
+        // releases the mapping 
+                glUnmapBufferARB = (PFNGLUNMAPBUFFERPROC)wglGetProcAddress("glUnmapBufferARB");
+
+        //      FBO extension opengl function bindings
+
+        // define a glGenFramebuffersEXT according to opengl extension procedure API
+                glGenFramebuffersEXT =(PFNGLGENFRAMEBUFFERSEXTPROC)wglGetProcAddress("glGenFramebuffersEXT");
+        // associate a texture for offscreen rendering using the FBO
+                glBindFramebufferEXT =(PFNGLBINDFRAMEBUFFEREXTPROC)wglGetProcAddress("glBindFramebufferEXT");
+        // Delete the FBO
+                glDeleteFramebuffersEXT =(PFNGLDELETEFRAMEBUFFERSEXTPROC)wglGetProcAddress("glDeleteFramebuffersEXT");
+        // Associate a texture to the FBO
+                glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)wglGetProcAddress("glFramebufferTexture2DEXT");
+        // Check for errors in the FBO
+                glCheckFramebufferStatusEXT =
+                (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)wglGetProcAddress("glCheckFramebufferStatusEXT");     
+
+        //      Multitexture Extension opengl function bindings
+
+        // Activate textures
+                pglActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)wglGetProcAddress("glActiveTextureARB");
+        // Draw complex textures
+           //      glMultiTexCoord2fARB =(PFNGLMULTITEXCOORD2FARBPROC)wglGetProcAddress("glActiveTextureARB");
+        // Check active texture 
+           //     glClientActiveTextureARB =
+           //     (PFNGLCLIENTACTIVETEXTUREARBPROC)wglGetProcAddress("glActiveTextureARB");
+
+		#elif
+
+		//      PBO extension opengl function binding
 
         // define a glGenBufferARB according to opengl Extensions procedures
                 glGenBuffersARB = (PFNGLGENBUFFERSPROC)glXGetProcAddress((const unsigned char*)"glGenBuffersARB");      
@@ -335,14 +379,14 @@ Filters[5] =
         //      Multitexture Extension opengl function bindings
 
         // Activate textures
-                glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)glXGetProcAddress((const unsigned char*)"glActiveTextureARB");
+                pglActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)glXGetProcAddress((const unsigned char*)"glActiveTextureARB");
         // Draw complex textures
                 glMultiTexCoord2fARB =(PFNGLMULTITEXCOORD2FARBPROC)glXGetProcAddress((const unsigned char*)"glActiveTextureARB");
         // Check active texture 
                 glClientActiveTextureARB =
                 (PFNGLCLIENTACTIVETEXTUREARBPROC)glXGetProcAddress((const unsigned char*)"glActiveTextureARB");
 
-
+		#endif
 
         
         }
@@ -497,7 +541,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         //SoState *state = action->getState();
         
         static GLuint fbo;                      //      FBO
-        GLuint iTexture[8];                     //      textures for GPU filtering
+        GLuint iTexture[4];                     //      textures for GPU filtering
+		noVideoImage = new CTargaImage;
         GLuint oTexture;
 
         GLvoid *resultCg;
@@ -507,8 +552,14 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         void *pboMemoryL,*pboMemoryR;
         GLboolean isPBO,isFBO;                  //      boolean flags
         GLboolean isStereo;
-        GLXDrawable glXSurface;                 //      glX variables to do the SwapBuffer
+       
+#if _WIN32
+		HDC Surface;							//		Windows variables to do the SwapBuffer
+		HGLRC Display;						
+#elif
+		GLXDrawable glXSurface;                 //      glX variables to do the SwapBuffer
         Display *pDisplay;
+#endif
 
         //      initializes this variables to use after in the openGL internal code
         //      this give a desired behavior at the time of configure the
@@ -721,9 +772,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
 		    glLoadIdentity();                                       //reset modelview matrix
 
-	    
-
-		    //as for the left buffer but with camera position at:
+	        //as for the left buffer but with camera position at:
 		    gluLookAt(IOD.getValue()/2, 0.0, 0.0, 
 			      IOD.getValue()/2, 0.0, screenZ,            
 					  0.0, 1.0, 0.0);
@@ -761,6 +810,21 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    //*******************************************************************************
 		    //      swap Buffers
 		    //      see the openGL programming Guide appendix C
+
+#if _WIN32
+			Surface = wglGetCurrentDC();
+
+			if(Surface)
+			{
+				Display = wglGetCurrentContext();      //      get the current display
+				//if (pDisplay  NULL)
+				//{
+				SwapBuffers(Surface);
+				//}
+			}
+
+
+#elif
 		    glXSurface = glXGetCurrentDrawable();
 
 		    if(glXSurface =! NULL)
@@ -771,7 +835,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 				    glXSwapBuffers(pDisplay,glXSurface);
 			    //}
 		    }
-		    
+#endif	    
 	    //      glXSwapBuffers(glXGetCurrentDisplay(),glXGetCurrentDrawable());
 		    //glXWaitGL();                  //      wait openGl execution
 
@@ -870,7 +934,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	    
 	    //      create textures
 	    
-	    glGenTextures(8,iTexture);
+	    glGenTextures(4,iTexture);
 	    //      assigns names for the textures in the textures array
 
 	    //      setup textures
@@ -879,7 +943,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	    size.setValue(w,h);
 	    components=3;
 
-	    for(int i=0; i<7;i++)
+	    for(int i=0; i<4;i++)
 	    {
 		    setupTexture(w,h,iTexture[i]);
 	    }
@@ -1164,45 +1228,54 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
                 
         //glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
         //glReadPixels(0,0,720,576,GL_RGB,GL_FLOAT,resultCg);
-	
-		glActiveTextureARB(GL_TEXTURE0_ARB);
-		glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[0]);
 		
-		glEnable(GL_TEXTURE_RECTANGLE_NV);
+		// check for support for 
+		bool isNV_RECTANGLE = false;
+		bool isARB_MultiTexture = false;
+		isNV_RECTANGLE= isExtensionSupported("GL_NV_texture_rectangle");
+		isARB_MultiTexture = isExtensionSupported("GL_ARB_multitexture");
+		if (isNV_RECTANGLE & isARB_MultiTexture){
+			
+			
+			//pglActiveTextureARB(GL_TEXTURE0_ARB);
+			
+			glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[0]);
 
-		glBegin(GL_QUADS);
-				glTexCoord2f(0.0,0.0);
-					glVertex3f( -width.getValue(), heigh.getValue()/2.0,0.0);
-				glTexCoord2f(0.0,heigh.getValue());     
-					glVertex3f( -width.getValue(),-heigh.getValue()/2.0 ,0.0);
-				glTexCoord2f(width.getValue(),heigh.getValue());
-					glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
-				glTexCoord2f(width.getValue(),0.0);
-					glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
-		glEnd();
-		glDisable(GL_TEXTURE_RECTANGLE_NV);
-		
-		// draw the right texture
-		dataToTexture(pthis->imageR.getValue(size,components),w,h,iTexture[1]);
-		
-		glActiveTextureARB(GL_TEXTURE0_ARB);
-		glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[1]);
-		
-		glEnable(GL_TEXTURE_RECTANGLE_NV);
+			glEnable(GL_TEXTURE_RECTANGLE_NV);
 
-		glBegin(GL_QUADS);
-				glTexCoord2f(0.0,0.0);
-					glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
-				glTexCoord2f(0.0,heigh.getValue());     
-					glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
-				glTexCoord2f(width.getValue(),heigh.getValue());
-					glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
-				glTexCoord2f(width.getValue(),0.0);
-					glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
-		glEnd();
-		glDisable(GL_TEXTURE_RECTANGLE_NV);	
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0,0.0);
+			glVertex3f( -width.getValue(), heigh.getValue()/2.0,0.0);
+			glTexCoord2f(0.0,heigh.getValue());     
+			glVertex3f( -width.getValue(),-heigh.getValue()/2.0 ,0.0);
+			glTexCoord2f(width.getValue(),heigh.getValue());
+			glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
+			glTexCoord2f(width.getValue(),0.0);
+			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
+			glEnd();
+			glDisable(GL_TEXTURE_RECTANGLE_NV);
+		}
 		
-		  
+			//
+			//// draw the right texture
+			dataToTexture(pthis->imageR.getValue(size,components),w,h,iTexture[1]);
+
+			//pglActiveTextureARB(GL_TEXTURE1_ARB);
+			glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[1]);			
+			glEnable(GL_TEXTURE_RECTANGLE_NV);
+
+			glBegin(GL_QUADS);
+					glTexCoord2f(0.0,0.0);
+						glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
+					glTexCoord2f(0.0,heigh.getValue());     
+						glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
+					glTexCoord2f(width.getValue(),heigh.getValue());
+						glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
+					glTexCoord2f(width.getValue(),0.0);
+						glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
+			glEnd();
+			glDisable(GL_TEXTURE_RECTANGLE_NV);	
+		
 
 	    }
 
@@ -1216,7 +1289,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
                 
       }		//    USING GL_RECTANGLENV
 		//glDeleteFramebuffersEXT(1,&fbo);
-		glDeleteTextures(8,iTexture);
+		glDeleteTextures(4,iTexture);
 			
 		glPopMatrix();
         

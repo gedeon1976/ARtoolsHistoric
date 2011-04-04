@@ -23,10 +23,24 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+//#include <GL/glut.h>
+#if _WIN32
+	#ifndef WIN32_LEAN_AND_MEAN
+		#define WIN32_LEAN_AND_MEAN
+	#endif
+	
+	#include <windows.h>			// to include GL headers
+
+	
+#elif
+	#include <GL/glx.h>
+#endif
+
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glext.h>                           //      GL extensions
-#include <GL/glx.h>                             //      Binding extensions with pointers to opengl in linux
+#include <GL/glext.h>  
+												//      GL extensions
+												//      Binding extensions with pointers to opengl in linux
                                                 //      see opengl red book pag 715 in the 5th edition
 //#include <Cg/cgGL.h>                          //      Cg API for OpenGL
 //#include <Cg/cg.h>                            //      Cg Language runtime for compiling and                                                           run cg programs
@@ -86,9 +100,9 @@ SoSFImage       imageL;
 SoSFImage       imageR;
 int             w;              //      save image size in integers
 int             h;
-int		X_haptic;	// 	Haptic position values
-int		Y_haptic;
-int		Z_haptic;
+int				X_haptic;	// 	Haptic position values
+int				Y_haptic;
+int				Z_haptic;
 unsigned char   *image_L;       //      left image in unsigned char format
 unsigned char   *image_R;       //      right image
 SoSFFloat       IOD;            //      inter-ocular distance
@@ -157,7 +171,7 @@ PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC      glCheckFramebufferStatusEXT;
 
 //      defines procedures for Multitexturing  according to glext.h
 
-PFNGLACTIVETEXTUREARBPROC       glActiveTextureARB;
+PFNGLACTIVETEXTUREARBPROC       pglActiveTextureARB;
                                         //      active a texture
 PFNGLMULTITEXCOORD2FARBPROC     glMultiTexCoord2fARB;
                                         //      draw complex textures

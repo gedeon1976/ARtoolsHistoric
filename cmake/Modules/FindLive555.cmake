@@ -9,16 +9,11 @@
 
 #  Based on cmake files from Kitware Inc
 
-
-IF (WIN32)
-
-ELSE (WIN32)
-
-  #       Include the headers of the libraries  
+  #Include the headers of the libraries  
   
   find_path(LIVE_MEDIA_INC liveMedia.hh
 	  ${CMAKE_SOURCE_DIR}/live/liveMedia/include)
-message("dir: "${CMAKE_SOURCE_DIR})
+  message("dir: "${CMAKE_SOURCE_DIR})
   find_path(LIVE_GROUP_INC Groupsock.hh
 	  ${CMAKE_SOURCE_DIR}/live/groupsock/include)
   find_path(LIVE_BASIC_INC BasicUsageEnvironment.hh
@@ -26,7 +21,9 @@ message("dir: "${CMAKE_SOURCE_DIR})
   find_path(LIVE_USAGE_INC UsageEnvironment.hh
 	  ${CMAKE_SOURCE_DIR}/live/UsageEnvironment/include)
   set(LIVE555_INCLUDE_DIRS ${LIVE_MEDIA_INC} ${LIVE_GROUP_INC} ${LIVE_BASIC_INC} ${LIVE_USAGE_INC})
-   
+  
+ IF (UNIX) 
+ 
   #       Search for the live555 libraries directories
 
   FIND_PATH(LIVE_MEDIA libliveMedia.a ${CMAKE_SOURCE_DIR}/live/liveMedia)
@@ -41,8 +38,26 @@ message("dir: "${CMAKE_SOURCE_DIR})
   
   set(LIVE555_LIBRARIES ${LIVE_MEDIA_LIB} ${LIVE_GROUP_LIB} ${LIVE_BASIC_LIB} ${LIVE_USAGE_LIB})
 
+ 
+ ELSE (UNIX)  
+  # Search for the live555 libraries directories
+
+  find_library(LIVE_MEDIA_LIB liveMedia 
+    PATH ${LIBRARY_OUTPUT_PATH}/Debug)
+  find_library(LIVE_GROUP_LIB groupsock 
+    PATH ${LIBRARY_OUTPUT_PATH}//Debug)
+  find_library(LIVE_BASIC_LIB BasicUsageEnvironment 
+    PATH ${LIBRARY_OUTPUT_PATH}/Debug)
+  find_library(LIVE_USAGE_LIB UsageEnvironment 
+    PATH ${LIBRARY_OUTPUT_PATH}/Debug)
   
-ENDIF (WIN32)
+  message ("build dir:" ${LIBRARY_OUTPUT_PATH}/${CMAKE_CFG_INTDIR})
+  
+  
+  set(LIVE555_LIBRARIES ${LIVE_MEDIA_LIB} ${LIVE_GROUP_LIB} ${LIVE_BASIC_LIB} ${LIVE_USAGE_LIB})
+
+  
+ENDIF (UNIX)
 
 # handle the QUIETLY and REQUIRED arguments and set LIVE555_FOUND to TRUE if 
 # all listed variables are TRUE

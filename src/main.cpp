@@ -13,9 +13,9 @@
 		    and Leopoldo Palomo
     
     This code can be distributed freely without any warranty.
-
-
 */
+
+
 // Qt nokia library
 #include <QtGui/QApplication>
 #include <QtGui>
@@ -35,8 +35,8 @@
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
 
 // Quarter viewer
-#include <Quarter/Quarter.h>
-#include <Quarter/QuarterWidget.h>
+//#include <Quarter/Quarter.h>
+//#include <Quarter/QuarterWidget.h>
 
 // Stereo camera
 #include "SoStereoTexture.h"
@@ -47,7 +47,7 @@
 #include <QTimer>
 
 
-using namespace SIM::Coin3D::Quarter;
+//using namespace SIM::Coin3D::Quarter;
 
 int main(int argc, char** argv)
 {
@@ -88,9 +88,9 @@ QApplication app(argc, argv);
     Stereo->IOD.setValue(5);//IOD
   ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
     root->addChild(Stereo);
-    //root->addChild(new SoCone);    
+    root->addChild(new SoCone);    
   
-     StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);
+     /*StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);*/
 //     QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
     // timer for update the image every 40 ms = 25fps
     QTimer* timer = new QTimer;
@@ -108,8 +108,8 @@ QApplication app(argc, argv);
     QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
 		     &mainGUI,SLOT(show_haptic_data(ioc_comm::vecData)));
     // send the haptic values to the virtual pointer
-    QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
-		     &video,SLOT(set_haptic_data(ioc_comm::vecData)));
+  /*  QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
+		     &video,SLOT(set_haptic_data(ioc_comm::vecData)));*/
     
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);
     viewer->setSceneGraph(root);
