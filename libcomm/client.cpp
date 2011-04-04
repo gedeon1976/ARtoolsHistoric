@@ -30,6 +30,7 @@ namespace ioc_comm {
     connection_.socket().async_connect(endpoint,
         boost::bind(&Client::handle_connect, this,
         boost::asio::placeholders::error, ++endpoint_iterator));
+   
   }
 
   void Client::start(){

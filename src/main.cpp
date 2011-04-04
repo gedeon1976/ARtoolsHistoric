@@ -1,4 +1,4 @@
-/*
+/*/*
 
 
     ARtools main GUI
@@ -13,9 +13,9 @@
 		    and Leopoldo Palomo
     
     This code can be distributed freely without any warranty.
+
+
 */
-
-
 // Qt nokia library
 #include <QtGui/QApplication>
 #include <QtGui>
@@ -26,6 +26,7 @@
 #include <Inventor/nodes/SoCone.h>
 #include <Inventor/nodes/SoOrthographicCamera.h>
 #include <Inventor/nodes/SoSeparator.h>
+#include <Inventor/nodes/SoTranslation.h>
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
 #include <Inventor/SoRenderManager.h>
 #include <Inventor/actions/SoGLRenderAction.h>
@@ -35,8 +36,8 @@
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
 
 // Quarter viewer
-//#include <Quarter/Quarter.h>
-//#include <Quarter/QuarterWidget.h>
+#include <Quarter/Quarter.h>
+#include <Quarter/QuarterWidget.h>
 
 // Stereo camera
 #include "SoStereoTexture.h"
@@ -45,9 +46,10 @@
 // haptic connection
 #include "hapticConnection.h"
 #include <QTimer>
+#include "common.h"
 
 
-//using namespace SIM::Coin3D::Quarter;
+using namespace SIM::Coin3D::Quarter;
 
 int main(int argc, char** argv)
 {
@@ -88,10 +90,10 @@ QApplication app(argc, argv);
     Stereo->IOD.setValue(5);//IOD
   ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
     root->addChild(Stereo);
-    root->addChild(new SoCone);    
+    //root->addChild(new SoCone);    
   
-     /*StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);*/
-//     QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
+    StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);
+    QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
     // timer for update the image every 40 ms = 25fps
     QTimer* timer = new QTimer;
     timer->setInterval(40);
@@ -99,20 +101,29 @@ QApplication app(argc, argv);
     QObject::connect(timer,SIGNAL(timeout()),&mainGUI,SLOT(show_fps())); 
     
     // add haptic connection
-    const char* URLserver = "147.83.37.31";
+    const char* URLserver = "sirio.upc.es";
     const char* port = "5000";
-    hapticConnection hapticDevice(URLserver,port);
+    hapticConnection hapticDevice(URLserver,port);    
     hapticDevice.startConnection();
     
     QObject::connect(timer,SIGNAL(timeout()),&hapticDevice,SLOT(enable_haptic_readings()));
     QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
 		     &mainGUI,SLOT(show_haptic_data(ioc_comm::vecData)));
     // send the haptic values to the virtual pointer
-  /*  QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
-		     &video,SLOT(set_haptic_data(ioc_comm::vecData)));*/
-    
+    QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
+  		     &video,SLOT(set_haptic_data(ioc_comm::vecData)));
+    // send image projected points to main GUI
+    QObject::connect(&video,SIGNAL(sendimagepoints(imagePoints)),
+		     &mainGUI,SLOT(get_image_points(imagePoints)));
+    SoCone *pointer = new SoCone;
+    pointer->height.setValue(30);
+    SoTranslation *translation = new SoTranslation;
+    translation->translation.setValue(mainGUI.get_X_value(),mainGUI.get_Y_value(),mainGUI.get_Z_value());
+    root->addChild(translation);
+    //root->addChild(pointer);
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);
     viewer->setSceneGraph(root);
+    
     mainGUI.setCentralWidget(viewer->getWidget());    
     
     // make the viewer react to inputs events similar to the good old 
@@ -152,3 +163,90 @@ QApplication app(argc, argv);
 
 
 }
+
+// #include <../libcomm/client.h>
+// #include <boost/asio.hpp>
+// #include <boost/date_time/posix_time/posix_time.hpp>
+//         
+// boost::asio::deadline_timer* t;
+// ioc_comm::Client* _client;
+// void print(const boost::system::error_code& /*e*/){
+//       ioc_comm::vecData serverData;
+//                         std::stringstream sstream;
+//       sstream.precision(3);
+//                   _client->getServerData(serverData);
+//                   if(serverData.size() > 0 ){
+//                           ioc_comm::baseData& tmp = serverData[0];
+//                           sstream << tmp.time_stamp << "\t";
+//                           for(unsigned int i = 0; i < tmp._data.size(); i++)
+//                                   sstream << tmp._data[i] << "\t";
+// 
+//                           std::cout << sstream.str() << std::endl;
+//                           std::cout.flush();
+//         sstream.clear();
+//       }
+//       t->expires_at(t->expires_at() + boost::posix_time::seconds(2));
+// 
+//       t->async_wait(print);
+// }
+// 
+// 
+// int main(int argc, char *argv[]){
+// 
+// try{
+//     // Check command line arguments.
+// //     if (argc != 3){
+// //       std::cerr << "Usage: haptic_client <server> <port>" << std::endl;
+// //       return 1;
+// //     }
+// 
+//     boost::asio::io_service io;
+//      const char* URLserver = "sirio.upc.es";
+//      const char* port = "5000";
+// 
+//     t = new boost::asio::deadline_timer(io, boost::posix_time::seconds(2));
+//     t->async_wait(print);
+// 
+//     _client = new ioc_comm::Client(URLserver, port, ioc_comm::HAPTIC, 1.0, 6);
+//     _client->start();
+// 
+//     ioc_comm::vecData sendingData;
+// 
+//     ioc_comm::cartesian::force force;
+// 
+//     // Set initial values to the force to be send
+//     force.time_stamp.assign(ioc_comm::cal_time_stamp());
+//     force._data.at(0) = 2.0;  force._data.at(1) = 2.0;
+//     force._data.at(2) = 2.0;  force._data.at(3) = 0.0;
+//     force._data.at(4) = 0.0;  force._data.at(5) = 0.0;
+// 
+//     sendingData.push_back(force);
+// 
+//     _client->setSendingData(sendingData);
+// 
+//     boost::thread th(boost::bind(&boost::asio::io_service::run, &io));
+// 
+//     for(int i = 0; i < 10; i++){
+//                           std::cout << i ;
+// 
+//   #if defined(WIN32)
+//                   Sleep(2000);
+//   #else
+//                   usleep(2000*1000);
+//   #endif
+//   //            
+//           }
+//         
+//           _client->close();
+//     th.interrupt();
+//     t->cancel();
+//     th.join();
+//     delete t;
+//           return 0;
+// 
+//   }catch (std::exception& e) {
+//     std::cerr << e.what() << std::endl;
+// 
+//   }
+//   return 1;
+// }

@@ -32,7 +32,8 @@
 	#include <windows.h>			// to include GL headers
 
 	
-#elif
+#endif
+#if linux
 	#include <GL/glx.h>
 #endif
 
@@ -58,7 +59,9 @@
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 //GLuint bufferID;                              //      PBO (pixel_buffer_object) name  
 
-
+#include <opencv/cv.h>				// 	include OpenCV for haptic transforms
+#include <opencv/cvaux.h>			//	used in 3Dpointer calculus
+#include <opencv/cxcore.h>
 
 class SoStereoTexture :public SoShape
 {
@@ -107,6 +110,25 @@ unsigned char   *image_L;       //      left image in unsigned char format
 unsigned char   *image_R;       //      right image
 SoSFFloat       IOD;            //      inter-ocular distance
 SoSFFloat       timetoSynchronize;
+				// 	3Dpointer variables
+CvMat 		*Transform_L;
+CvMat 		*Transform_R;
+CvMat 		*imageL_points;
+CvMat 		*imageR_points;
+CvMat 		*hapticPoint;
+int 		xiL;
+int 		xiR;
+int 		yiL;
+int 		yiR;
+int 		ziL;
+int 		ziR;
+int 		xi_nL;
+int 		yi_nL;
+int 		xi_nR;
+int 		yi_nR;
+float 		SfL;
+float 		SfR;
+
                                 //      time that must be waited to
                                 //      synchronize the render of two video streams
 
@@ -176,6 +198,7 @@ PFNGLACTIVETEXTUREARBPROC       pglActiveTextureARB;
 PFNGLMULTITEXCOORD2FARBPROC     glMultiTexCoord2fARB;
                                         //      draw complex textures
 PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTextureARB;
+   
                                         //      check textures?
 //      EXTENSIONS MANAGEMENT 
                                         //      check if extension given is supported
@@ -199,3 +222,4 @@ virtual ~SoStereoTexture();
 };
 
 #endif
+

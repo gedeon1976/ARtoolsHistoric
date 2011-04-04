@@ -28,12 +28,16 @@
 #include "client.h"
 // include IOCCOMM communications library
 #include "../libcomm/client.h"
+// include common types
+#include "common.h"
 
 /**
     @author
 */
 // qt nokia
 #include <QTimer>
+
+
 
 
 class StereoVideo:public QObject
@@ -54,6 +58,7 @@ class StereoVideo:public QObject
     void set_haptic_data(ioc_comm::vecData hapticData);
   signals:
     void updatedone();
+    void sendimagepoints(imagePoints actualPoints);
    
   private:
     IMAGE set_format;		// set the left and right cameras

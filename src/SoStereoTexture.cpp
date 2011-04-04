@@ -88,7 +88,7 @@ SoStereoTexture::SoStereoTexture()
         //      add the fields with default values
         SO_NODE_ADD_FIELD(width,(20));          
         SO_NODE_ADD_FIELD(heigh,(20));
-		SO_NODE_ADD_FIELD(imageL,(SbVec2s(0,0),3,0));
+	SO_NODE_ADD_FIELD(imageL,(SbVec2s(0,0),3,0));
         SO_NODE_ADD_FIELD(imageR,(SbVec2s(0,0),3,0));
         //SO_NODE_ADD_FIELD(imageL,(NULL));
         //SO_NODE_ADD_FIELD(imageR,(NULL));
@@ -303,9 +303,9 @@ Filters[5] =
         //      define procedures for PBO according to glext.h
         //      use glx.h to do the correct binding through glXGetProcAddress(GLubyte*) in linux
         //      and to enable the use of opengl extensions
-		//		and for windows use wglext.h to do the correct binding through wglGetProcAddress(GLubyte*)
+	//	and for windows use windows.h to do the correct binding through wglGetProcAddress(GLubyte*)
         
-		#ifdef _WIN32
+	#ifdef _WIN32
         //      PBO extension opengl function binding
 
         // define a glGenBufferARB according to opengl Extensions procedures
@@ -345,8 +345,8 @@ Filters[5] =
            //     glClientActiveTextureARB =
            //     (PFNGLCLIENTACTIVETEXTUREARBPROC)wglGetProcAddress("glActiveTextureARB");
 
-		#elif
-
+	#endif// UNIX
+	#if linux
 		//      PBO extension opengl function binding
 
         // define a glGenBufferARB according to opengl Extensions procedures
@@ -385,10 +385,33 @@ Filters[5] =
         // Check active texture 
                 glClientActiveTextureARB =
                 (PFNGLCLIENTACTIVETEXTUREARBPROC)glXGetProcAddress((const unsigned char*)"glActiveTextureARB");
+	
+	#endif // end WIN32
 
-		#endif
+	// OpenCV code
+	
+	// initializes haptic transforms
+	Transform_L = cvCreateMat(4,4,CV_32FC1);
+	Transform_R = cvCreateMat(4,4,CV_32FC1);
+	cvSetZero(Transform_L);
+	cvSetZero(Transform_R);
+	
+	imageL_points = cvCreateMat(4,4,CV_32FC1);
+	imageR_points = cvCreateMat(4,4,CV_32FC1);
+        cvSetZero(imageL_points);
+	cvSetZero(imageR_points);
+	hapticPoint = cvCreateMat(4,4,CV_32FC1);
+	cvSetZero(hapticPoint);
+	xiL = 1; xiR = 1;
+	yiL = 1; yiR = 1;
+	ziL = 1; ziR = 1;
+	X_haptic = 1;
+	Y_haptic = 1;
+	Z_haptic = 1;
+	xi_nL = 1; yi_nL = 1;
+	xi_nR = 1; yi_nR = 1;
 
-        
+
         }
 }
 //      Destructor
@@ -542,7 +565,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         
         static GLuint fbo;                      //      FBO
         GLuint iTexture[4];                     //      textures for GPU filtering
-		noVideoImage = new CTargaImage;
+		
         GLuint oTexture;
 
         GLvoid *resultCg;
@@ -554,18 +577,86 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         GLboolean isStereo;
        
 #if _WIN32
-		HDC Surface;							//		Windows variables to do the SwapBuffer
-		HGLRC Display;						
-#elif
-		GLXDrawable glXSurface;                 //      glX variables to do the SwapBuffer
+	HDC Surface;				//	Windows variables to do the SwapBuffer
+	HGLRC Display;						
+#endif
+#if linux
+	GLXDrawable glXSurface;                 //      glX variables to do the SwapBuffer
         Display *pDisplay;
 #endif
+	
+	// Haptic transforms ////////////////////////////////////////////////////////////////////////////////////////
+	
+	float thetaAngle = 0;
+	float f = 45;				// 	focal length to be found
+	float Baseline = 11;			// 	measured in haptic coordinates (in real world correspond
+						//	to a separation of 11 cm between the cameras)
+	float cTheta,sTheta, delta_X;
+	sTheta = sin(thetaAngle);
+	cTheta = cos(thetaAngle);
+	delta_X = 0.5*Baseline;
+	float ZcL =  Z_haptic*cTheta - (X_haptic - delta_X)*sTheta;
+	float ZcR =  Z_haptic*cTheta - (X_haptic + delta_X)*sTheta;
+	if (Z_haptic != 0)
+	{
+	    SfL = f/ZcL;			// scale factors
+	    SfR = f/ZcR;
+	}else{
+	    SfL = 1;
+	    SfR = 1; 
+	}
+	float Transform_L_values[] = {cTheta, 	0, 	sTheta,	-delta_X,
+				      0,	1,	0,	0,
+				      -sTheta,	0,	cTheta,	0,
+				      0,	0,	0,	1
+				      };
+	Transform_L = cvInitMatHeader(Transform_L,4,4,CV_32FC1,Transform_L_values);
+	
+	float Transform_R_values[] = {cTheta, 	0, 	sTheta,	delta_X,
+				      0,	1,	0,	0,
+				      -sTheta,	0,	cTheta,	0,
+				      0,	0,	0,	1
+				      };
+	Transform_R = cvInitMatHeader(Transform_R,4,4,CV_32FC1,Transform_R_values);
+	
+	float HIP [] = {X_haptic,0,0,0,
+			Y_haptic,0,0,0,
+			Z_haptic,0,0,0,
+			1,0,0,0};
+	hapticPoint = cvInitMatHeader(hapticPoint,4,4,CV_32FC1,HIP);
+	// find left transform
+	cvMatMul(Transform_L,hapticPoint,imageL_points);
+	// find right transform
+	cvMatMul(Transform_R,hapticPoint,imageR_points);
+	
+	// get projected values on images
+	
+	xiL = SfL*cvmGet(imageL_points,0,0);
+	yiL = SfL*cvmGet(imageL_points,1,0);
+	
+	xiR = SfR*cvmGet(imageR_points,0,0);
+	yiR = SfR*cvmGet(imageR_points,1,0);
+	
+	ziL = SfL*cvmGet(imageL_points,2,0);
+	ziR = SfR*cvmGet(imageR_points,2,0);
+	
+	
+	
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+
 
         //      initializes this variables to use after in the openGL internal code
         //      this give a desired behavior at the time of configure the
         //      openGL textures
         w = (int)width.getValue();
         h = (int)heigh.getValue();
+	
+	// final coordinates mapped from haptic to be rendered at the textures
+	xi_nL = xiR - 0.5*w;
+	yi_nL = yiL;
+	xi_nR = xiL + 0.5*w;
+	yi_nR = yiR;
+	
 
         ////////////////////////
         //      Cg Setup
@@ -772,7 +863,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear color and depth buffers
 		    glLoadIdentity();                                       //reset modelview matrix
 
-	        //as for the left buffer but with camera position at:
+	   //as for the left buffer but with camera position at:
 		    gluLookAt(IOD.getValue()/2, 0.0, 0.0, 
 			      IOD.getValue()/2, 0.0, screenZ,            
 					  0.0, 1.0, 0.0);
@@ -811,7 +902,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    //      swap Buffers
 		    //      see the openGL programming Guide appendix C
 
-#if _WIN32
+		    #if _WIN32
 			Surface = wglGetCurrentDC();
 
 			if(Surface)
@@ -824,18 +915,20 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			}
 
 
-#elif
+		    #endif
+		    #if linux
+		    
 		    glXSurface = glXGetCurrentDrawable();
 
-		    if(glXSurface =! NULL)
-		    {
-			    pDisplay = glXGetCurrentDisplay();      //      get the current display
-			    //if (pDisplay  NULL)
-			    //{
-				    glXSwapBuffers(pDisplay,glXSurface);
-			    //}
-		    }
-#endif	    
+			if(glXSurface =! NULL)
+			{
+				pDisplay = glXGetCurrentDisplay();      //      get the current display
+				//if (pDisplay  NULL)
+				//{
+					glXSwapBuffers(pDisplay,glXSurface);
+				//}
+			}
+		    #endif	    
 	    //      glXSwapBuffers(glXGetCurrentDisplay(),glXGetCurrentDrawable());
 		    //glXWaitGL();                  //      wait openGl execution
 
@@ -1004,7 +1097,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    
 		    // draw 3d scene
 		    // move to tha actual position given by the haptic
-		    glTranslatef(X_haptic,Y_haptic,Z_haptic);
+		    glTranslatef(xi_nL,yi_nL,screenZ);
 		    // drawing a 3D pointer
 		    GLUquadric* quadL = gluNewQuadric();
 		    GLdouble radius = 20;
@@ -1063,7 +1156,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    glEnd();
 		    // draw 3d scene
 		    // move to tha actual position given by the haptic
-		    glTranslatef(X_haptic,Y_haptic,Z_haptic);
+		    glTranslatef(xi_nR,yi_nR,screenZ);
 		    // drawing a 3D pointer
 		    GLUquadric* quadR = gluNewQuadric();
 		    gluSphere(quadR,radius,slices,stacks);
@@ -1228,7 +1321,9 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
                 
         //glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
         //glReadPixels(0,0,720,576,GL_RGB,GL_FLOAT,resultCg);
-		
+
+	
+	#if _WIN32
 		// check for support for 
 		bool isNV_RECTANGLE = false;
 		bool isARB_MultiTexture = false;
@@ -1255,27 +1350,58 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			glEnd();
 			glDisable(GL_TEXTURE_RECTANGLE_NV);
 		}
-		
-			//
-			//// draw the right texture
-			dataToTexture(pthis->imageR.getValue(size,components),w,h,iTexture[1]);
+	#endif
+	#if linux
+	
+		glActiveTextureARB(GL_TEXTURE0_ARB);
+		glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[0]);
+	#endif
 
-			//pglActiveTextureARB(GL_TEXTURE1_ARB);
-			glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[1]);			
-			glEnable(GL_TEXTURE_RECTANGLE_NV);
+		// draw 3d scene
+		// move to tha actual position given by the haptic
+		glTranslatef(xi_nL,yi_nL,screenZ);
+		// drawing a 3D pointer
+		GLUquadric* quadL = gluNewQuadric();
+		GLdouble radius = 20;
+		GLdouble slices = 40;
+		GLdouble stacks = 40;
+		gluSphere(quadL,radius,slices,stacks);
+		glTranslatef(-xi_nL,-yi_nL,-screenZ);		
+		// draw the right texture
+		dataToTexture(pthis->imageR.getValue(size,components),w,h,iTexture[1]);
 
-			glBegin(GL_QUADS);
-					glTexCoord2f(0.0,0.0);
-						glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
-					glTexCoord2f(0.0,heigh.getValue());     
-						glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
-					glTexCoord2f(width.getValue(),heigh.getValue());
-						glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
-					glTexCoord2f(width.getValue(),0.0);
-						glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
-			glEnd();
-			glDisable(GL_TEXTURE_RECTANGLE_NV);	
+	#if _WIN32
+		//pglActiveTextureARB(GL_TEXTURE1_ARB);
+		glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[1]);			
+		glEnable(GL_TEXTURE_RECTANGLE_NV);
+
+		glBegin(GL_QUADS);
+				glTexCoord2f(0.0,0.0);
+					glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
+				glTexCoord2f(0.0,heigh.getValue());     
+					glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
+				glTexCoord2f(width.getValue(),heigh.getValue());
+					glVertex3f( width.getValue(), -heigh.getValue()/2.0,0.0);
+				glTexCoord2f(width.getValue(),0.0);
+					glVertex3f( width.getValue(),  heigh.getValue()/2.0,0.0);
+		glEnd();
+		glDisable(GL_TEXTURE_RECTANGLE_NV);	
 		
+	#endif
+	#if linux
+		glActiveTextureARB(GL_TEXTURE0_ARB);
+		glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[1]);
+		
+		glEnable(GL_TEXTURE_RECTANGLE_NV);
+	#endif
+			
+
+		// draw 3d scene
+		// move to tha actual position given by the haptic
+		glTranslatef(xi_nR,yi_nR,screenZ);
+		// drawing a 3D pointer
+		GLUquadric* quadR = gluNewQuadric();
+		gluSphere(quadR,radius,slices,stacks);
 
 	    }
 

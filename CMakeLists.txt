@@ -1,6 +1,12 @@
 project(ARtools)
 cmake_minimum_required(VERSION 2.6)
 
+# if(NOT CMAKE_BUILD_TYPE)
+#   set(CMAKE_BUILD_TYPE Debug CACHE STRING
+#       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+#       FORCE)
+# endif(NOT CMAKE_BUILD_TYPE)
+
 #define the path to the cmake modules
 add_subdirectory(cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
@@ -20,7 +26,9 @@ find_package(FFMPEG REQUIRED)
 find_package(Live555 REQUIRED)
 if (WIN32)
   find_package(Pthreads REQUIRED)
+  
 endif (WIN32)
+find_package(OpenCV REQUIRED)
 
 
 # add subdirectories

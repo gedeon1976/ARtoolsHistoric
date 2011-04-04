@@ -12,6 +12,8 @@
 
 // include IOCCOMM communications library
 #include "../libcomm/client.h"
+// include common types
+#include "common.h"
 
 // using multiple inheritance approach
 class ARtools : public QMainWindow, private Ui::MainWindow
@@ -24,6 +26,10 @@ public:
   public slots:
   void show_fps();
   void show_haptic_data(ioc_comm::vecData hapticData);
+  float get_X_value();
+  float get_Y_value();
+  float get_Z_value();
+  void get_image_points(imagePoints actualPoints);
 private:
    float getTimeDiff();
 #ifdef UNIX
@@ -32,6 +38,9 @@ private:
    struct timezone timeZone;
 #endif // UNIX
    float timeDiff; 
+   float X_Haptic;
+   float Y_Haptic;
+   float Z_Haptic;
    
 };
 
