@@ -25,8 +25,7 @@ find_package(SoQt4 REQUIRED)
 find_package(FFMPEG REQUIRED)
 find_package(Live555 REQUIRED)
 if (WIN32)
-  find_package(Pthreads REQUIRED)
-  
+  find_package(Pthreads REQUIRED)  
 endif (WIN32)
 find_package(OpenCV REQUIRED)
 
