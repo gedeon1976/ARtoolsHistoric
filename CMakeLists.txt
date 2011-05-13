@@ -19,15 +19,17 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 find_package(Boost REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Coin3D REQUIRED)
-find_package(Qt4 REQUIRED)
-find_package(SoQt4 REQUIRED)
-#find_package(Quarter REQUIRED)
+find_package(OpenCV REQUIRED)
 find_package(FFMPEG REQUIRED)
 find_package(Live555 REQUIRED)
+find_package(Qt4 REQUIRED)
+find_package(SoQt4 REQUIRED)
+find_package(OpenHaptics REQUIRED)
+#find_package(Quarter REQUIRED)
+
 if (WIN32)
   find_package(Pthreads REQUIRED)  
 endif (WIN32)
-find_package(OpenCV REQUIRED)
 
 
 # add subdirectories
@@ -38,5 +40,6 @@ add_subdirectory(live/UsageEnvironment)
 add_subdirectory(live/BasicUsageEnvironment)
 add_subdirectory(libcomm)
 add_subdirectory(libmt)
+add_subdirectory(haptic)
 add_subdirectory(src)
 
