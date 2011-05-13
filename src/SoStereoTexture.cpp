@@ -25,7 +25,8 @@
 #include <Inventor/misc/SoState.h>              // to get the actual state of elements
 #include "SoStereoTexture.h"                    // node definitions
 
-
+// include common types
+#include "common.h"
 
 
 //#include "openvidia32.h"
@@ -88,7 +89,7 @@ SoStereoTexture::SoStereoTexture()
         //      add the fields with default values
         SO_NODE_ADD_FIELD(width,(20));          
         SO_NODE_ADD_FIELD(heigh,(20));
-	SO_NODE_ADD_FIELD(imageL,(SbVec2s(0,0),3,0));
+	    SO_NODE_ADD_FIELD(imageL,(SbVec2s(0,0),3,0));
         SO_NODE_ADD_FIELD(imageR,(SbVec2s(0,0),3,0));
         //SO_NODE_ADD_FIELD(imageL,(NULL));
         //SO_NODE_ADD_FIELD(imageR,(NULL));
@@ -410,6 +411,13 @@ Filters[5] =
 	Z_haptic = 1;
 	xi_nL = 1; yi_nL = 1;
 	xi_nR = 1; yi_nR = 1;
+	// set Haptic Workspace
+	hapticSpanX = 764;
+	hapticSpanY = 593;
+	hapticSpanZ = 403;
+	hfW = 1;
+	hfH = 1;
+	hfZ = 1;
 
 
         }
@@ -564,7 +572,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         //SoState *state = action->getState();
         
         static GLuint fbo;                      //      FBO
-        GLuint iTexture[4];                     //      textures for GPU filtering
+        GLuint iTexture[4];                     //      textures for GPU filtering FX3500 only support 4 textures
 		
         GLuint oTexture;
 
@@ -589,8 +597,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	
 	float thetaAngle = 0;
 	float f = 45;				// 	focal length to be found
-	float Baseline = 11;			// 	measured in haptic coordinates (in real world correspond
-						//	to a separation of 11 cm between the cameras)
+	float Baseline = 7;//11		// 	measured in haptic coordinates (in real world correspond
+								//	to a separation of 11 cm between the cameras)
 	float cTheta,sTheta, delta_X;
 	sTheta = sin(thetaAngle);
 	cTheta = cos(thetaAngle);
@@ -652,11 +660,18 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         h = (int)heigh.getValue();
 	
 	// final coordinates mapped from haptic to be rendered at the textures
-	xi_nL = xiR - 0.5*w;
+	xi_nL = xiR - 0.5*w;//-0.5*Baseline +  
 	yi_nL = yiL;
-	xi_nR = xiL + 0.5*w;
+	xi_nR = xiL + 0.5*w;// 0.5*Baseline + 
 	yi_nR = yiR;
 	
+	// Scaling factors haptic to images
+	// It maintains the Haptic movements within the image limits
+	hfW = hapticSpanX/w;
+	hfH = hapticSpanY/h;
+	hfZ = hapticSpanZ/100;
+
+
 
         ////////////////////////
         //      Cg Setup
@@ -674,7 +689,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         float depthZ = 150.0;                           // depth of the object model
 
         //double fovy =  45;                            // field of view in y-axis, 
-        double theta = 46;                              // aperture angle as FOV
+        double theta = 90;                             // aperture angle as FOV
         double aspect = double(width.getValue())/double(heigh.getValue()); 
                                                         // screen aspect ratio
         double nearZ = 75.0;                            // near clipping plane
@@ -1046,6 +1061,46 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 	    if(isStereo == GL_TRUE) 
 	    {
+			// Scaling the scene to the Haptic limited workspace
+			float Y_delta,X_deltaL,X_deltaR;
+			t_temp =  screenZ*tan(theta/2);                        // top coordinate
+		    b_temp = -screenZ*tan(theta/2);                        // bottom coordinate
+			r_tempL = aspect*t_temp - K;       
+		    l_tempL = aspect*b_temp - K;
+			r_tempR = aspect*t_temp + K;       
+		    l_tempR = aspect*b_temp + K;
+			
+			Y_delta = (t_temp -(b_temp));
+			X_deltaL = (r_tempL -(l_tempL));
+			X_deltaR = (r_tempR -(l_tempR));
+			hfH = hapticSpanY/Y_delta;
+			hfWL = hapticSpanX/X_deltaL;
+			hfWR = hapticSpanX/X_deltaR;
+
+			if (hapticSpanX > X_deltaL){
+				xi_nL  = X_haptic/hfWL - 0.25*X_deltaL;
+				
+			}else{
+				xi_nL  = X_haptic*hfWL - 0.25*X_deltaL;
+				
+			}
+			if (hapticSpanX > X_deltaR){
+				
+				xi_nR  = X_haptic/hfWR - 0.25*X_deltaR;
+			}else{
+				
+				xi_nR  = X_haptic*hfWR - 0.25*X_deltaR;
+			}
+			if (hapticSpanY > Y_delta){
+				
+				yi_nL =  Y_haptic/hfH - 0.5*Y_delta;	
+				yi_nR =  Y_haptic/hfH - 0.5*Y_delta;
+			}else{
+				yi_nL =  Y_haptic*hfH - 0.5*Y_delta;	
+				yi_nR =  Y_haptic*hfH - 0.5*Y_delta;
+			}
+			
+
 		    //*******************************************************************************
 		    //      QUAD BUFFER INITIALIZATION
 		    glViewport (0, 0, 1000, 800);                           // sets drawing viewport
@@ -1081,8 +1136,9 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 		    //      DRAW THE LEFT IMAGE
 
-
-		    glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
+			dataToTexture(pthis->imageL.getValue(size,components),w,h,iTexture[0]);
+			glEnable(GL_TEXTURE_RECTANGLE_NV);
+		    //glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageL.getValue(size,components));
 		    //      modifying for stereo
 		    glBegin(GL_QUADS);
 			    glTexCoord2f(0.0,0.0);
@@ -1094,17 +1150,19 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			    glTexCoord2f(width.getValue(),0.0);
 				    glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
 		    glEnd();
-		    
+		    glDisable(GL_TEXTURE_RECTANGLE_NV);
 		    // draw 3d scene
 		    // move to tha actual position given by the haptic
-		    glTranslatef(xi_nL,yi_nL,screenZ);
+			// use negative values to correct the real movement on the screen
+			
+		    glTranslatef(-xi_nL,yi_nL,5.0);//
 		    // drawing a 3D pointer
 		    GLUquadric* quadL = gluNewQuadric();
-		    GLdouble radius = 20;
+		    GLdouble radius = 3;
 		    GLdouble slices = 40;
 		    GLdouble stacks = 40;
 		    gluSphere(quadL,radius,slices,stacks);
-		    
+		    glTranslatef(xi_nL,-yi_nL,-5.0);
 
 		    glPopMatrix();
 	    //**************************************************************************
@@ -1142,8 +1200,9 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    glTranslatef(0.0,0.0,depthZ);
 
 	    //      DRAW THE RIGHT IMAGE
-
-		    glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
+			dataToTexture(pthis->imageR.getValue(size,components),w,h,iTexture[1]);
+			glEnable(GL_TEXTURE_RECTANGLE_NV);
+		    //glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
 		    glBegin(GL_QUADS);
 			    glTexCoord2f(0.0,0.0);
 				    glVertex3f( width.getValue()/2.0, heigh.getValue()/2.0,screenZ);
@@ -1154,12 +1213,16 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			    glTexCoord2f(width.getValue(),0.0);
 				    glVertex3f( -width.getValue()/2.0,  heigh.getValue()/2.0,screenZ);
 		    glEnd();
+			glDisable(GL_TEXTURE_RECTANGLE_NV);
 		    // draw 3d scene
 		    // move to tha actual position given by the haptic
-		    glTranslatef(xi_nR,yi_nR,screenZ);
+			
+			xi_nR = xi_nR - Z_haptic;//hfZ
+		    glTranslatef(-xi_nR ,yi_nR,5.0);
 		    // drawing a 3D pointer
 		    GLUquadric* quadR = gluNewQuadric();
 		    gluSphere(quadR,radius,slices,stacks);
+			glTranslatef(xi_nR,-yi_nL,-5.0);
 		    
 		    glPopMatrix();
 	    }
@@ -1322,6 +1385,24 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         //glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
         //glReadPixels(0,0,720,576,GL_RGB,GL_FLOAT,resultCg);
 
+		//  Scaling factor for showing the 2 images for left and right
+		//  it is the case where no Stereo has been selected
+
+		if (hapticSpanX > w){
+			xi_nL  = X_haptic/hfW - 0.5*w;
+			xi_nR  = X_haptic/hfW + 0.5*w;
+		}else{
+			xi_nL  = X_haptic*hfW - 0.5*w;
+			xi_nR  = X_haptic*hfW + 0.5*w;
+		}
+		if (hapticSpanY > h){
+		
+			yi_nL =  Y_haptic/hfH - 0.5*h;	
+			yi_nR =  Y_haptic/hfH - 0.5*h;
+		}else{
+			yi_nL =  Y_haptic*hfH - 0.5*h;	
+			yi_nR =  Y_haptic*hfH - 0.5*h;
+		}
 	
 	#if _WIN32
 		// check for support for 
@@ -1329,24 +1410,23 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		bool isARB_MultiTexture = false;
 		isNV_RECTANGLE= isExtensionSupported("GL_NV_texture_rectangle");
 		isARB_MultiTexture = isExtensionSupported("GL_ARB_multitexture");
-		if (isNV_RECTANGLE & isARB_MultiTexture){
-			
+		if (isNV_RECTANGLE & isARB_MultiTexture){			
 			
 			//pglActiveTextureARB(GL_TEXTURE0_ARB);
-			
+			// LEFT IMAGE
 			glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[0]);
 
 			glEnable(GL_TEXTURE_RECTANGLE_NV);
 
 			glBegin(GL_QUADS);
-			glTexCoord2f(0.0,0.0);
-			glVertex3f( -width.getValue(), heigh.getValue()/2.0,0.0);
-			glTexCoord2f(0.0,heigh.getValue());     
-			glVertex3f( -width.getValue(),-heigh.getValue()/2.0 ,0.0);
-			glTexCoord2f(width.getValue(),heigh.getValue());
-			glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
-			glTexCoord2f(width.getValue(),0.0);
-			glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
+				glTexCoord2f(0.0,0.0);
+				glVertex3f( -width.getValue(), heigh.getValue()/2.0,0.0);
+				glTexCoord2f(0.0,heigh.getValue());     
+				glVertex3f( -width.getValue(),-heigh.getValue()/2.0 ,0.0);
+				glTexCoord2f(width.getValue(),heigh.getValue());
+				glVertex3f( 0.0, -heigh.getValue()/2.0,0.0);
+				glTexCoord2f(width.getValue(),0.0);
+				glVertex3f( 0.0,  heigh.getValue()/2.0,0.0);
 			glEnd();
 			glDisable(GL_TEXTURE_RECTANGLE_NV);
 		}
@@ -1359,19 +1439,23 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 		// draw 3d scene
 		// move to tha actual position given by the haptic
-		glTranslatef(xi_nL,yi_nL,screenZ);
+		// use negative values to correct the real movement on the screen
+		glTranslatef(xi_nL,yi_nL,5.0);
 		// drawing a 3D pointer
 		GLUquadric* quadL = gluNewQuadric();
-		GLdouble radius = 20;
+		GLdouble radius = 5;
 		GLdouble slices = 40;
 		GLdouble stacks = 40;
 		gluSphere(quadL,radius,slices,stacks);
-		glTranslatef(-xi_nL,-yi_nL,-screenZ);		
+		// drift to compensate the before traslation, it keep at the final
+		// of the transform the correct frame reference
+		glTranslatef(-xi_nL,-yi_nL,-5.0);		
 		// draw the right texture
 		dataToTexture(pthis->imageR.getValue(size,components),w,h,iTexture[1]);
 
 	#if _WIN32
 		//pglActiveTextureARB(GL_TEXTURE1_ARB);
+		// RIGHT IMAGE
 		glBindTexture(GL_TEXTURE_RECTANGLE_NV,iTexture[1]);			
 		glEnable(GL_TEXTURE_RECTANGLE_NV);
 
@@ -1398,10 +1482,13 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 		// draw 3d scene
 		// move to tha actual position given by the haptic
-		glTranslatef(xi_nR,yi_nR,screenZ);
+		glTranslatef(xi_nR,yi_nR,5.0);
 		// drawing a 3D pointer
 		GLUquadric* quadR = gluNewQuadric();
 		gluSphere(quadR,radius,slices,stacks);
+		// drift to compensate the before traslation, it keep at the final
+		// of the transform the correct frame reference
+		glTranslatef(-xi_nL,-yi_nL,-5.0);	
 
 	    }
 
@@ -1455,4 +1542,14 @@ void SoStereoTexture::show()
 {
 
 }
-
+/// get the projected points from the haptic to the stereo images
+/// at the rendering scene
+imagePoints SoStereoTexture::getProjectedPoints()
+{
+	imagePoints points;
+	points.xiL = xi_nL;
+	points.xiR = xi_nR;
+	points.yiL = yi_nL;
+	points.yiR = yi_nR;
+	return points;
+}

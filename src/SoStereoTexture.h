@@ -23,6 +23,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+// include common types for this project
+#include "common.h"
 //#include <GL/glut.h>
 #if _WIN32
 	#ifndef WIN32_LEAN_AND_MEAN
@@ -39,7 +41,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glext.h>  
+#include <glext.h>  
 												//      GL extensions
 												//      Binding extensions with pointers to opengl in linux
                                                 //      see opengl red book pag 715 in the 5th edition
@@ -59,8 +61,8 @@
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 //GLuint bufferID;                              //      PBO (pixel_buffer_object) name  
 
-#include <opencv/cv.h>				// 	include OpenCV for haptic transforms
-#include <opencv/cvaux.h>			//	used in 3Dpointer calculus
+#include <cv.h>				// 	include OpenCV for haptic transforms
+#include <cvaux.h>			//	used in 3Dpointer calculus
 #include <opencv/cxcore.h>
 
 class SoStereoTexture :public SoShape
@@ -128,9 +130,26 @@ int 		xi_nR;
 int 		yi_nR;
 float 		SfL;
 float 		SfR;
+float		hapticSpanX;		//		range of movements on X for the Haptic device
+float		hfW;				//		haptic scaling on image width
+								//		where hfW = hapticSpanX/ImageWidth
+float		hapticSpanY;
+float		hfH;				//		haptic scaling on image height
+								//		where hfH = hapticSpanY/ImageHeight
+float		hapticSpanZ;
+float		hfZ;				//		haptic Scaling for image depth?
 
                                 //      time that must be waited to
                                 //      synchronize the render of two video streams
+
+float		t_temp;				//		frustrum limits for haptic movements in stereo
+float		b_temp;
+float		r_tempL;
+float		r_tempR;
+float		l_tempL;
+float		l_tempR;
+float		hfWL;				//		scalings factor for a stereo system
+float		hfWR;
 
 // Initialize the class
 static void initClass();        //      to define the type of information of the class
@@ -214,6 +233,10 @@ void dataToTexture(const unsigned char *data,int width, int height,GLuint texID)
 void cgErrorCallback();
 
 void checkForCgError();                 //      for debugging Cg programs and Cg initialization
+
+public:
+	imagePoints getProjectedPoints();	//		get the calculated projected points for the
+										//		3D pointer
 
 
 // destructor

@@ -11,6 +11,10 @@ ARtools::ARtools()
 	#if (UNIX)
 		gettimeofday(&elapsedTimeFirst,&timeZone) ;
 	#endif
+  // initializes variables
+	X_Haptic = 0;
+	Y_Haptic = 0;
+	Z_Haptic = 0;
   
 }
 
@@ -35,34 +39,22 @@ void ARtools::show_fps()
 	#endif
 }
 // show data from haptic device
-void ARtools::show_haptic_data(ioc_comm::vecData hapticData)
+void ARtools::show_haptic_data(mt::Vector3 position)
 {
   // show haptic values on corresponding labels
   QString X;QString Y;QString Z;
   QString alpha;QString beta;QString gamma;
   QString Stylusbutton;
-  
-  if(hapticData.size() > 0)
-    {
-      ioc_comm::baseData& temp = hapticData[0];
-      X.setNum(temp._data[0]);Xhaptic->setText(X);X_Haptic = temp._data[0];
-      Y.setNum(temp._data[1]);Yhaptic->setText(Y);Y_Haptic = temp._data[1];
-      Z.setNum(temp._data[2]);Zhaptic->setText(Z);Z_Haptic = temp._data[2];
-      alpha.setNum(temp._data[3]);alphaHaptic->setText(alpha);
-      beta.setNum(temp._data[4]);betaHaptic->setText(beta);
-      gamma.setNum(temp._data[5]);gammaHaptic->setText(gamma);
-      Stylusbutton.setNum(temp._data[6]);        
+             
+    // default values
+  X.setNum(position[0]);Xhaptic->setText(X);X_Haptic = position[0];
+  Y.setNum(position[1]);Yhaptic->setText(Y);Y_Haptic = position[1];
+  Z.setNum(position[2]);Zhaptic->setText(Z);Z_Haptic = position[2];
+  alpha.setNum(0);alphaHaptic->setText(alpha);
+  beta.setNum(0);betaHaptic->setText(beta);
+  gamma.setNum(0);gammaHaptic->setText(gamma);    
       
-    }else{
-      // default values
-      X.setNum(1);Xhaptic->setText(X);X_Haptic = 1;
-      Y.setNum(1);Yhaptic->setText(Y);Y_Haptic = 1;
-      Z.setNum(1);Zhaptic->setText(Z);Z_Haptic = 1;
-      alpha.setNum(0);alphaHaptic->setText(alpha);
-      beta.setNum(0);betaHaptic->setText(beta);
-      gamma.setNum(0);gammaHaptic->setText(gamma);    
-      
-    }
+   
 }
 
 
@@ -99,10 +91,9 @@ void ARtools::get_image_points(imagePoints actualPoints)
   QString xir;QString yir;
   
   xil.setNum(actualPoints.xiL);xiL->setText(xil);
-  yil.setNum(actualPoints.yiL);xiL->setText(yil);
-  xir.setNum(actualPoints.xiR);xiL->setText(xir);
-  yir.setNum(actualPoints.yiR);xiL->setText(yir);
-  
+  yil.setNum(actualPoints.yiL);yiL->setText(yil);
+  xir.setNum(actualPoints.xiR);xiR->setText(xir);
+  yir.setNum(actualPoints.yiR);yiR->setText(yir);  
 }
 
 

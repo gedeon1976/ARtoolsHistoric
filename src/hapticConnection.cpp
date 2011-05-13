@@ -18,41 +18,64 @@
 */
 // include definitions
 #include "hapticConnection.h"
-//constructor
+
+//constructors
+hapticConnection::hapticConnection(void)
+{
+	// Create haptic device
+	hapticStatus = false;
+	HapticDevice = new haptic::Haptic(hapticStatus);
+	//ForceonHaptic = new Vect6(6);
+	//HapticData = new Vect6(6);
+	/*ForceonHaptic[0] = 0; HapticData[0] = 0;
+	ForceonHaptic[1] = 0; HapticData[1] = 0;
+	ForceonHaptic[2] = 0; HapticData[2] = 0;
+	ForceonHaptic[3] = 0; HapticData[3] = 0;
+	ForceonHaptic[4] = 0; HapticData[4] = 0;
+	ForceonHaptic[5] = 0; HapticData[5] = 0;*/
+	
+}
+
 hapticConnection::hapticConnection(const std::string& URLserver,const std::string& port)
 {
   // configure the connection
-  hapticClient = new ioc_comm::Client(URLserver,port,ioc_comm::HAPTIC,1.0, 6);
+  //hapticClient = new ioc_comm::Client(URLserver,port,ioc_comm::HAPTIC,1.0, 6);
 }
 // destructor
 hapticConnection::~hapticConnection()
 {
-
+	// close the haptic connection
+	HapticDevice->stop();
 }
 void hapticConnection::startConnection(void)
 {
-  
-  hapticClient->start();  
+	Vect6 ForceonHaptic(6);
+	HapticDevice->calibrate();
+	HapticDevice->start();
+
   // set initial values to the force to be send
-  forceOnHaptic.time_stamp.assign(ioc_comm::cal_time_stamp());
-  forceOnHaptic._data.at(0) = 0.0;
-  forceOnHaptic._data.at(1) = 0.0;
-  forceOnHaptic._data.at(2) = 0.0;
-  forceOnHaptic._data.at(3) = 0.0;
-  forceOnHaptic._data.at(4) = 0.0;
-  forceOnHaptic._data.at(5) = 0.0;
-  // send initial force values
-  sendingData.push_back(forceOnHaptic);
-  hapticClient->setSendingData(sendingData);
+	ForceonHaptic[0] = 0; 
+	ForceonHaptic[1] = 0;
+	ForceonHaptic[2] = 0; 
+	ForceonHaptic[3] = 0; 
+	ForceonHaptic[4] = 0; 
+	ForceonHaptic[5] = 0; 
+	HapticDevice->setForce(ForceonHaptic);
+ 
     
 }
 void hapticConnection::closeConnection(void )
 {
-  hapticClient->close();
+  //hapticClient->close();
 }
 void hapticConnection::getHapticPosition(void )
 {
-    std::stringstream sstream;
+	Vect6 HapticData(6);
+	HapticDevice->getPosition(HapticPosition);
+	position = HapticPosition.getTranslation();
+	
+
+	/*   std::stringstream sstream;
     sstream.precision(3);
     hapticClient->getServerData(serverData);
     if(serverData.size() > 0)
@@ -65,7 +88,7 @@ void hapticConnection::getHapticPosition(void )
 	std::cout<<sstream.str()<<std::endl;
       }
       sstream.clear();
-    }
+    }*/
 
 }
 // enable haptic slot for reading data from haptic device
@@ -73,7 +96,8 @@ void hapticConnection::enable_haptic_readings()
 {
   getHapticPosition();
   // emit signal to update data on GUI and other components
-  emit sendHapticData(serverData);
+  //emit sendHapticData(HapticData0);
+  emit sendHapticData(position);
 }
 
 #include "hapticConnection..moc"

@@ -22,31 +22,41 @@
 
 // include IOCCOMM library
 #include "../libcomm/client.h"
+#include "../haptic/haptic.h"
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <QObject>
 
 using namespace std;
+//using namespace haptic;
 class hapticConnection:public QObject{
  
   Q_OBJECT  
   public:
-    //hapticConnection();
+    hapticConnection(void);			// direct access to the haptic (understood as the haptic is connected
+									// to the same machine)
     hapticConnection(const std::string& URLserver,const std::string& port);
     ~hapticConnection();    
     void startConnection(void);
     void getHapticPosition(void);
     void closeConnection(void);
   private:
-    ioc_comm::Client* hapticClient;
-    ioc_comm::vecData sendingData;
-    ioc_comm::cartesian::force forceOnHaptic;
-    ioc_comm::vecData serverData;
+    bool hapticStatus;
+	mt::Transform HapticPosition;
+	mt::Vector3 position;
+	haptic::Haptic* HapticDevice;	// haptic device
+	
+    //ioc_comm::Client* hapticClient;
+    //ioc_comm::vecData sendingData;
+    //ioc_comm::cartesian::force forceOnHaptic;
+    //ioc_comm::vecData serverData;
+	//ioc_comm::baseData serverData;
 
   private slots:
     void enable_haptic_readings();
   signals:
-   void sendHapticData(ioc_comm::vecData serverData);
+   void sendHapticData(mt::Vector3 position);
+   //void sendHapticData(Vect6 HapticData);
   
 };
 #endif //  _END _HAPTICCONNECTION_H_

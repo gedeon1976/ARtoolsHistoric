@@ -10,8 +10,11 @@
 #endif
 #include <time.h>
 
-// include IOCCOMM communications library
+// include IOCCOMM communications library and Emmanuel's Haptic Library
 #include "../libcomm/client.h"
+#include "../haptic/haptic.h"
+//mt library
+#include <mt/mt.h>
 // include common types
 #include "common.h"
 
@@ -25,7 +28,7 @@ public:
     
   public slots:
   void show_fps();
-  void show_haptic_data(ioc_comm::vecData hapticData);
+  void show_haptic_data(mt::Vector3);
   float get_X_value();
   float get_Y_value();
   float get_Z_value();

@@ -30,6 +30,8 @@
 #include "../libcomm/client.h"
 // include common types
 #include "common.h"
+//mt library
+#include <mt/mt.h>
 
 /**
     @author
@@ -45,6 +47,7 @@ class StereoVideo:public QObject
   Q_OBJECT
   public:
     StereoVideo();
+	StereoVideo(int width, int height, SoStereoTexture* node);
     StereoVideo(const char* URLcamL,const char* URLcamR, int width, int height, SoStereoTexture* node);
     ~StereoVideo();
     Export_Frame getImageL();
@@ -55,7 +58,7 @@ class StereoVideo:public QObject
     
   private slots:
     void update();
-    void set_haptic_data(ioc_comm::vecData hapticData);
+    void set_haptic_data(mt::Vector3);
   signals:
     void updatedone();
     void sendimagepoints(imagePoints actualPoints);

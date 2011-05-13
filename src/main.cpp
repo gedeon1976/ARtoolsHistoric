@@ -85,42 +85,39 @@ QApplication app(argc, argv);
     //      add Stereo node
     
     SoStereoTexture *Stereo = new SoStereoTexture;
-    Stereo->width.setValue(720);
-    Stereo->heigh.setValue(576);
-    Stereo->IOD.setValue(5);//IOD
+    Stereo->width.setValue(640);
+    Stereo->heigh.setValue(480);
+    Stereo->IOD.setValue(0.5);//IOD
   ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
     root->addChild(Stereo);
-    //root->addChild(new SoCone);    
-  
-  /*  StereoVideo video("rtsp://sonar.upc.es:7070/cam0","rtsp://sonar.upc.es:7070/cam1",720,576,Stereo);
-    QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); */
-    // timer for update the image every 40 ms = 25fps
+    root->addChild(new SoCone);    
+    //rtsp://sonar.upc.es:7070/cam1
+	StereoVideo video("rtsp://147.83.37.135:5544/CameraStreamL","rtsp://147.83.37.135:5545/CameraStreamR",640,480,Stereo);
+    QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
+    // timer for update the image every 40 ms = 25fps	
     QTimer* timer = new QTimer;
     timer->setInterval(40);
     timer->start();  
     QObject::connect(timer,SIGNAL(timeout()),&mainGUI,SLOT(show_fps())); 
     
     // add haptic connection
-    const char* URLserver = "sirio.upc.es";
+    const char* URLserver = "localhost";
     const char* port = "5000";
-    hapticConnection hapticDevice(URLserver,port);    
-    hapticDevice.startConnection();
+    //hapticConnection hapticDevice(URLserver,port);    
+    //hapticDevice.startConnection();
+	hapticConnection hapticDevice0;   
+	hapticDevice0.startConnection();
     
-    QObject::connect(timer,SIGNAL(timeout()),&hapticDevice,SLOT(enable_haptic_readings()));
-    QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
-		     &mainGUI,SLOT(show_haptic_data(ioc_comm::vecData)));
+    QObject::connect(timer,SIGNAL(timeout()),&hapticDevice0,SLOT(enable_haptic_readings()));
+    QObject::connect(&hapticDevice0,SIGNAL(sendHapticData(mt::Vector3)),
+		     &mainGUI,SLOT(show_haptic_data(mt::Vector3)));
     // send the haptic values to the virtual pointer
-    //QObject::connect(&hapticDevice,SIGNAL(sendHapticData(ioc_comm::vecData)),
-  		//     &video,SLOT(set_haptic_data(ioc_comm::vecData)));
+    QObject::connect(&hapticDevice0,SIGNAL(sendHapticData(mt::Vector3)),
+  		     &video,SLOT(set_haptic_data(mt::Vector3)));
     //// send image projected points to main GUI
-    //QObject::connect(&video,SIGNAL(sendimagepoints(imagePoints)),
-		  //   &mainGUI,SLOT(get_image_points(imagePoints)));
-    SoCone *pointer = new SoCone;
-    pointer->height.setValue(30);
-    SoTranslation *translation = new SoTranslation;
-    translation->translation.setValue(mainGUI.get_X_value(),mainGUI.get_Y_value(),mainGUI.get_Z_value());
-    root->addChild(translation);
-    //root->addChild(pointer);
+    QObject::connect(&video,SIGNAL(sendimagepoints(imagePoints)),
+		     &mainGUI,SLOT(get_image_points(imagePoints)));
+   
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);
     viewer->setSceneGraph(root);
     

@@ -24,6 +24,26 @@ StereoVideo::StereoVideo()
   
 }
 
+StereoVideo::StereoVideo(int width, int height, SoStereoTexture *node)
+{
+ // initializes variables
+  StereoNode = new SoStereoTexture;  
+  StereoNode->width = width;
+  StereoNode->heigh = height;
+  realNode = node;
+  w = width;			// video size
+  h = height;
+  nc = 3;			// component number, here we use 3(RGB)
+  
+  // timer for update the image every 40 ms = 25fps
+  timer = new QTimer(this);
+  timer->setInterval(40);
+  timer->start();  
+  connect(timer,SIGNAL(timeout()),this,SLOT(update())); 
+
+}
+
+
 StereoVideo::StereoVideo(const char* URLcamL,const char* URLcamR, int width, int height, SoStereoTexture *node)
 {
   // initializes variables
@@ -33,7 +53,7 @@ StereoVideo::StereoVideo(const char* URLcamL,const char* URLcamR, int width, int
   realNode = node;
   w = width;			// video size
   h = height;
-  nc = 3;			// component number, here we use 3(RGB)
+  nc = 3;			    // component number, here we use 3(RGB)
   set_format = LEFT_IMAGE;
   CamL.Init_Session(URLcamL,set_format,width,height);
   set_format = RIGHT_IMAGE;
@@ -96,19 +116,30 @@ void StereoVideo::update()
     }
     // emit signal to indicate stereo updating is ready
      emit updatedone(); 
+	 // get projected points
+	 imagePoints points;
+	 points = realNode->getProjectedPoints();
+	 emit sendimagepoints(points);
+
 }
 
-void StereoVideo::set_haptic_data(ioc_comm::vecData hapticData)
+void StereoVideo::set_haptic_data(mt::Vector3 hapticData)
 {
     // set the haptic values to the StereoNode
-    if(hapticData.size() > 0)
-      {
-	ioc_comm::baseData& temp = hapticData[0];
-	realNode->X_haptic = temp._data[0];
-	realNode->Y_haptic = temp._data[1];
-	realNode->Z_haptic = temp._data[2];
-      }
+   
+	realNode->X_haptic = hapticData[0];
+	realNode->Y_haptic = hapticData[1];
+	realNode->Z_haptic = hapticData[2];
+     
 }
+
+//void StereoVideo::sendimagepoints(imagePoints actualPoints)
+//{
+//	//// get projected points
+//	//imagePoints points;
+//	//points = realNode->getProjectedPoints();
+//	//emit sendimagepoints(points);
+//}
 
 
 #include "stereovideo.moc"
