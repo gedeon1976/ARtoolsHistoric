@@ -9,6 +9,7 @@
 
 //      Description:    this program uses the live555 libraries 
                         to make a client to communicate with spook video server
+						or a rtsp server like vlc
 
                                                                                 */
 #ifndef _CLIENT_H_

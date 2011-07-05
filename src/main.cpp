@@ -87,7 +87,7 @@ QApplication app(argc, argv);
     SoStereoTexture *Stereo = new SoStereoTexture;
     Stereo->width.setValue(640);
     Stereo->heigh.setValue(480);
-    Stereo->IOD.setValue(0.5);//IOD
+    Stereo->IOD.setValue(7.0);//IOD
   ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
     root->addChild(Stereo);
     root->addChild(new SoCone);    

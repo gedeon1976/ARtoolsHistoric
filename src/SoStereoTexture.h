@@ -113,11 +113,18 @@ unsigned char   *image_R;       //      right image
 SoSFFloat       IOD;            //      inter-ocular distance
 SoSFFloat       timetoSynchronize;
 				// 	3Dpointer variables
+CvMat		*K_L;				//		intrinsic matrices
+CvMat		*K_R;
+CvMat		*Left_WorldTransform;//		extrinsic matrices
+CvMat		*Rigth_WorldTransform;
+CvMat		*P_L;				//		projection matrices
+CvMat		*P_R;
 CvMat 		*Transform_L;
 CvMat 		*Transform_R;
 CvMat 		*imageL_points;
 CvMat 		*imageR_points;
 CvMat 		*hapticPoint;
+float		currentPositionDisparity;
 int 		xiL;
 int 		xiR;
 int 		yiL;
@@ -128,6 +135,10 @@ int 		xi_nL;
 int 		yi_nL;
 int 		xi_nR;
 int 		yi_nR;
+float		uo_L;
+float		uo_R;
+float		vo_L;
+float		vo_R;
 float 		SfL;
 float 		SfR;
 float		hapticSpanX;		//		range of movements on X for the Haptic device
@@ -150,6 +161,10 @@ float		l_tempL;
 float		l_tempR;
 float		hfWL;				//		scalings factor for a stereo system
 float		hfWR;
+float		Xh;					//		Biswas inspired method to get the corresponding points
+float		Yh;
+float		Zh;
+float		X1;
 
 // Initialize the class
 static void initClass();        //      to define the type of information of the class

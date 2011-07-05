@@ -44,7 +44,7 @@ void ARtools::show_haptic_data(mt::Vector3 position)
   // show haptic values on corresponding labels
   QString X;QString Y;QString Z;
   QString alpha;QString beta;QString gamma;
-  QString Stylusbutton;
+  QString StylusButton;
              
     // default values
   X.setNum(position[0]);Xhaptic->setText(X);X_Haptic = position[0];
@@ -89,11 +89,40 @@ void ARtools::get_image_points(imagePoints actualPoints)
    // show image projected values on corresponding labels
   QString xil;QString yil;
   QString xir;QString yir;
-  
+  QString currentPositionDisparity;
+  QString currentPositionDepth;
+  QString currentPositionX_World;
+  QString currentPositionY_World;
+  float currentPixelDisparity;
+  float currentPixelDepth;
+  float currentPixelX_World;
+  float currentPixelY_World;
+
+  // fix to set automatic the w,h,B and stereo condition
+  float w = 640;
+  float f = 780;
+  float B = 72;
+
   xil.setNum(actualPoints.xiL);xiL->setText(xil);
   yil.setNum(actualPoints.yiL);yiL->setText(yil);
   xir.setNum(actualPoints.xiR);xiR->setText(xir);
-  yir.setNum(actualPoints.yiR);yiR->setText(yir);  
+  yir.setNum(actualPoints.yiR);yiR->setText(yir); 
+  // show current disparity
+  currentPixelDisparity = fabs(fabs(actualPoints.xiL) - fabs(actualPoints.xiR));
+  currentPositionDisparity.setNum(currentPixelDisparity);
+  lbl_disparityValue->setText(currentPositionDisparity);
+  // show current depth of pointer
+  currentPixelDepth = f*B/currentPixelDisparity;
+  currentPositionDepth.setNum(currentPixelDepth);
+  lbl_depthValue->setText(currentPositionDepth);
+  // show X, Y world coordinates from left camera
+  currentPixelX_World = actualPoints.xiL*B/currentPixelDisparity;
+  currentPixelY_World = actualPoints.yiL*B/currentPixelDisparity;
+  currentPositionX_World.setNum(currentPixelX_World);
+  currentPositionY_World.setNum(currentPixelY_World);
+  lbl_XWorldValue->setText(currentPositionX_World);
+  lbl_YWorldValue->setText(currentPositionY_World);
+
 }
 
 
