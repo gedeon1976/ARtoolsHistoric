@@ -61,6 +61,9 @@ ID=0;
 m_global_flag = -1;                                     //      flag to start semaphore synchronization
 NTP_flag = -1;                                          //      flag to use in NTP time readings
 
+//		openCV variables
+
+
 
 //      Allocation of memory to save the compressed and uncompressed frames
 
@@ -976,7 +979,12 @@ int STREAM::rtsp_decode(Frame dataCompress)
         //      decode the video frame using libavcodec
 try{
         //printf("%s\n","decode frame");
-        decodeOK = avcodec_decode_video(pCodecCtx,pFrame,&frameFinished,dataCompress.data,dataCompress.size);
+	    // changing to avcodec_decode_video2
+		AVPacket pkg;
+		pkg.data = dataCompress.data;
+		pkg.size = dataCompress.size;
+		pkg.flags = AV_PKT_FLAG_KEY;
+        decodeOK = avcodec_decode_video2(pCodecCtx,pFrame,&frameFinished,&pkg);
                 
         //if(decodeOK!=0)
                 //{printf("%s\n","error in decoding");}
@@ -1232,12 +1240,26 @@ catch(int status)
         exit(0);                //      exit from application
 }
 }
+//////////////////////////////////////////////////////////////////////////////////////
+//	This function fill an IplImage from the data from the current stream (current AVFrame structure)
+void STREAM::fill_iplimage_from_stream(IplImage *img, const AVFilterBufferRef *picref, PixelFormat pixfmt){
+
+	// code based on libavfilter/vf_libopencv.c(fill_iplimage_from_picref function)
+   
+	img->imageData =  img->imageDataOrigin = (char*)picref->data[0];
+	img->dataOrder = IPL_DATA_ORDER_PIXEL;
+    img->origin    = IPL_ORIGIN_TL;
+    img->widthStep = picref->linesize[0];
+
+
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 Export_Frame STREAM::getImage()//dataFrame
 {
 
     Export_Frame I_Frame;
-    int cod;
+	AVFilterBufferRef  *currentImageBuffer;
+	int cod;
         
     if (m_global_flag == -1)
     {
@@ -1269,6 +1291,12 @@ Export_Frame STREAM::getImage()//dataFrame
                     ReceivedFrame = InputBuffer.front();        //      get the frame from the FIFO buffer 
 
                     I_Frame.pData = ReceivedFrame.pFrame;       //      save image within a frame structure
+					currentImageBuffer = avfilter_get_video_buffer_ref_from_frame(ReceivedFrame.pFrame,777);
+																//		convert to IplImage format
+																//		this is used to capture and process the image
+					IplImage *tmpImage = cvCreateImage(cvSize(720,576),IPL_DEPTH_8U,3);
+					fill_iplimage_from_stream(tmpImage, currentImageBuffer, PIX_FMT_RGB24);
+					I_Frame.pImage = tmpImage;
                     I_Frame.h=720;                              //      width of image
                     I_Frame.w=576;                              //      height of image
         

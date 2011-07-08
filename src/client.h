@@ -26,10 +26,14 @@
 //********************************************************************************
 //      libavcodec libraries
 extern "C" {
+
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>                // libavformat and libavcodec and avutil libraries
 #include <libavutil/avutil.h>
-#include <libswscale/swscale.h>				     // video scaling library	
+#include <libswscale/swscale.h>				     // video scaling library
+#include <libavfilter/avfilter.h>				 // used with OpenCV
+#include <libavfilter/avcodec.h>				 // used with OpenCV
+
 }
 
 //********************************************************************************
@@ -87,7 +91,10 @@ extern "C" {
 
 #include <Inventor/nodes/SoCallback.h>                  // to use opengl
 
-
+//*********************************************************************************
+//		OpenCV Libraries
+#include <opencv/cv.h>
+#include <opencv/cxcore.h>
 
 //#include <GL/gl.h>                                    
 //#include <GL/glext.h>                                 //GL extensions
@@ -149,7 +156,8 @@ struct dataFrame{
 };
 struct ExportFrame{
 
-        AVFrame *pData;
+        IplImage *pImage;
+		AVFrame *pData;
         int index;
         int h;
         int w;
@@ -428,6 +436,7 @@ Frame dataBuffer;
 Frame data_RTP;
 Frame ReceivedFrame;
 Frame Temp;
+IplImage *tmpImage;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //      STL FIFOs
 deque<Frame>InputBuffer;                //      input FIFO queue, here used as the main buffer
@@ -444,6 +453,8 @@ int rtsp_getFrame();                    //      Get a frame from the RTSP video 
 int rtsp_decode(Frame dataCompress);
                                         //      Decodes a compressed frame and convert to RGB format
 int rtsp_Buffering(int n);              //      Buffer for get n frames at Start of reception, used to smooth the appareance of frames
+void fill_iplimage_from_stream(IplImage *img, const AVFilterBufferRef *picref, enum PixelFormat pixfmt);
+
 
 //static
 //timeval timeNow();            //      To save time of arrival of the frames

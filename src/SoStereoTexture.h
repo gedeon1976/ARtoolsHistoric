@@ -61,8 +61,8 @@
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 //GLuint bufferID;                              //      PBO (pixel_buffer_object) name  
 
-#include <cv.h>				// 	include OpenCV for haptic transforms
-#include <cvaux.h>			//	used in 3Dpointer calculus
+#include <opencv/cv.h>				// 	include OpenCV for haptic transforms
+#include <opencv/cvaux.h>			//	used in 3Dpointer calculus
 #include <opencv/cxcore.h>
 
 class SoStereoTexture :public SoShape
