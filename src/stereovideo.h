@@ -62,6 +62,7 @@ class StereoVideo:public QObject
   signals:
     void updatedone();
     void sendimagepoints(imagePoints actualPoints);
+	void sendIplImage(IplImage *actualImage);
    
   private:
     IMAGE set_format;		// set the left and right cameras
@@ -70,7 +71,10 @@ class StereoVideo:public QObject
     
     SoStereoTexture *StereoNode;// a coin node for stereo visualization management
     SoStereoTexture *realNode;	// real stereo node from the main GUI window
-    int w,h,nc;			// width, height, number of components of image(RGB color)
+    int w,h,nc;					// width, height, number of components of image(RGB color)
+
+	IplImage *updateImageL;		// save left IplImage
+	IplImage *updateImageR;		// save right IplImage
      
   
 };

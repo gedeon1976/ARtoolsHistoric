@@ -17,6 +17,9 @@
 
 
 */
+
+#include "reportingHook.h"
+
 #ifndef _SOSTEREOTEXTURE_H_
 #define _SOSTEREOTEXTURE_H_
 
@@ -64,6 +67,7 @@
 #include <opencv/cv.h>				// 	include OpenCV for haptic transforms
 #include <opencv/cvaux.h>			//	used in 3Dpointer calculus
 #include <opencv/cxcore.h>
+#include <opencv/highgui.h>
 
 class SoStereoTexture :public SoShape
 {

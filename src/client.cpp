@@ -21,7 +21,10 @@
 */
 //************************************************************************************************************
 //      includes header files
-
+//#if _WIN32
+//	// Visual Studio Debug
+//	#include "reportingHook.h"
+//#endif
 #include "client.h"     
 
 //      Custom Inventor nodes
@@ -62,7 +65,7 @@ m_global_flag = -1;                                     //      flag to start se
 NTP_flag = -1;                                          //      flag to use in NTP time readings
 
 //		openCV variables
-
+convertedImage = NULL;
 
 
 //      Allocation of memory to save the compressed and uncompressed frames
@@ -979,12 +982,14 @@ int STREAM::rtsp_decode(Frame dataCompress)
         //      decode the video frame using libavcodec
 try{
         //printf("%s\n","decode frame");
-	    // changing to avcodec_decode_video2
+	    // changing to avcodec_decode_video2 (july 2011)
 		AVPacket pkg;
 		pkg.data = dataCompress.data;
 		pkg.size = dataCompress.size;
 		pkg.flags = AV_PKT_FLAG_KEY;
         decodeOK = avcodec_decode_video2(pCodecCtx,pFrame,&frameFinished,&pkg);
+		// OpenCV
+		//IplImage *decodeIplImage = NULL;
                 
         //if(decodeOK!=0)
                 //{printf("%s\n","error in decoding");}
@@ -1004,11 +1009,18 @@ try{
                        // img_convert((AVPicture*)pFrameRGBA,PIX_FMT_RGB24,(AVPicture*)pFrame,pCodecCtx->pix_fmt,pCodecCtx->width,pCodecCtx->height);//RGB24
         //              }       
 			// NEW FFMPEG API
+			
 			pSwsCtx = sws_getContext(pCodecCtx->width,pCodecCtx->height,pCodecCtx->pix_fmt,
 						     pCodecCtx->width,pCodecCtx->height,PIX_FMT_RGB24,
 						     SWS_BICUBIC,NULL,NULL,NULL);
+			
 			sws_scale(pSwsCtx,pFrame->data,pFrame->linesize,0,pCodecCtx->height,
-				  pFrameRGBA->data,pFrameRGBA->linesize);		     
+				  pFrameRGBA->data,pFrameRGBA->linesize);
+			// convert to IPLImage also
+			/*decodeIplImage = cvCreateImage(cvSize(pCodecCtx->width,pCodecCtx->height),
+								IPL_DEPTH_8U,3);
+			sws_scale(pSwsCtx,pFrame->data,pFrame->linesize,0,pCodecCtx->height,
+					decodeIplImage->imageData,decodeIplImage->widthStep);*/
 			
 			
 			
@@ -1016,6 +1028,9 @@ try{
                         //      save to a buffer
                         data_RTP.image = pFrameRGBA->data[0];   //      save RGB frame
                         data_RTP.pFrame = pFrameRGBA;           //      save frame to export
+
+						
+						
 
                         //printf("frame %d from camera %d was decoded\n",frameCounter,ID);
                         //      get the timestamp of the frame
@@ -1028,6 +1043,9 @@ try{
                         //throw pFrameRGBA;
                 //}
                 }
+				// free the memory
+				//sws_freeContext(pSwsCtx); 
+				
 }
 catch(...)
 {       
@@ -1245,11 +1263,18 @@ catch(int status)
 void STREAM::fill_iplimage_from_stream(IplImage *img, const AVFilterBufferRef *picref, PixelFormat pixfmt){
 
 	// code based on libavfilter/vf_libopencv.c(fill_iplimage_from_picref function)
-   
+    IplImage *tmpImage;
+	CvSize imgSize;
+	picref->video->w = 640;
+	picref->video->h = 480;
+	imgSize = cvSize(picref->video->w,picref->video->h);
+	tmpImage = cvCreateImageHeader(imgSize,IPL_DEPTH_8U,3);
+	*img = *tmpImage;
 	img->imageData =  img->imageDataOrigin = (char*)picref->data[0];
 	img->dataOrder = IPL_DATA_ORDER_PIXEL;
     img->origin    = IPL_ORIGIN_TL;
     img->widthStep = picref->linesize[0];
+	cvReleaseImage(&tmpImage);
 
 
 }
@@ -1258,7 +1283,9 @@ Export_Frame STREAM::getImage()//dataFrame
 {
 
     Export_Frame I_Frame;
-	AVFilterBufferRef  *currentImageBuffer;
+	I_Frame.pImage = NULL;
+	AVFilterBufferRef  *currentImageBuffer = NULL;
+	
 	int cod;
         
     if (m_global_flag == -1)
@@ -1283,25 +1310,35 @@ Export_Frame STREAM::getImage()//dataFrame
     }
     else{       
     */
-
-      std::cout << "Input Buffer size is : " << InputBuffer.size() << std::endl;
+	
+			std::cout << "Input Buffer size is : " << InputBuffer.size() << std::endl;
             if(!InputBuffer.empty())                    //      check if buffer is not empty
             {
                                         
                     ReceivedFrame = InputBuffer.front();        //      get the frame from the FIFO buffer 
 
                     I_Frame.pData = ReceivedFrame.pFrame;       //      save image within a frame structure
+					
+																//		copy frame properties
+		
 					currentImageBuffer = avfilter_get_video_buffer_ref_from_frame(ReceivedFrame.pFrame,777);
+					avfilter_copy_frame_props(currentImageBuffer,ReceivedFrame.pFrame);
+
+
 																//		convert to IplImage format
 																//		this is used to capture and process the image
-					IplImage *tmpImage = cvCreateImage(cvSize(720,576),IPL_DEPTH_8U,3);
-					fill_iplimage_from_stream(tmpImage, currentImageBuffer, PIX_FMT_RGB24);
-					I_Frame.pImage = tmpImage;
-                    I_Frame.h=720;                              //      width of image
-                    I_Frame.w=576;                              //      height of image
-        
-                    InputBuffer.pop_front();            //      delete the head frame from the FIFO buffer
-                
+					convertedImage = cvCreateImageHeader(cvSize(currentImageBuffer->video->w,
+						currentImageBuffer->video->h),IPL_DEPTH_8U,3);
+					
+					fill_iplimage_from_stream(convertedImage, currentImageBuffer, PIX_FMT_RGB24);
+					//memcpy(I_Frame.pImage,currentImage,currentImage->imageSize);
+					I_Frame.pImage = cvCloneImage(convertedImage);  
+                    I_Frame.h=640;                              //      width of image
+                    I_Frame.w=480;                              //      height of image
+					
+					InputBuffer.pop_front();					//      delete the head frame from the FIFO buffer
+                   
+
                     //printf("FIFO size: %d\n",InputBuffer.size());
                     //printf("FIFO size: %d from camera %d\n",InputBuffer.size(),ID);
                 
@@ -1313,16 +1350,24 @@ Export_Frame STREAM::getImage()//dataFrame
                     I_Frame.pData = pFrameRGBA; //      to avoid empty frame
 
             }   
+			// Release memory buffer
+			// Release image data
+			
+			cvFree(&convertedImage);
+			av_free(currentImageBuffer);
+	
+
+
     /*
     }
     cod = unlock_mutex();
     if (cod!=0) 
     {printf("%s\n","Error unlocking get RTP data");}
      */ 
-        
             set_Semaphore(1);           //      send signal increase semaphore
     }
                     //return ReceivedFrame.image;                               //      return the last frame
+    
 
     return I_Frame;
         

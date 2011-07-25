@@ -30,6 +30,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>                // libavformat and libavcodec and avutil libraries
 #include <libavutil/avutil.h>
+#include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>				     // video scaling library
 #include <libavfilter/avfilter.h>				 // used with OpenCV
 #include <libavfilter/avcodec.h>				 // used with OpenCV
@@ -436,7 +437,7 @@ Frame dataBuffer;
 Frame data_RTP;
 Frame ReceivedFrame;
 Frame Temp;
-IplImage *tmpImage;
+IplImage *convertedImage;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //      STL FIFOs
 deque<Frame>InputBuffer;                //      input FIFO queue, here used as the main buffer

@@ -27,6 +27,10 @@
 
 // include common types
 #include "common.h"
+//#if _WIN32
+//	// Visual Studio Debug
+//	#include "reportingHook.h"
+//#endif
 
 
 //#include "openvidia32.h"

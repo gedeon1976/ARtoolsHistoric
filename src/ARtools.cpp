@@ -1,4 +1,8 @@
 #include "ARtools.h"
+//#if _WIN32
+//	// Visual Studio Debug
+//	#include "reportingHook.h"
+//#endif
 
 ARtools::ARtools()
 {
@@ -8,13 +12,18 @@ ARtools::ARtools()
 		 QMainWindow::AnimatedDocks |
 		 QMainWindow::AllowTabbedDocks
 		 );
+  createActions();
+  createMenus();
 	#if (UNIX)
 		gettimeofday(&elapsedTimeFirst,&timeZone) ;
 	#endif
-  // initializes variables
+	// initializes variables
+	// haptic 
 	X_Haptic = 0;
 	Y_Haptic = 0;
 	Z_Haptic = 0;
+	// openCV
+	leftImage = NULL;
   
 }
 
@@ -125,5 +134,81 @@ void ARtools::get_image_points(imagePoints actualPoints)
 
 }
 
+void ARtools::get_IplImage(IplImage *actualImage){
+
+	// copy IplImage from remote cameras
+	try{
+		leftImage = cvCloneImage(actualImage);
+		ShowLeftVideo();
+		cvReleaseImage(&actualImage);
+	}
+	catch(...){
+		int err = cvGetErrStatus();
+		const char* description = cvErrorStr(err);
+		int i=143;
+		cvGuiBoxReport(err,"get_IplImage",description,"ARtools.cpp",i,"2");
+
+	}
+}
+
+// Show the left camera video on a OpenCV window
+void ARtools::ShowLeftVideo(){
+	// show a openCV window
+	try{
+		CvSize imgSize;
+		imgSize = cvSize(640,480);
+		IplImage *testImage = cvCloneImage(leftImage);
+		// copy image from camera and convert to OpenCV format: BGR
+		cvCvtColor(leftImage,testImage,CV_RGB2BGR);
+		cvNamedWindow("Left Video");
+		cvShowImage("Left Video",testImage);
+		cvReleaseImage(&testImage);
+		cvReleaseImage(&leftImage);
+	}
+	catch(...){
+
+		int err = cvGetErrStatus();
+		const char* description = cvErrorStr(err);
+		int i=143;
+		cvGuiBoxReport(err,"ShowLeftVideo",description,"ARtools.cpp",i,"2");
+
+	}
+}
+
+void ARtools::AboutAct(){
+	// Show a message about the application 
+	
+		QMessageBox::about(this, tr("About ARtools"),
+		tr("This is a prototype of teleoperation tools based on augmented reality technology"));
+	
+}
+void ARtools::createActions(){
+	// create the action for the menus
+	bool status = true;
+	// Help actions
+	aboutApp = new QAction(tr("About..."),this);
+	connect(aboutApp,SIGNAL(triggered()),
+			this,SLOT(AboutAct()));
+	// Video Processing actions
+	showleftCamera = new QAction(tr("Show Left Camera"),this);
+	connect(showleftCamera,SIGNAL(triggered()),
+			this,SLOT(ShowLeftVideo()));
+	
+
+	
+}
+void ARtools::createMenus(){
+	// create the menus
+	// Video Processing
+	VideoProcessing_Menu = this->menuBar()->addMenu("&Video Processing");
+	VideoProcessing_Menu->addAction(showleftCamera);
+	// Help
+	help_Menu = this->menuBar()->addMenu("&Help");
+	help_Menu->addAction(aboutApp);
+	
+
+
+	
+}
 
 #include "ARtools.moc"

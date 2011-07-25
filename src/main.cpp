@@ -14,8 +14,16 @@
     
     This code can be distributed freely without any warranty.
 
-
 */
+//#if _WIN32
+//	// Visual Studio Debug
+//	#include "reportingHook.h"
+//	#include "setDebugNew.h"
+//#endif
+	
+
+
+
 // Qt nokia library
 #include <QtGui/QApplication>
 #include <QtGui>
@@ -53,7 +61,10 @@
 
 int main(int argc, char** argv)
 {
-QApplication app(argc, argv);
+	
+	try{
+
+	QApplication app(argc, argv);
     ARtools mainGUI;
     mainGUI.show();
     // initializes Quarter library (also the Qt and Coin3D libraries implicitly)  
@@ -117,11 +128,19 @@ QApplication app(argc, argv);
     //// send image projected points to main GUI
     QObject::connect(&video,SIGNAL(sendimagepoints(imagePoints)),
 		     &mainGUI,SLOT(get_image_points(imagePoints)));
+	// send left image captured to openCV processing
+	QObject::connect(&video,SIGNAL(sendIplImage(IplImage*)),
+			&mainGUI,SLOT(get_IplImage(IplImage*)));
    
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);
     viewer->setSceneGraph(root);
     
     mainGUI.setCentralWidget(viewer->getWidget());    
+	// add extra widgets
+	
+	
+
+
     
     // make the viewer react to inputs events similar to the good old 
     // examinerViewer
@@ -156,8 +175,19 @@ QApplication app(argc, argv);
     delete viewer;
 
    // Quarter::clean();
+	/*#if defined(WIN32) && defined(_DEBUG)
+		_CrtDumpMemoryLeaks();
+		setFilterDebugHook();
+	#endif*/
+	}
+	catch(cv::Exception){
 
+		int err = cvGetErrStatus();
+		const char* description = cvErrorStr(err);
+		int i=143;
+		cvGuiBoxReport(err,"ShowLeftVideo",description,"ARtools.cpp",i,"2");
 
+	}
 
 }
 

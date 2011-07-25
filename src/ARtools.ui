@@ -44,7 +44,15 @@
     <property name="title">
      <string>About</string>
     </property>
+    <addaction name="actionARtools"/>
    </widget>
+   <widget class="QMenu" name="menuImage_Processing">
+    <property name="title">
+     <string>Image Processing</string>
+    </property>
+    <addaction name="actionShow_Current_Streaming"/>
+   </widget>
+   <addaction name="menuImage_Processing"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -283,7 +291,7 @@
         <string>YWorld</string>
        </property>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
          <x>120</x>
@@ -1272,6 +1280,21 @@
     </widget>
    </widget>
   </widget>
+  <action name="actionOpenCV">
+   <property name="text">
+    <string>OpenCV</string>
+   </property>
+  </action>
+  <action name="actionARtools">
+   <property name="text">
+    <string>ARtools</string>
+   </property>
+  </action>
+  <action name="actionShow_Current_Streaming">
+   <property name="text">
+    <string>Show Current Streaming</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>

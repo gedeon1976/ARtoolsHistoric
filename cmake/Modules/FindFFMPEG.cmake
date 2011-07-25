@@ -11,22 +11,26 @@ IF (WIN32)
 
   FIND_PATH( FFMPEG_INCLUDE_DIRS libavcodec/avcodec.h
     "/FFmpeg/include"
-  )
+	)
   FIND_LIBRARY( FFMPEG_avcodec_LIBRARY avcodec
     "/FFmpeg/lib"
-  )
+	)
 
   FIND_LIBRARY( FFMPEG_avformat_LIBRARY avformat
     "/FFmpeg/lib"
-  )
+	)
   
   FIND_LIBRARY( FFMPEG_avutil_LIBRARY avutil
     "/FFmpeg/lib"
-  )
+	)
+	
+  FIND_LIBRARY( FFMPEG_avfilter_LIBRARY avfilter
+    "/FFmpeg/lib"  
+	)
 
   FIND_LIBRARY( FFMPEG_swscale_LIBRARY swscale
     "/FFmpeg/lib"
-  )
+	)
   
       IF( FFMPEG_avcodec_LIBRARY )
       IF( FFMPEG_avformat_LIBRARY )
@@ -40,6 +44,10 @@ IF (WIN32)
         IF( FFMPEG_swscale_LIBRARY )
            SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_swscale_LIBRARY} )
         ENDIF( FFMPEG_swscale_LIBRARY )
+		
+		IF ( FFMPEG_avfilter_LIBRARY)
+			SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_avfilter_LIBRARY})
+		ENDIF(FFMPEG_avfilter_LIBRARY)
     
 
       ENDIF( FFMPEG_avformat_LIBRARY )
@@ -90,6 +98,13 @@ ELSE (WIN32)
         /usr/local/lib64
       )
 
+	 FIND_LIBRARY( FFMPEG_avfilter_LIBRARY avfilter
+        /usr/lib
+        /usr/local/lib
+        /usr/lib64
+        /usr/local/lib64
+      )
+	  
       FIND_LIBRARY( FFMPEG_swscale_LIBRARY swscale
         /usr/lib
         /usr/local/lib
@@ -109,6 +124,10 @@ ELSE (WIN32)
         IF( FFMPEG_swscale_LIBRARY )
            SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_swscale_LIBRARY} )
         ENDIF( FFMPEG_swscale_LIBRARY )
+		
+		IF ( FFMPEG_avfilter_LIBRARY)
+			SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_avfilter_LIBRARY})
+		ENDIF(FFMPEG_avfilter_LIBRARY)
     
 
       ENDIF( FFMPEG_avformat_LIBRARY )

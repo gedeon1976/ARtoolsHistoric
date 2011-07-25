@@ -18,7 +18,10 @@
 */
 
 #include "stereovideo.h"
-
+//#if _WIN32
+//	// Visual Studio Debug
+//	#include "reportingHook.h"
+//#endif
 StereoVideo::StereoVideo()
 {
   
@@ -39,7 +42,7 @@ StereoVideo::StereoVideo(int width, int height, SoStereoTexture *node)
   timer = new QTimer(this);
   timer->setInterval(40);
   timer->start();  
-  connect(timer,SIGNAL(timeout()),this,SLOT(update())); 
+  connect(timer,SIGNAL(timeout()),this,SLOT(update()));
 
 }
 
@@ -47,6 +50,8 @@ StereoVideo::StereoVideo(int width, int height, SoStereoTexture *node)
 StereoVideo::StereoVideo(const char* URLcamL,const char* URLcamR, int width, int height, SoStereoTexture *node)
 {
   // initializes variables
+  updateImageL = NULL;
+  updateImageR = NULL;
   StereoNode = new SoStereoTexture;  
   StereoNode->width = width;
   StereoNode->heigh = height;
@@ -63,6 +68,7 @@ StereoVideo::StereoVideo(const char* URLcamL,const char* URLcamR, int width, int
   timer->setInterval(40);
   timer->start();  
   connect(timer,SIGNAL(timeout()),this,SLOT(update())); 
+  
     
 }
 
@@ -120,7 +126,17 @@ void StereoVideo::update()
 	 imagePoints points;
 	 points = realNode->getProjectedPoints();
 	 emit sendimagepoints(points);
-
+	 // send current Left IplImage
+	 updateImageL = cvCloneImage(FrL.pImage);	
+	 //updateImageR = cvCloneImage(FrR.pImage);	 
+	 // emit signal to send current openCV coverted image
+	 emit sendIplImage(updateImageL);
+	 cvReleaseImage(&FrL.pImage);
+	 cvReleaseImage(&FrR.pImage);
+	 cvFree(&FrL.pImage);
+	 cvFree(&FrR.pImage);
+	 
+	 
 }
 
 void StereoVideo::set_haptic_data(mt::Vector3 hapticData)
