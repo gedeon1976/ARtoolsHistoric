@@ -128,9 +128,9 @@ void StereoVideo::update()
 	 emit sendimagepoints(points);
 	 // send current Left IplImage
 	 updateImageL = cvCloneImage(FrL.pImage);	
-	 //updateImageR = cvCloneImage(FrR.pImage);	 
-	 // emit signal to send current openCV coverted image
-	 emit sendIplImage(updateImageL);
+	 updateImageR = cvCloneImage(FrR.pImage);	 
+	 // emit signal to send current openCV converted images
+	 emit sendIplImageStereo(updateImageL,updateImageR);
 	 cvReleaseImage(&FrL.pImage);
 	 cvReleaseImage(&FrR.pImage);
 	 cvFree(&FrL.pImage);

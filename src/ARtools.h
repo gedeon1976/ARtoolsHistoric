@@ -38,14 +38,18 @@ public:
   void show_fps();
   void show_haptic_data(mt::Vector3);
   void get_image_points(imagePoints actualPoints);
-  void get_IplImage(IplImage *actualImage);
+  void get_IplImageStereo(IplImage *actualImageL,IplImage *actualImageR);
+  void get_IplImageL(IplImage *actualImageL);
+  void get_IplImageR(IplImage *actualImageR);
   float get_X_value();
   float get_Y_value();
   float get_Z_value();
   
 private slots:
 	void AboutAct();
+	void ShowStereoVideo();
 	void ShowLeftVideo();
+	void ShowRightVideo();
 private:
    QAction *aboutApp;
    QAction *showleftCamera;
@@ -62,7 +66,8 @@ private:
    // variables
    // OpenCV
    QMenu *VideoProcessing_Menu;
-	IplImage *leftImage;	
+   IplImage *leftImage;	
+   IplImage *rightImage;
    // help
    QMenu *help_Menu;
    float timeDiff; 

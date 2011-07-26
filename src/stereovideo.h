@@ -62,7 +62,9 @@ class StereoVideo:public QObject
   signals:
     void updatedone();
     void sendimagepoints(imagePoints actualPoints);
-	void sendIplImage(IplImage *actualImage);
+	void sendIplImageStereo(IplImage *actualImageL,IplImage *actualImageR);
+	void sendIplImageL(IplImage *actualImageL);
+	void sendIplImageR(IplImage *actualImageR);
    
   private:
     IMAGE set_format;		// set the left and right cameras

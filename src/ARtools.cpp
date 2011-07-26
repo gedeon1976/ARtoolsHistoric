@@ -24,6 +24,7 @@ ARtools::ARtools()
 	Z_Haptic = 0;
 	// openCV
 	leftImage = NULL;
+	rightImage = NULL;
   
 }
 
@@ -134,13 +135,28 @@ void ARtools::get_image_points(imagePoints actualPoints)
 
 }
 
-void ARtools::get_IplImage(IplImage *actualImage){
+// Get the images from the remote cameras
+void ARtools::get_IplImageStereo(IplImage *actualImageL,IplImage *actualImageR){
+	// copy the images
+	try{
+		leftImage = cvCloneImage(actualImageL);
+		rightImage = cvCloneImage(actualImageR);
+		ShowStereoVideo(); 
+		cvReleaseImage(&actualImageL);
+		cvReleaseImage(&actualImageR);
+	}
+	catch(...){
+
+	}
+}
+
+void ARtools::get_IplImageL(IplImage *actualImageL){
 
 	// copy IplImage from remote cameras
 	try{
-		leftImage = cvCloneImage(actualImage);
+		leftImage = cvCloneImage(actualImageL);
 		ShowLeftVideo();
-		cvReleaseImage(&actualImage);
+		cvReleaseImage(&actualImageL);
 	}
 	catch(...){
 		int err = cvGetErrStatus();
@@ -150,7 +166,43 @@ void ARtools::get_IplImage(IplImage *actualImage){
 
 	}
 }
+// copy Rigth remote camera images
+void ARtools::get_IplImageR(IplImage *actualImageR){
+	try{
+		rightImage = cvCloneImage(actualImageR);
+		ShowRightVideo();
+		cvReleaseImage(&actualImageR);
+	}
+	catch(...){
+	}
 
+}
+// show the left and right cameras on OpenCV window
+void ARtools::ShowStereoVideo(){
+	try{
+		CvSize imgSize;
+		imgSize = cvSize(640,480);
+		IplImage *testImageL = cvCloneImage(leftImage);
+		IplImage *testImageR = cvCloneImage(rightImage);
+		// copy image from camera and convert to OpenCV format: BGR
+		cvCvtColor(leftImage,testImageL,CV_RGB2BGR);
+		cvCvtColor(rightImage,testImageR,CV_RGB2BGR);
+		// image processing
+
+		// show images
+		cvNamedWindow("Left Video");
+		cvNamedWindow("Right Video");
+		cvShowImage("Left Video",testImageL);
+		cvShowImage("Right Video",testImageR);
+		// free the resources
+		cvReleaseImage(&testImageL);
+		cvReleaseImage(&testImageR);
+		cvReleaseImage(&leftImage);		
+		cvReleaseImage(&rightImage);
+	}
+	catch(...){
+	}
+}
 // Show the left camera video on a OpenCV window
 void ARtools::ShowLeftVideo(){
 	// show a openCV window
@@ -172,6 +224,23 @@ void ARtools::ShowLeftVideo(){
 		int i=143;
 		cvGuiBoxReport(err,"ShowLeftVideo",description,"ARtools.cpp",i,"2");
 
+	}
+}
+// Show the right camera video on a OpenCV window
+void ARtools::ShowRightVideo(){
+	// show a openCV window
+	try{
+		CvSize imgSize;
+		imgSize = cvSize(640,480);
+		IplImage *testImage = cvCloneImage(rightImage);
+		// copy image from camera and convert to OpenCV format: BGR
+		cvCvtColor(rightImage,testImage,CV_RGB2BGR);
+		cvNamedWindow("Right Video");
+		cvShowImage("Right Video",testImage);
+		cvReleaseImage(&testImage);
+		cvReleaseImage(&rightImage);
+	}
+	catch(...){
 	}
 }
 

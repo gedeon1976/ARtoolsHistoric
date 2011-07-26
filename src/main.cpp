@@ -128,9 +128,10 @@ int main(int argc, char** argv)
     //// send image projected points to main GUI
     QObject::connect(&video,SIGNAL(sendimagepoints(imagePoints)),
 		     &mainGUI,SLOT(get_image_points(imagePoints)));
-	// send left image captured to openCV processing
-	QObject::connect(&video,SIGNAL(sendIplImage(IplImage*)),
-			&mainGUI,SLOT(get_IplImage(IplImage*)));
+	// send left and right captured images to openCV processing
+	QObject::connect(&video,SIGNAL(sendIplImageStereo(IplImage*,IplImage*)),
+			&mainGUI,SLOT(get_IplImageStereo(IplImage*,IplImage*)));
+	
    
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);
     viewer->setSceneGraph(root);
