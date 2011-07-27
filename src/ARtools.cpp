@@ -1,4 +1,5 @@
 #include "ARtools.h"
+#include "pointer_3D.h"
 //#if _WIN32
 //	// Visual Studio Debug
 //	#include "reportingHook.h"
