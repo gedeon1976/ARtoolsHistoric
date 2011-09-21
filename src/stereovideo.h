@@ -11,7 +11,7 @@
 		  and Leopoldo Palomo
     
     This code is freely available and is delivered as is
-    without warranty
+    without warranty, not for commercial use.
     
     Copyright: See COPYING file that comes with this distribution
 

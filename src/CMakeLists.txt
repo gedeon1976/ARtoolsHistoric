@@ -14,6 +14,7 @@ include(${QT_USE_FILE})
 set(LIBIOCCOMM_INCLUDE_DIR  "${CMAKE_SOURCE_DIR}/libcomm")
 set(HAPTIC_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/haptic")
 set(mt_DIR "${CMAKE_SOURCE_DIR}/libmt")
+set(IMAGE_PROCESS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/imageProcess")
 if (UNIX)
     set(LIBIOCCOMM_LIBRARIES  "${LIBIOCCOMM_INCLUDE_DIR}/libioccomm.a")
   else (UNIX)
@@ -26,13 +27,15 @@ include_directories(${LIBIOCCOMM_INCLUDE_DIR})
 if (UNIX)
   include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} 
   ${COIN3D_INCLUDE_DIRS} ${QUARTER_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${FFMPEG_INCLUDE_DIR} 
-  ${LIVE555_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${mt_DIR} ${OPENHAPTICS_INCLUDE_DIR}) 
+  ${LIVE555_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${mt_DIR} ${IMAGE_PROCESS_INCLUDE_DIR} 
+  ${OPENHAPTICS_INCLUDE_DIR}) 
   message("live555: "${LIVE555_INCLUDE_DIRS})
 
 else (UNIX)
   include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${PTHREADS_INCLUDE_DIRS}
   ${COIN3D_INCLUDE_DIRS} ${QUARTER_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${FFMPEG_INCLUDE_DIRS} 
-  ${LIVE555_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${mt_DIR} ${OPENHAPTICS_INCLUDE_DIR}) 
+  ${LIVE555_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${mt_DIR} ${IMAGE_PROCESS_INCLUDE_DIR} 
+  ${OPENHAPTICS_INCLUDE_DIR}) 
   message("live555 Dir: "${LIVE555_INCLUDE_DIRS})
 
 endif (UNIX)
@@ -90,7 +93,7 @@ else (UNIX)
 
 endif (UNIX)
 
-set(ARtools_SRCS ${CMAKE_SOURCE_DIR}/haptic/haptic.cpp pointer_3D.cpp ARtools.cpp client.cpp stereovideo.cpp hapticConnection.cpp SoStereoTexture.cpp  main.cpp ${SOURCES_MOC} ${Forms_UIS})
+set(ARtools_SRCS ${CMAKE_SOURCE_DIR}/haptic/haptic.cpp ${CMAKE_SOURCE_DIR}/imageProcess/pointer_3D.cpp ARtools.cpp client.cpp stereovideo.cpp hapticConnection.cpp LICFs.cpp SoStereoTexture.cpp  main.cpp ${SOURCES_MOC} ${Forms_UIS})
 qt4_automoc(${ARtools_SRCS})
 add_executable(ARtools ${ARtools_SRCS})
 if (UNIX)

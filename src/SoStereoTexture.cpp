@@ -419,7 +419,7 @@ Filters[5] =
 	Transform_R = cvCreateMat(4,4,CV_32FC1);
 	cvSetZero(Transform_L);
 	cvSetZero(Transform_R);
-	
+	// initializes image variables
 	imageL_points = cvCreateMat(4,4,CV_32FC1);
 	imageR_points = cvCreateMat(4,4,CV_32FC1);
     cvSetZero(imageL_points);
@@ -429,6 +429,7 @@ Filters[5] =
 	xiL = 1; xiR = 1; uo_L = 1; vo_L = 1;
 	yiL = 1; yiR = 1; uo_R = 1; vo_R = 1;
 	ziL = 1; ziR = 1;
+	// initializes values for haptic readings
 	X_haptic = 1;
 	Y_haptic = 1;
 	Z_haptic = 1;
@@ -625,7 +626,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	
 	float thetaAngle = 0;
 	float f = 780;//800;				// 	focal length to be found
-	float Baseline = 72;//11	// 	measured in haptic coordinates (in real world correspond
+	float Baseline = 72;//110	// 	measured in haptic coordinates (in real world correspond
 								//	to a separation of 11 cm between the cameras)
 	float cTheta,sTheta, delta_X;
 	sTheta = sin(thetaAngle);
@@ -728,7 +729,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	int DisparityDepth = 100;
 	hfZ = hapticSpanZ/DisparityDepth;
 
-	// calculus of positions using Biswas (Indian Institute) inspired method
+	// calculus of positions using prof. Biswas (Indian Institute) inspired method
 	
 	Xh = X_haptic*hfW;
 	Yh = Y_haptic*hfH;
@@ -1189,7 +1190,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 		/*	if (hapticSpanX > X_deltaL){
 				xi_nL  = X_haptic/hfWL - 0.25*X_deltaL;
-				
+				    
 			}else{
 				xi_nL  = X_haptic*hfWL - 0.25*X_deltaL;
 				
@@ -1670,7 +1671,7 @@ void SoStereoTexture::show()
 
 }
 /// get the projected points from the haptic to the stereo images
-/// at the rendering scene
+/// at the rendering scene and the center of cameras at image coordinates
 imagePoints SoStereoTexture::getProjectedPoints()
 {
 	imagePoints points;
@@ -1678,5 +1679,10 @@ imagePoints SoStereoTexture::getProjectedPoints()
 	points.xiR = xi_nR;
 	points.yiL = yi_nL;
 	points.yiR = yi_nR;
+	// center of cameras
+	points.uo_L = uo_L;
+	points.vo_L = vo_L;
+	points.uo_R = uo_R;
+	points.vo_R = vo_R;
 	return points;
 }

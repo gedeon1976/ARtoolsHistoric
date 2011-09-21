@@ -135,11 +135,11 @@ int 		yiL;
 int 		yiR;
 int 		ziL;
 int 		ziR;
-int 		xi_nL;
+int 		xi_nL;				//		matched stereo points
 int 		yi_nL;
 int 		xi_nR;
 int 		yi_nR;
-float		uo_L;
+float		uo_L;				//		center of cameras from calibration
 float		uo_R;
 float		vo_L;
 float		vo_R;

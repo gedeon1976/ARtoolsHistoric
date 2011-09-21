@@ -18,11 +18,17 @@
 #include <mt/mt.h>
 // include common types
 #include "common.h"
+// include LICFs class
+#include "LICFs.h"
 // openCV headers
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>			
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
+#include "pointer_3D.h"
+// rendering types control
+#define RENDERING_3D 1
+#define RENDERING_OPENCV 2
 
 
 // using multiple inheritance approach
@@ -50,6 +56,13 @@ private slots:
 	void ShowStereoVideo();
 	void ShowLeftVideo();
 	void ShowRightVideo();
+	void SetCannyAperture(int hSldCannyAperture);
+	void SetCannyLowThreshold(int hSldCannyLowValue);
+	void SetCannyHighThreshold(int hSldCannyHighValue);
+	void SetHoughThreshold(int HoughThreshold);
+	void SetHoughMinLengthDetection(int minLengthDetection);
+	void SetHoughMaxGapBetweenLines(int maxGapBetweenLines);
+	void SetLICF_MaxDistanceBetweenLines(int maxDistance);
 private:
    QAction *aboutApp;
    QAction *showleftCamera;
@@ -68,12 +81,24 @@ private:
    QMenu *VideoProcessing_Menu;
    IplImage *leftImage;	
    IplImage *rightImage;
+   pointer_3D ImageProcessing;
+   imagePoints actualImages_Points;
+   double CannyWindowSize;
+   double thresholdCannyLow;
+   double thresholdCannyHigh;
+   int HoughThreshold;
+   double HoughMinLengthDetection;
+   double HoughMaxGapBetweenLines;
+   int LICF_MaxDistanceBetweenLines;
+   int rendering_type;
+
    // help
    QMenu *help_Menu;
    float timeDiff; 
    float X_Haptic;
    float Y_Haptic;
    float Z_Haptic;
+   bool matrixF_calculated;
    
 };
 
