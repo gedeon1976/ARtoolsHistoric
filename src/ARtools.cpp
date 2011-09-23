@@ -243,6 +243,7 @@ void ARtools::ShowStereoVideo(){
 
 		vector<LICFs_Structure> Actual_LICFs_L;
 		vector<LICFs_Structure> Actual_LICFs_R;
+		vector<Matching_LICFs> Actual_Matched_LICFs;
 
 		imgSize = cvGetSize(leftImage);
 		IplImage *testImageL = cvCreateImage(imgSize,IPL_DEPTH_8U,1);
@@ -254,6 +255,7 @@ void ARtools::ShowStereoVideo(){
 		IplImage *HoughRightSubImage,*LICF_RightSubImage;
 		IplImage *LeftSubImage,*LeftSubImageGray,*EdgeLeftSubImage;
 		IplImage *RightSubImage,*RightSubImageGray,*EdgeRightSubImage;
+		IplImage *SubGrayToMatch;
 
 		// copy image from camera and convert to OpenCV format: BGR
 		IplImage *leftImageBGR = cvCloneImage(leftImage);
@@ -332,6 +334,10 @@ void ARtools::ShowStereoVideo(){
 		cvCircle(rightImageBGR,cvPoint((int)SubAreaLimitsR.x_AreaCenter,(int)SubAreaLimitsR.y_AreaCenter)
 			,2,CV_RGB(255,0,0));
 
+		// GET THE MATCHING BETWEEN IMAGES
+		SubGrayToMatch = LICFs_FeaturesR.GetSubImageGray();
+		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,0.995,7);
+
 		// draw results
 		// LEFT IMAGE
 		LICFs_Structure tmp_currentLICF;
@@ -360,6 +366,17 @@ void ARtools::ShowStereoVideo(){
 				cvPoint(tmp_currentLICF_R.L_1.x2 + xo_R,tmp_currentLICF_R.L_1.y2 + yo_R), CV_RGB(0,255,128), 1, 8 );
 			 cvCircle(rightImageBGR,cvPoint(tmp_currentLICF_R.x_xK + xo_R,tmp_currentLICF_R.y_xK + yo_R),2,CV_RGB(0,0,255),1,3,0);
 			}
+		}
+
+		// Draw Matched points
+		for(int i=0;i< Actual_Matched_LICFs.size();i++){
+
+			cvCircle(leftImageBGR,cvPoint(xo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.x_xK,
+				yo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.y_xK),3,CV_RGB(255,127,0));
+			cvCircle(rightImageBGR,cvPoint(xo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.x_xK,
+				yo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.y_xK),3,CV_RGB(255,127,0));
+
+
 		}
 
 
@@ -590,8 +607,10 @@ void ARtools::ShowStereoVideo(){
 		cvReleaseImage(&leftImageBGR);
 		cvReleaseImage(&rightImageBGR);
 
-		//cvReleaseImage(&EdgeImageL);
-		//cvReleaseImage(&EdgeImageR);
+		cvReleaseImage(&EdgeImageL);
+		cvReleaseImage(&EdgeImageR);
+
+		cvReleaseImage(&SubGrayToMatch);
 
 		/*cvReleaseImage(&HoughLeftSubImage);
 		cvReleaseImage(&HoughRightSubImage);

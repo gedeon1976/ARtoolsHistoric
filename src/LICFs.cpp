@@ -6,6 +6,16 @@ LICFs::LICFs(IplImage *image)
 	lines = 0;
 	HoughStorage = cvCreateMemStorage(0);
 	imageOriginal = cvCloneImage(image);
+	imgType = LEFT;
+	LICFs_matchCounter = 0;
+	 // matching
+	minVal = 0;
+	maxVal = 0;
+	I_height = this->SubImageSize.height;
+	I_width = this->SubImageSize.width;
+	pt = cvPoint( I_height/2, I_width/2 );
+	minLoc = &pt;
+	maxLoc = &pt;
 	
 
 }
@@ -13,13 +23,16 @@ LICFs::LICFs(IplImage *image)
 LICFs::~LICFs(void)
 {
 	// release memory
-	cvReleaseImage(&imageOriginal);
+	
 	cvReleaseImage(&imageOriginal);
 	cvReleaseImage(&SubImage);		
 	cvReleaseImage(&SubImageGray);	
 	cvReleaseImage(&HoughSubImage);	
 	cvReleaseImage(&EdgeSubImage);
+	//cvReleaseMat(&LICF_feature);
 	cvReleaseMemStorage(&HoughStorage);
+	//cvReleaseMat(&matchOnImageResults);
+	//cvReleaseImage(&grayImageToMatch);
 }
 
 // Get a subImage from an Image to be analyzed
@@ -27,9 +40,9 @@ void LICFs::GetSubImage(imagePoints actualImages_Points, float percentage, IMAGE
 	
 	try{
 		// the value chosen was percentage % of image size
-		IMAGE_TYPE imgType = imageType;
+		imgType = imageType;
 		CvPoint UpperLeft,LowerRight;
-		if (imageType == LEFT){
+		if (imgType == LEFT){
 			UpperLeft = cvPoint((actualImages_Points.xiL - abs((percentage*imageOriginal->width/2))),actualImages_Points.yiL - abs((percentage*imageOriginal->height/2)));
 			LowerRight = cvPoint((actualImages_Points.xiL + abs((percentage*imageOriginal->width/2))),actualImages_Points.yiL + abs((percentage*imageOriginal->height/2)));
 			// set center of the area to analyze
@@ -48,7 +61,7 @@ void LICFs::GetSubImage(imagePoints actualImages_Points, float percentage, IMAGE
 		SubImageSize = cvSize((LowerRight.x - UpperLeft.x),(LowerRight.y - UpperLeft.y));
 		SubImage = cvCreateImage(SubImageSize,IPL_DEPTH_8U,3);	
 		SubImageGray = cvCreateImage(SubImageSize,IPL_DEPTH_8U,1);
-		HoughSubImage = cvCreateImage(SubImageSize,IPL_DEPTH_8U,1);	
+		HoughSubImage = cvCreateImage(SubImageSize,IPL_DEPTH_8U,3);	
 	    EdgeSubImage = cvCreateImage(SubImageSize,IPL_DEPTH_8U,1);
 		// get subImage
 		cvGetRectSubPix(imageOriginal,SubImage,SubImageCenter);
@@ -80,8 +93,15 @@ SubArea_Structure LICFs::GetSubAreaBoundaries(void){
 void LICFs::ApplyCannyEdgeDetector(double CannyWindowSize, double thresholdCannyLow, double thresholdCannyHigh){
 	try{
 		
-
 		cvCanny(SubImageGray,EdgeSubImage,thresholdCannyLow,thresholdCannyHigh,CannyWindowSize);
+		// Show image
+		if (imgType == LEFT){
+			cvNamedWindow("Edge subImage L");
+			cvShowImage("Edge subImage L",EdgeSubImage);
+		}else{
+			cvNamedWindow("Edge subImage R");
+			cvShowImage("Edge subImage R",EdgeSubImage);
+		}
 		
 	}
 	catch(...){
@@ -93,8 +113,19 @@ CvSeq* LICFs::ApplyHoughLineDetection(int HoughThreshold, double HoughMinLengthD
 		
 		lines = cvHoughLines2(EdgeSubImage,HoughStorage,CV_HOUGH_PROBABILISTIC,1,CV_PI/180,
 			HoughThreshold,HoughMaxGapBetweenLines,HoughMaxGapBetweenLines);
-		//cvCvtColor( imageEdges, HoughSubImage, CV_GRAY2BGR );
-		//linesTmp = lines;
+		cvCvtColor(EdgeSubImage, HoughSubImage, CV_GRAY2BGR );
+
+		for (int i=0;i<lines->total;i++){
+			CvPoint* line = (CvPoint*)cvGetSeqElem(lines,i);
+			cvLine(HoughSubImage,line[0],line[1],CV_RGB(255,0,0));
+		}
+		if (imgType == LEFT){
+			cvNamedWindow("Hough subImage L");
+			cvShowImage("Hough subImage L",HoughSubImage);
+		}else{
+			cvNamedWindow("Hough subImage R");
+			cvShowImage("Hough subImage R",HoughSubImage);
+		}
 		return lines;
 	}
 	catch(...){
@@ -111,7 +142,7 @@ vector<LICFs_Structure> LICFs::ApplyLICF_Detection(CvSeq *imageHoughLines, int L
 		LICFs_Structure currentLICF,tmp_currentLICF;
 		
 		vector<lineParameters> Actual_Lines;
-		vector<LICFs_Structure> Actual_LICFs;
+		
 
 		float d_betweenLines1 = 10;
 		float d_betweenLines2 = 10;
@@ -225,6 +256,55 @@ vector<LICFs_Structure> LICFs::ApplyLICF_Detection(CvSeq *imageHoughLines, int L
 		}
 		return Actual_LICFs;
 
+	}
+	catch(...){
+	}
+}
+// Get current subImageGray
+IplImage* LICFs::GetSubImageGray(void){
+	try{
+		grayImageToMatch = cvCloneImage(SubImageGray);
+		return grayImageToMatch;
+	}
+	catch(...){
+	}
+}
+// Get the current matching points for this image
+vector<Matching_LICFs> LICFs::ApplyMatchingLICFs(IplImage *SubImageToMatch,float threshold, int Windowsize){
+	try{
+		// for all the LICFS found
+		LICF_feature = cvCreateMat(Windowsize,Windowsize,CV_8UC1);
+		// Create a matrix for the correspond match results
+		int widthLICF = (SubImageGray->width - LICF_feature->width + 1);
+		int heighLICF =  (SubImageGray->height - LICF_feature->height +1);
+		matchOnImageResults = cvCreateMat(heighLICF,widthLICF,CV_32FC1);
+		Matching_LICFs currentMatched_LICFs;
+		LICFs_matchCounter = 0;
+
+		for (int i=0;i < Actual_LICFs.size();i++){
+			// get LICF position
+			LICF_FeatureCenter.x = Actual_LICFs.at(i).x_xK;
+			LICF_FeatureCenter.y = Actual_LICFs.at(i).y_xK;
+			// crop the LICF as an subimage to look for a match in the other image
+			cvGetRectSubPix(SubImageGray,LICF_feature,LICF_FeatureCenter);	
+			cvMatchTemplate(SubImageToMatch,LICF_feature,matchOnImageResults,CV_TM_CCORR_NORMED);
+			// find place of matching in the other image
+			cvMinMaxLoc(matchOnImageResults,&minVal,&maxVal,minLoc,maxLoc);
+			// save matching points
+			if (maxVal > threshold){
+				LICFs_matchCounter = LICFs_matchCounter + 1;
+				// right LICF
+				currentMatched_LICFs.MatchLICFs_R.x_xK = maxLoc->x;
+				currentMatched_LICFs.MatchLICFs_R.y_xK = maxLoc->y;
+				// left LICF
+				currentMatched_LICFs.MatchLICFs_L.x_xK = Actual_LICFs.at(i).x_xK;
+				currentMatched_LICFs.MatchLICFs_L.y_xK = Actual_LICFs.at(i).y_xK;
+				// save on vector
+				Actual_Matched_LICFs.push_back(currentMatched_LICFs);
+			
+			}
+		}
+		return Actual_Matched_LICFs;
 	}
 	catch(...){
 	}

@@ -51,5 +51,12 @@ struct LICFs_Structure{
 	lineParameters L_1;
 	lineParameters L_2;
 };
+struct Matching_LICFs{
+	// This structure save the matching set
+	// for LICFs features for the two subimages
+	// being analyzed
+	LICFs_Structure MatchLICFs_L;
+	LICFs_Structure MatchLICFs_R;
+};
 
 #endif
