@@ -23,6 +23,11 @@ struct SubArea_Structure{
 	float y_AreaCenter;
 	
 };
+struct lineIntersection{
+	// this structure save the intersection point between 2 lines
+	float xi;
+	float yi;
+};
 struct lineParameters{
 	//  this structure save parameters of a line
 	// parameter of the equation
@@ -36,6 +41,9 @@ struct lineParameters{
 	float x2;
 	float y1;
 	float y2;
+	float thetaAngle;
+	float x_farthest;
+	float y_farthest;
 };
 struct LICFs_Structure{
 	// LICFs features in an image
@@ -58,5 +66,7 @@ struct Matching_LICFs{
 	LICFs_Structure MatchLICFs_L;
 	LICFs_Structure MatchLICFs_R;
 };
+
+
 
 #endif

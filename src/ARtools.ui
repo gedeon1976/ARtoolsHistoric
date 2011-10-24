@@ -1540,6 +1540,76 @@ font: 75 14pt &quot;Courier&quot;;</string>
       </property>
      </widget>
     </widget>
+    <widget class="QGroupBox" name="groupBoxEpipolarError">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>170</y>
+       <width>251</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Epipolar Error</string>
+     </property>
+     <widget class="QSpinBox" name="spinBoxLICF_EpipolarErrorLimitThreshold">
+      <property name="geometry">
+       <rect>
+        <x>11</x>
+        <y>22</y>
+        <width>33</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Epipolar Error Threshold</string>
+      </property>
+      <property name="value">
+       <number>10</number>
+      </property>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>20</y>
+        <width>191</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="lblActualEpipolarError">
+         <property name="text">
+          <string>Actual Value</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLCDNumber" name="lcdActualEpipolarErrorValue">
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="smallDecimalPoint">
+          <bool>true</bool>
+         </property>
+         <property name="numDigits">
+          <number>6</number>
+         </property>
+         <property name="digitCount">
+          <number>6</number>
+         </property>
+         <property name="segmentStyle">
+          <enum>QLCDNumber::Flat</enum>
+         </property>
+         <property name="intValue" stdset="0">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <action name="actionOpenCV">

@@ -25,7 +25,15 @@ ARtools::ARtools()
 	// openCV
 	leftImage = NULL;
 	rightImage = NULL;
+	leftWithHomography = NULL;
+	leftWithHomography2 = NULL;
+	planeFound_onImage = NULL;
+	shiftedVerticalImage = NULL;
+	verticalShift = 0;
+	H_alignment = NULL;
+
 	matrixF_calculated = false;
+	images_alignment = false;
 	actualImages_Points.xiL = 1;
 	actualImages_Points.xiR = 1;
 	actualImages_Points.yiL = 1;
@@ -38,6 +46,8 @@ ARtools::ARtools()
     HoughMinLengthDetection = 10;
     HoughMaxGapBetweenLines = 5;
 	LICF_MaxDistanceBetweenLines = 10;
+	LICF_EpipolarErrorConstraintLimit = 10;
+	LICF_EpipolarErrorConstraintActualValue = 1;
 	rendering_type = RENDERING_OPENCV;
 	// connect Canny thresholds controls
 	QObject::connect(this->hSldCannyLow,SIGNAL(sliderMoved(int)),
@@ -56,6 +66,8 @@ ARtools::ARtools()
 	// connect LICF controls
 	QObject::connect(this->spinBoxLICFmaxLineDistance,SIGNAL(valueChanged(int)),
 		this,SLOT(SetHoughLICF_MaxDistanceBetweenLines(int)));
+	QObject::connect(this->spinBoxLICF_EpipolarErrorLimitThreshold,SIGNAL(valueChanged(int)),
+		this,SLOT(SetLICF_EpipolarErrorConstraintThreshold(int)));
 
 
   
@@ -257,9 +269,13 @@ void ARtools::ShowStereoVideo(){
 		IplImage *RightSubImage,*RightSubImageGray,*EdgeRightSubImage;
 		IplImage *SubGrayToMatch;
 
+		CvMat *e = cvCreateMat(3,3,CV_32FC1);
+		CvMat *e_prim = cvCreateMat(3,3,CV_32FC1);
+
 		// copy image from camera and convert to OpenCV format: BGR
 		IplImage *leftImageBGR = cvCloneImage(leftImage);
 		IplImage *rightImageBGR = cvCloneImage(rightImage);
+		IplImage *rightImageBGR_Aligned = cvCloneImage(rightImageBGR);
 		cvCvtColor(leftImage,leftImageBGR,CV_RGB2BGR);
 		cvCvtColor(rightImage,rightImageBGR,CV_RGB2BGR);
 
@@ -267,19 +283,90 @@ void ARtools::ShowStereoVideo(){
 		cvCvtColor(leftImage,testImageL,CV_RGB2GRAY);
 		cvCvtColor(rightImage,testImageR,CV_RGB2GRAY);
 
+		// find the vertical shifment between the two images
+		shiftedVerticalImage = cvCloneImage(testImageR);
+		cvSetZero(shiftedVerticalImage);	
+
+
+		// create images to show the effect of the homographies		
+
 		// Epipolar geometry calculus
+		CvMat *H_matrix = cvCreateMat(3,3,CV_32FC1);
+		CvMat *H_matrix2 = cvCreateMat(3,3,CV_32FC1);
+		
+		cvSetIdentity(H_matrix);
+		cvSetIdentity(H_matrix2);
+		
+
+		int matchPoints = 0;
+		MatchedPoints firstMatchedPoints;
+		CvMat *leftPoints = NULL;
+		CvMat *rightPoints = NULL;
+		CvScalar p1,p2;
+		float counterY1=0,counterY2=0;
+		
 		if (matrixF_calculated == false){
-			ImageProcessing.LoadImages(testImageL,testImageR);
-			ImageProcessing.MatchPoints(0.995);
-			ImageProcessing.FindFundamentalMatrix();
-			//ImageProcessing.FindEpipoles();
+			
+			if (images_alignment == false){
+				ImageProcessing.LoadImages(testImageL,testImageR);
+				matchPoints = ImageProcessing.MatchPoints(0.995);
+			}
+					
+			// the minimum number of matches needed are 8
+			if ((matchPoints >= 8)|(images_alignment == true)){
+				
+				if (images_alignment == false){
+					H_alignment = cvCreateMat(3,3,CV_32FC1);
+					cvSetIdentity(H_alignment);
+
+					firstMatchedPoints = ImageProcessing.GetMatchPoints();
+					leftPoints = firstMatchedPoints.pointsL;
+					rightPoints = firstMatchedPoints.pointsR;
+					for (int i=1;i<firstMatchedPoints.pointsCount;i++){
+						p1 = cvGet2D(firstMatchedPoints.pointsL,0,i);					
+						p2 = cvGet2D(firstMatchedPoints.pointsR,0,i);
+						counterY1 = (p1.val[1] - p2.val[1]) + counterY1;
+					}
+					
+					// get vertical shift and set transformation
+					verticalShift = abs(counterY1)/(firstMatchedPoints.pointsCount-1);	
+					cvmSet(H_alignment,1,2,-verticalShift);
+					// transform the right image to be correctly aligned
+					cvWarpPerspective(testImageR,shiftedVerticalImage,H_alignment);
+					
+				}
+				// Charge again the correct images pair
+				ImageProcessing.LoadImages(testImageL,shiftedVerticalImage);
+				matchPoints = ImageProcessing.MatchPoints(0.995);
+				if (matchPoints >= 8){
+					// find fundamental matrix
+					ImageProcessing.FindFundamentalMatrix();
+					CvMat *tmpF = ImageProcessing.GetFundamentalMatrix();
+					float scalarValue = floor(cvmGet(tmpF,2,2));
+					double detValue = floor(cvDet(tmpF));
+					// check validity of F_matrix
+					if ((scalarValue == 1.0f)){
+						ImageProcessing.FindEpipoles();
+						matrixF_calculated = true;
+						images_alignment = true;
+						
+					}
+				}else{
+				// set alignment to true
+				images_alignment = true;
+				}
+			}
 			//ImageProcessing.FindEpipolarLines();
 			// do this calculus only when the scene changes, no more
-			matrixF_calculated = true;
+			
 		}else{
 			matrixF_calculated = true;
 		}
-
+		// Correct rigth misalignment
+		cvWarpPerspective(testImageR,shiftedVerticalImage,H_alignment);
+		cvWarpPerspective(rightImageBGR,rightImageBGR_Aligned,H_alignment);
+		// correct the image Points shift
+		actualImages_Points.yiR = actualImages_Points.yiR - verticalShift;
 		// detect LICFs features for the left image
 		LICFs LICFs_FeaturesL(leftImageBGR); 
 		//// Get a gray image
@@ -305,10 +392,10 @@ void ARtools::ShowStereoVideo(){
 
 		cvRectangle(leftImageBGR,upperLeft_L,lowerRight_L,CV_RGB(0,255,0));
 		cvCircle(leftImageBGR,cvPoint((int)SubAreaLimitsL.x_AreaCenter,(int)SubAreaLimitsL.y_AreaCenter)
-			,2,CV_RGB(255,0,0));
+			,2,CV_RGB(0,255,0));
 
 		// detect LICFs features for the right image
-		LICFs LICFs_FeaturesR(rightImageBGR); 
+		LICFs LICFs_FeaturesR(rightImageBGR_Aligned); 
 		//// Get a gray image
 		currentImage = RIGHT;
 		LICFs_FeaturesR.GetSubImage(actualImages_Points,0.1,currentImage);
@@ -330,14 +417,42 @@ void ARtools::ShowStereoVideo(){
 		lowerRight_R = cvPoint(SubAreaLimitsR.x_AreaCenter + abs(0.5*SubAreaLimitsR.width),
 			SubAreaLimitsR.y_AreaCenter + abs(0.5*SubAreaLimitsR.heigh));
 
-		cvRectangle(rightImageBGR,upperLeft_R,lowerRight_R,CV_RGB(0,255,0));
-		cvCircle(rightImageBGR,cvPoint((int)SubAreaLimitsR.x_AreaCenter,(int)SubAreaLimitsR.y_AreaCenter)
-			,2,CV_RGB(255,0,0));
+		cvRectangle(rightImageBGR_Aligned,upperLeft_R,lowerRight_R,CV_RGB(0,255,0));
+		cvCircle(rightImageBGR_Aligned,cvPoint((int)SubAreaLimitsR.x_AreaCenter,(int)SubAreaLimitsR.y_AreaCenter)
+			,2,CV_RGB(0,255,0));
 
-		// GET THE MATCHING BETWEEN IMAGES
+		// GET THE MATCHING BETWEEN IMAGES: here left is the reference image
 		SubGrayToMatch = LICFs_FeaturesR.GetSubImageGray();
-		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,0.995,7);
+		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.995,5);
 
+		// GET THE ERROR FOR EPIPOLAR CONSTRAINT
+		CvMat *F_matrix = ImageProcessing.GetFundamentalMatrix();
+		LICFs_EpipolarConstraintResult errorConstraint;
+
+		errorConstraint = LICFs_FeaturesL.GetEpipolarConstraintError(F_matrix,SubAreaLimitsL,SubAreaLimitsR);
+		this->lcdActualEpipolarErrorValue->display(errorConstraint.errorValue);
+
+		// FIND THE CORRESPONDENT LICF BASED HOMOGRAPHY
+		int maxEpipolarPixelErr = 100;// equivalent to 10 px error:200
+		if((errorConstraint.errorValue > 0)&(errorConstraint.errorValue < maxEpipolarPixelErr)){
+			e = ImageProcessing.Get_e_epipole();
+			e_prim = ImageProcessing.Get_e_prim_epipole();
+			H_matrix = LICFs_FeaturesL.FindLICF_BasedHomography(Actual_Matched_LICFs,F_matrix,e,e_prim,
+				SubAreaLimitsL,SubAreaLimitsR);
+			// use Hartley Zisserman method
+			H_matrix2 = LICFs_FeaturesL.FindLICF_BasedHomographyZissermman(Actual_Matched_LICFs,F_matrix,e,e_prim,
+				SubAreaLimitsL,SubAreaLimitsR);
+			leftWithHomography = cvCloneImage(leftImageBGR);
+			leftWithHomography2 = cvCloneImage(leftImageBGR);
+			cvWarpPerspective(leftImageBGR,leftWithHomography,H_matrix,CV_WARP_FILL_OUTLIERS);  
+			cvWarpPerspective(leftImageBGR,leftWithHomography2,H_matrix2,CV_WARP_FILL_OUTLIERS); 
+			// Show plane results
+			// use right and leftwithhomography2
+			planeFound_onImage = cvCloneImage(rightImageBGR);
+			cvAddWeighted(rightImageBGR_Aligned,1.0,leftWithHomography2,1.0,0.0,planeFound_onImage);
+			
+		}
+		
 		// draw results
 		// LEFT IMAGE
 		LICFs_Structure tmp_currentLICF;
@@ -360,82 +475,179 @@ void ARtools::ShowStereoVideo(){
 		for (int i=0;i < Actual_LICFs_R.size();i++){
 			if (Actual_LICFs_R.size() != 0){
 			 tmp_currentLICF_R = Actual_LICFs_R.at(i);
-			 cvLine(rightImageBGR, cvPoint(tmp_currentLICF_R.L_1.x1 + xo_R,tmp_currentLICF_R.L_1.y1 + yo_R),
+			 cvLine(rightImageBGR_Aligned, cvPoint(tmp_currentLICF_R.L_1.x1 + xo_R,tmp_currentLICF_R.L_1.y1 + yo_R),
 				cvPoint(tmp_currentLICF_R.L_1.x2 + xo_R,tmp_currentLICF_R.L_1.y2 + yo_R), CV_RGB(0,128,255), 1, 8 );
-			 cvLine(rightImageBGR, cvPoint(tmp_currentLICF_R.L_2.x1 + xo_R,tmp_currentLICF_R.L_2.y1 + yo_R),
+			 cvLine(rightImageBGR_Aligned, cvPoint(tmp_currentLICF_R.L_2.x1 + xo_R,tmp_currentLICF_R.L_2.y1 + yo_R),
 				cvPoint(tmp_currentLICF_R.L_1.x2 + xo_R,tmp_currentLICF_R.L_1.y2 + yo_R), CV_RGB(0,255,128), 1, 8 );
-			 cvCircle(rightImageBGR,cvPoint(tmp_currentLICF_R.x_xK + xo_R,tmp_currentLICF_R.y_xK + yo_R),2,CV_RGB(0,0,255),1,3,0);
+			 cvCircle(rightImageBGR_Aligned,cvPoint(tmp_currentLICF_R.x_xK + xo_R,tmp_currentLICF_R.y_xK + yo_R),2,CV_RGB(0,0,255),1,3,0);
 			}
 		}
 
-		// Draw Matched points
+		// Draw Matched points and Constraint Results
+		double aL,bL,cL,aR,bR,cR;
+		CvPoint2D32f ImageIntersections_L[4];
+		CvPoint2D32f ImageIntersections_R[4];
+		float yLmin,yLmax,LimitL,LimitR;
+		vector<CvPoint> pL,pR;
+		CvPoint currentPointL,currentPointR;		
+		CvPoint matchPointL,matchPointR;
+		int Nmatches = Actual_Matched_LICFs.size();
+		CvFont font;
+		double hScale = 0.7;
+		double vScale = 0.7;
+		int lineWidth = 1;
+		string matchNumber;
+		char text[5]; 
+		cvInitFont(&font,CV_FONT_HERSHEY_COMPLEX_SMALL,hScale,vScale,1.0f,lineWidth);
+		// draw section of planes
+		CvPoint PolyVertexL[3];
+		CvPoint *PolyVertexFL = PolyVertexL;
+		CvPoint PolyVertexR[3];
+		CvPoint *PolyVertexFR = PolyVertexR;
+		int nbSides = 3;
+
+		// get epipoles coordinates
+		e = ImageProcessing.Get_e_epipole();
+		e_prim = ImageProcessing.Get_e_prim_epipole();
+		CvScalar Value_e,Value_e_prim;
+		//e
+		Value_e.val[2] = cvmGet(e,0,2);
+		Value_e.val[0] = cvmGet(e,0,0)/Value_e.val[2];
+		Value_e.val[1] = cvmGet(e,0,1)/Value_e.val[2];
+		// e'
+		Value_e_prim.val[2] = cvmGet(e_prim,2,0);
+		Value_e_prim.val[0] = cvmGet(e_prim,0,0)/Value_e_prim.val[2];
+		Value_e_prim.val[1] = cvmGet(e_prim,1,0)/Value_e_prim.val[2];
+
 		for(int i=0;i< Actual_Matched_LICFs.size();i++){
+			// Matched Points			
+			sprintf_s(text,5,"%d",i);
+			matchNumber.assign(text);
+			matchPointL.x = xo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.x_xK;
+			matchPointL.y = yo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.y_xK;
+			matchPointR.x = xo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.x_xK;
+			matchPointR.y = yo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.y_xK;
+			
+			cvPutText(leftImageBGR,matchNumber.data(),matchPointL,&font,CV_RGB(255,255,255));
+			cvCircle(leftImageBGR,matchPointL,3,CV_RGB(255,127,0));
 
-			cvCircle(leftImageBGR,cvPoint(xo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.x_xK,
-				yo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.y_xK),3,CV_RGB(255,127,0));
-			cvCircle(rightImageBGR,cvPoint(xo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.x_xK,
-				yo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.y_xK),3,CV_RGB(255,127,0));
+			// draw section of plane detected
+			PolyVertexL[0] = cvPoint(matchPointL.x,matchPointL.y);
+			PolyVertexL[1] = cvPoint(xo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.L_1.x_farthest,
+				yo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.L_1.y_farthest);
+			PolyVertexL[2] = cvPoint(xo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.L_2.x_farthest,
+				yo_L + Actual_Matched_LICFs.at(i).MatchLICFs_L.L_2.y_farthest);
+			//PolyVertexL[3] =  cvPoint(Value_e.val[0],Value_e.val[1]);
 
+			cvFillPoly(leftImageBGR,&PolyVertexFL,&nbSides,1,CV_RGB(255,127,36));
+
+			cvPutText(rightImageBGR_Aligned,matchNumber.data(),matchPointR,&font,CV_RGB(255,255,255));
+			cvCircle(rightImageBGR_Aligned,matchPointR,3,CV_RGB(255,127,0));
+
+			// draw section of plane detected
+			PolyVertexR[0] = cvPoint(matchPointR.x,matchPointR.y);
+			PolyVertexR[1] = cvPoint(xo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.L_1.x_farthest,
+				yo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.L_1.y_farthest);
+			PolyVertexR[2] = cvPoint(xo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.L_2.x_farthest,
+				yo_R + Actual_Matched_LICFs.at(i).MatchLICFs_R.L_2.y_farthest);
+			//PolyVertexR[3] =  cvPoint(Value_e_prim.val[0],Value_e_prim.val[1]);
+
+			cvFillPoly(rightImageBGR_Aligned,&PolyVertexFR,&nbSides,1,CV_RGB(255,127,36));
+
+			// epipolar lines
+			// lines parameters ax + by + c =0
+			
+			aL = cvmGet(errorConstraint.EpilineL,0,i);aR = cvmGet(errorConstraint.EpilineR,0,i);
+			bL = cvmGet(errorConstraint.EpilineL,1,i);bR = cvmGet(errorConstraint.EpilineR,1,i);
+			cL = cvmGet(errorConstraint.EpilineL,2,i);cR = cvmGet(errorConstraint.EpilineR,2,i);
+			// draw epipolar lines
+			// on limits  x1 = 0, x2 = width, y3 = 0, y4 = heigh
+			// and its intersections on the image rectangle
+			yLmin =0 ; yLmax = imgSize.width + imgSize.height;
+			// left image
+			ImageIntersections_L[0].x = 0;ImageIntersections_L[0].y = -cL/bL;//left side
+			ImageIntersections_L[1].x = imgSize.width;ImageIntersections_L[1].y = (-aL*imgSize.width)/bL + ImageIntersections_L[0].y;//right side
+			ImageIntersections_L[2].x = -cL/aL;ImageIntersections_L[2].y = 0;//top side
+			ImageIntersections_L[3].x = (-bL*imgSize.height)/aL + ImageIntersections_L[2].x;ImageIntersections_L[3].y = imgSize.height;// bottom side
+			// right
+			ImageIntersections_R[0].x = 0;ImageIntersections_R[0].y = -cR/bR;//left side
+			ImageIntersections_R[1].x = imgSize.width;ImageIntersections_R[1].y = (-aR*imgSize.width)/bR + ImageIntersections_R[0].y;//right side
+			ImageIntersections_R[2].x = -cR/aR;ImageIntersections_R[2].y = 0;//top side
+			ImageIntersections_R[3].x = (-bR*imgSize.height)/aR + ImageIntersections_R[2].x;ImageIntersections_R[3].y = imgSize.height;// bottom side
+
+
+
+			for (int i =0; i<4;i++){
+				LimitL = ImageIntersections_L[i].x + ImageIntersections_L[i].y;
+				LimitR = ImageIntersections_R[i].x + ImageIntersections_R[i].y;
+				// left
+				if ((LimitL >= yLmin)&(LimitL <= yLmax)){
+						currentPointL.x = (int)ImageIntersections_L[i].x;
+						currentPointL.y = (int)ImageIntersections_L[i].y;
+						pL.push_back(currentPointL);
+				}	
+				// right
+				if ((LimitR >= yLmin)&(LimitR <= yLmax)){
+						currentPointR.x = (int)ImageIntersections_R[i].x;
+						currentPointR.y = (int)ImageIntersections_R[i].y;
+						pR.push_back(currentPointR);
+				}
+			}
+	
+			// draw lines on the left image
+			if (pL.size()>=2){
+				cvPutText(leftImageBGR,matchNumber.data(),pL.at(0),&font,CV_RGB(255,255,255));
+				cvLine(leftImageBGR,pL.at(0),pL.at(1),CV_RGB(255,64,64),1);	
+			}
+			// draw lines on the right image
+			if (pR.size()>=2){
+				cvPutText(rightImageBGR_Aligned,matchNumber.data(),pR.at(0),&font,CV_RGB(255,255,255));
+				cvLine(rightImageBGR_Aligned,pR.at(0),pR.at(1),CV_RGB(255,255,0),1);	 
+			}
+		}	
+		// Write H_matrix and epipolarError in the image
+		if((errorConstraint.errorValue > 0)&(errorConstraint.errorValue < maxEpipolarPixelErr)){
+			float H_matrixValue;
+			char H_value[100];
+			for (int i=0;i<3;i++){
+				for(int j=0;j<3;j++){
+					H_matrixValue = cvmGet(H_matrix,i,j);
+					sprintf_s(H_value,100,"%f",H_matrixValue);
+					matchNumber.assign(H_value);
+					cvPutText(leftWithHomography,matchNumber.data(),cvPoint((j+1)*100,(i+1)*20),&font,CV_RGB(255,255,255));
+					// show values for Zisserman matrix
+					H_matrixValue = cvmGet(H_matrix2,i,j);
+					sprintf_s(H_value,100,"%f",H_matrixValue);
+					matchNumber.assign(H_value);
+					cvPutText(leftWithHomography2,matchNumber.data(),cvPoint((j+1)*100,(i+1)*20),&font,CV_RGB(255,255,255));
+
+				}
+			}
+			// Epipolar error
+			sprintf_s(H_value,100,"%f",errorConstraint.errorValue);
+			matchNumber.assign(H_value);
+			cvPutText(leftWithHomography,matchNumber.data(),cvPoint(20,80),&font,CV_RGB(255,255,255));
+			
 
 		}
-
-
-
+		
 
 		
-		// draw the corresponding haptic point
+		
+		// SHOW TRANSFORMED IMAGE USING HOMOGRAPHY
 
-		// draw a rectangle for the influence area of the 3D pointer
-		// the value chosen was 10 % of image size
-			//CvPoint leftUpperL,rightLowerL;
-			//CvPoint leftUpperR,rightLowerR;
-			//// left image
-			//leftUpperL = cvPoint((actualImages_Points.xiL - abs((0.1*leftImageBGR->width/2))),actualImages_Points.yiL - abs((0.1*leftImageBGR->height/2)));
-			//rightLowerL = cvPoint((actualImages_Points.xiL + abs((0.1*leftImageBGR->width/2))),actualImages_Points.yiL + abs((0.1*leftImageBGR->height/2)));
-			//// right image
-			//leftUpperR = cvPoint((actualImages_Points.xiR - abs((0.1*rightImageBGR->width/2))),actualImages_Points.yiR - abs((0.1*rightImageBGR->height/2)));
-			//rightLowerR = cvPoint((actualImages_Points.xiR + abs((0.1*rightImageBGR->width/2))),actualImages_Points.yiR + abs((0.1*rightImageBGR->height/2)));
-			//
-			//// sub image rectangle size making
-			//CvSize LeftSubImageSize = cvSize((rightLowerL.x - leftUpperL.x),(rightLowerL.y - leftUpperL.y));
-			//CvSize RightSubImageSize = cvSize((rightLowerR.x - leftUpperR.x),(rightLowerR.y - leftUpperR.y));
-			//
-			//LeftSubImage = cvCreateImage(LeftSubImageSize,IPL_DEPTH_8U,3);
-			//RightSubImage = cvCreateImage(RightSubImageSize,IPL_DEPTH_8U,3);
-			//
-			//LeftSubImageGray = cvCreateImage(LeftSubImageSize,IPL_DEPTH_8U,1);
-			//RightSubImageGray = cvCreateImage(RightSubImageSize,IPL_DEPTH_8U,1);
+		cvNamedWindow("Vertical Shifment");
+		cvShowImage("Vertical Shifment",shiftedVerticalImage);
 
-			//HoughLeftSubImage = cvCreateImage(LeftSubImageSize,IPL_DEPTH_8U,3);
-			//HoughRightSubImage = cvCreateImage(RightSubImageSize,IPL_DEPTH_8U,3);
+		cvNamedWindow("Left With Homography");
+		cvShowImage("Left With Homography",leftWithHomography);
 
-			//EdgeLeftSubImage = cvCreateImage(LeftSubImageSize,IPL_DEPTH_8U,1);
-			//EdgeRightSubImage = cvCreateImage(RightSubImageSize,IPL_DEPTH_8U,1);
+		cvNamedWindow("Left With Homography2");
+		cvShowImage("Left With Homography2",leftWithHomography2);
 
-			////EdgeLeftSubImageSobel = cvCreateImage(LeftSubImageSize,IPL_DEPTH_16S,1);		
+		cvNamedWindow("Plane Found");
+		cvShowImage("Plane found",planeFound_onImage);
 
-			//leftSubImageCenter.x = actualImages_Points.xiL;
-			//leftSubImageCenter.y = actualImages_Points.yiL;
-			//
-			//rightSubImageCenter.x = actualImages_Points.xiR;
-			//rightSubImageCenter.y = actualImages_Points.yiR;
-
-			//cvGetRectSubPix(leftImageBGR,LeftSubImage,leftSubImageCenter);
-			//cvCvtColor(LeftSubImage,LeftSubImageGray,CV_BGR2GRAY);
-			//LICF_LeftSubImage = cvCloneImage(LeftSubImage); 
-
-			//cvGetRectSubPix(rightImageBGR,RightSubImage,rightSubImageCenter);
-			//cvCvtColor(RightSubImage,RightSubImageGray,CV_BGR2GRAY);
-			//LICF_RightSubImage = cvCloneImage(RightSubImage);	
-
-			//// put the matches and a rectangle influence area on a test image
-			//cvRectangle(leftImageBGR,leftUpperL,rightLowerL,CV_RGB(0,255,0));
-			//cvCircle(leftImageBGR,cvPoint(actualImages_Points.xiL,actualImages_Points.yiL)
-			//	,3,CV_RGB(255,0,0),2,3,0);
-
-			//cvRectangle(rightImageBGR,leftUpperR,rightLowerR,CV_RGB(0,255,0));
-			//cvCircle(rightImageBGR,cvPoint(actualImages_Points.xiR,actualImages_Points.yiR)
-			//	,3,CV_RGB(255,0,0),2,3,0);
 		// show images
 		cvNamedWindow("Left Video");
 		cvNamedWindow("Right Video");
@@ -453,7 +665,7 @@ void ARtools::ShowStereoVideo(){
 		cvNamedWindow("LICF Image R");*/
 
 		cvShowImage("Left Video",leftImageBGR);
-		cvShowImage("Right Video",rightImageBGR);
+		cvShowImage("Right Video",rightImageBGR_Aligned);
 
 		//cvShowImage("Left SubImage",LeftSubImage);
 		//cvShowImage("Left SubImage",RightSubImage);	
@@ -606,11 +818,17 @@ void ARtools::ShowStereoVideo(){
 
 		cvReleaseImage(&leftImageBGR);
 		cvReleaseImage(&rightImageBGR);
+		cvReleaseImage(&rightImageBGR_Aligned);
 
 		cvReleaseImage(&EdgeImageL);
 		cvReleaseImage(&EdgeImageR);
 
 		cvReleaseImage(&SubGrayToMatch);
+
+		cvReleaseImage(&leftWithHomography);
+		cvReleaseImage(&leftWithHomography2);
+		cvReleaseImage(&planeFound_onImage);
+		cvReleaseImage(&shiftedVerticalImage);
 
 		/*cvReleaseImage(&HoughLeftSubImage);
 		cvReleaseImage(&HoughRightSubImage);
@@ -731,6 +949,25 @@ void ARtools::SetLICF_MaxDistanceBetweenLines(int maxDistance){
 	catch(...){
 	}
 
+}
+// set Limit for the Epipolar Constraint, this value is the max error allowed
+void ARtools::SetLICF_EpipolarErrorConstraintThreshold(int LimitValue){
+	try{
+		LICF_EpipolarErrorConstraintLimit = LimitValue;
+	}
+	catch(...){
+	}
+}
+// Get the value for the actual epipolar error
+void ARtools::GetLICF_EpipolarErrorConstraintValue(float ActualValue)
+{
+	try{
+		LICF_EpipolarErrorConstraintActualValue = ActualValue;
+		this->lcdActualEpipolarErrorValue->display(ActualValue);
+	}
+	catch(...)
+	{
+	}
 }
 
 void ARtools::AboutAct(){

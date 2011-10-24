@@ -63,6 +63,8 @@ private slots:
 	void SetHoughMinLengthDetection(int minLengthDetection);
 	void SetHoughMaxGapBetweenLines(int maxGapBetweenLines);
 	void SetLICF_MaxDistanceBetweenLines(int maxDistance);
+	void SetLICF_EpipolarErrorConstraintThreshold(int LimitValue);
+	void GetLICF_EpipolarErrorConstraintValue(float ActualValue);
 private:
    QAction *aboutApp;
    QAction *showleftCamera;
@@ -81,8 +83,14 @@ private:
    QMenu *VideoProcessing_Menu;
    IplImage *leftImage;	
    IplImage *rightImage;
+   IplImage *leftWithHomography;
+   IplImage *leftWithHomography2;
+   IplImage *planeFound_onImage;
+   IplImage *shiftedVerticalImage;
    pointer_3D ImageProcessing;
    imagePoints actualImages_Points;
+   CvMat *H_alignment;
+   double verticalShift;
    double CannyWindowSize;
    double thresholdCannyLow;
    double thresholdCannyHigh;
@@ -90,6 +98,8 @@ private:
    double HoughMinLengthDetection;
    double HoughMaxGapBetweenLines;
    int LICF_MaxDistanceBetweenLines;
+   int LICF_EpipolarErrorConstraintLimit;
+   float LICF_EpipolarErrorConstraintActualValue;
    int rendering_type;
 
    // help
@@ -99,6 +109,7 @@ private:
    float Y_Haptic;
    float Z_Haptic;
    bool matrixF_calculated;
+   bool images_alignment;
    
 };
 
