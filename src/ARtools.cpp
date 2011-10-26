@@ -31,6 +31,8 @@ ARtools::ARtools()
 	shiftedVerticalImage = NULL;
 	verticalShift = 0;
 	H_alignment = NULL;
+	dstCmp = NULL;
+	imgwithHomography_gray = NULL;
 
 	matrixF_calculated = false;
 	images_alignment = false;
@@ -263,6 +265,8 @@ void ARtools::ShowStereoVideo(){
 		IplImage *EdgeImageL = cvCreateImage(imgSize,IPL_DEPTH_8U,1);
 		IplImage *EdgeImageR = cvCreateImage(imgSize,IPL_DEPTH_8U,1);
 
+		//IplImage *imgwithHomography_gray = cvCreateImage(imgSize,IPL_DEPTH_8U,1);
+
 		IplImage *HoughLeftSubImage,*LICF_LeftSubImage;
 		IplImage *HoughRightSubImage,*LICF_RightSubImage;
 		IplImage *LeftSubImage,*LeftSubImageGray,*EdgeLeftSubImage;
@@ -285,7 +289,7 @@ void ARtools::ShowStereoVideo(){
 
 		// find the vertical shifment between the two images
 		shiftedVerticalImage = cvCloneImage(testImageR);
-		cvSetZero(shiftedVerticalImage);	
+		//cvSetZero(shiftedVerticalImage);	
 
 
 		// create images to show the effect of the homographies		
@@ -333,9 +337,12 @@ void ARtools::ShowStereoVideo(){
 					cvmSet(H_alignment,1,2,-verticalShift);
 					// transform the right image to be correctly aligned
 					cvWarpPerspective(testImageR,shiftedVerticalImage,H_alignment);
+					imgwithHomography_gray = cvCloneImage(testImageR);
+					
 					
 				}
 				// Charge again the correct images pair
+				dstCmp = cvCloneImage(testImageR);
 				ImageProcessing.LoadImages(testImageL,shiftedVerticalImage);
 				matchPoints = ImageProcessing.MatchPoints(0.995);
 				if (matchPoints >= 8){
@@ -351,7 +358,7 @@ void ARtools::ShowStereoVideo(){
 						images_alignment = true;
 						
 					}
-				}else{
+				}else{ 
 				// set alignment to true
 				images_alignment = true;
 				}
@@ -365,6 +372,8 @@ void ARtools::ShowStereoVideo(){
 		// Correct rigth misalignment
 		cvWarpPerspective(testImageR,shiftedVerticalImage,H_alignment);
 		cvWarpPerspective(rightImageBGR,rightImageBGR_Aligned,H_alignment);
+		
+
 		// correct the image Points shift
 		actualImages_Points.yiR = actualImages_Points.yiR - verticalShift;
 		// detect LICFs features for the left image
@@ -423,9 +432,9 @@ void ARtools::ShowStereoVideo(){
 
 		// GET THE MATCHING BETWEEN IMAGES: here left is the reference image
 		SubGrayToMatch = LICFs_FeaturesR.GetSubImageGray();
-		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.995,5);
+		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.995,15);
 
-		// GET THE ERROR FOR EPIPOLAR CONSTRAINT
+		// REFINE THE MATCHES USING THE EPIPOLAR ERROR CONSTRAINT
 		CvMat *F_matrix = ImageProcessing.GetFundamentalMatrix();
 		LICFs_EpipolarConstraintResult errorConstraint;
 
@@ -433,7 +442,7 @@ void ARtools::ShowStereoVideo(){
 		this->lcdActualEpipolarErrorValue->display(errorConstraint.errorValue);
 
 		// FIND THE CORRESPONDENT LICF BASED HOMOGRAPHY
-		int maxEpipolarPixelErr = 100;// equivalent to 10 px error:200
+		int maxEpipolarPixelErr = 200;// equivalent to 10 px error:200
 		if((errorConstraint.errorValue > 0)&(errorConstraint.errorValue < maxEpipolarPixelErr)){
 			e = ImageProcessing.Get_e_epipole();
 			e_prim = ImageProcessing.Get_e_prim_epipole();
@@ -450,12 +459,18 @@ void ARtools::ShowStereoVideo(){
 			// use right and leftwithhomography2
 			planeFound_onImage = cvCloneImage(rightImageBGR);
 			cvAddWeighted(rightImageBGR_Aligned,1.0,leftWithHomography2,1.0,0.0,planeFound_onImage);
-			
+			cvCvtColor(leftWithHomography2,imgwithHomography_gray,CV_BGR2GRAY);
+			// test comparing images
+			dstCmp = cvCloneImage(testImageR);
+			cvCmp(shiftedVerticalImage,imgwithHomography_gray,dstCmp,CV_CMP_EQ);
 		}
 		
+		
+		
+
 		// draw results
 		// LEFT IMAGE
-		LICFs_Structure tmp_currentLICF;
+		LICFs_Structure tmp_currentLICF; 
 		int xo_L = upperLeft_L.x;
 		int yo_L = upperLeft_L.y;
 		for (int i=0;i < Actual_LICFs_L.size();i++){
@@ -635,6 +650,9 @@ void ARtools::ShowStereoVideo(){
 		
 		
 		// SHOW TRANSFORMED IMAGE USING HOMOGRAPHY
+
+		cvNamedWindow("Comparing images");
+		cvShowImage("Comparing images",dstCmp);
 
 		cvNamedWindow("Vertical Shifment");
 		cvShowImage("Vertical Shifment",shiftedVerticalImage);
@@ -829,6 +847,7 @@ void ARtools::ShowStereoVideo(){
 		cvReleaseImage(&leftWithHomography2);
 		cvReleaseImage(&planeFound_onImage);
 		cvReleaseImage(&shiftedVerticalImage);
+		cvReleaseImage(&dstCmp);
 
 		/*cvReleaseImage(&HoughLeftSubImage);
 		cvReleaseImage(&HoughRightSubImage);

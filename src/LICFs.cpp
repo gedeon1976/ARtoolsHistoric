@@ -382,7 +382,7 @@ vector<Matching_LICFs> LICFs::ApplyMatchingLICFs(IplImage *SubImageToMatch,vecto
 		//matchOnImageResults = cvCreateMat(heighLICF,widthLICF,CV_32FC1);
 		Matching_LICFs currentMatched_LICFs;
 		LICFs_matchCounter = 0;
-		double minThetaAngle = 10;
+		double minThetaAngle = 1;
 		double currentAngleDifference_L1 = 15;
 		double currentAngleDifference_L2 = 15;
 
@@ -398,7 +398,7 @@ vector<Matching_LICFs> LICFs::ApplyMatchingLICFs(IplImage *SubImageToMatch,vecto
 				// crop the LICF as an subimage to look for a match in the other image
 				cvGetRectSubPix(SubImageGray,LICF_feature,LICF_FeatureCenter);
 				cvGetRectSubPix(SubImageToMatch,LICF_featureOtherImage,LICF_FeatureCenterOtherImage);
-				//cvMatchTemplate(LICF_featureOtherImageh,LICF_feature,matchOnImageResults,CV_TM_CCORR_NORMED);
+				//cvMatchTemplate(LICF_featureOtherImage,LICF_feature,matchOnImageResults,CV_TM_CCORR_NORMED);
 				// find NCC between the two LICF subimages
 				maxVal = GetLICFs_NCC(LICF_feature,LICF_featureOtherImage);
 				// find place of matching in the other image
@@ -406,10 +406,10 @@ vector<Matching_LICFs> LICFs::ApplyMatchingLICFs(IplImage *SubImageToMatch,vecto
 				// save matching points
 				if (maxVal > threshold){
 					// check line matching
-					currentAngleDifference_L1 = LICFs_otherImage.at(j).L_1.thetaAngle - Actual_LICFs.at(i).L_1.thetaAngle;
-					currentAngleDifference_L2 = LICFs_otherImage.at(j).L_2.thetaAngle - Actual_LICFs.at(i).L_2.thetaAngle;
+					//currentAngleDifference_L1 = LICFs_otherImage.at(j).L_1.thetaAngle - Actual_LICFs.at(i).L_1.thetaAngle;
+					//currentAngleDifference_L2 = LICFs_otherImage.at(j).L_2.thetaAngle - Actual_LICFs.at(i).L_2.thetaAngle;
 
-					if ((abs(currentAngleDifference_L1) < minThetaAngle)&(abs(currentAngleDifference_L2) < minThetaAngle)){
+					//if ((abs(currentAngleDifference_L1) < minThetaAngle)&(abs(currentAngleDifference_L2) < minThetaAngle)){
 						LICFs_matchCounter = LICFs_matchCounter + 1;
 						// right LICF
 						currentMatched_LICFs.MatchLICFs_R.x_xK = LICFs_otherImage.at(j).x_xK;
@@ -424,7 +424,7 @@ vector<Matching_LICFs> LICFs::ApplyMatchingLICFs(IplImage *SubImageToMatch,vecto
 
 						// save on vector
 						Actual_Matched_LICFs.push_back(currentMatched_LICFs);
-					}
+					//}
 				}
 			}// end for j
 		}

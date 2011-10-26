@@ -87,6 +87,8 @@ private:
    IplImage *leftWithHomography2;
    IplImage *planeFound_onImage;
    IplImage *shiftedVerticalImage;
+   IplImage *imgwithHomography_gray;
+   IplImage *dstCmp; 
    pointer_3D ImageProcessing;
    imagePoints actualImages_Points;
    CvMat *H_alignment;
