@@ -20,6 +20,8 @@
 #include "common.h"
 // include LICFs class
 #include "LICFs.h"
+// include EDlines class
+#include "EDlines.h"
 // openCV headers
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>			

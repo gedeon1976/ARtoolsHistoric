@@ -20,13 +20,16 @@
 
 // include common types
 #include "common.h"
+#include <algorithm>
+#include <list>
 
 // openCV headers
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>			
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
-//#include <QObject>
+//#include EDlines class
+#include "EDlines.h"
 
 enum IMAGE_TYPE{LEFT = 1, RIGHT = 2};
 using namespace std;
@@ -54,13 +57,17 @@ public:
 	void GetSubImage(imagePoints actualImages_Points, float percentage, IMAGE_TYPE imageType);
 	void ApplyCannyEdgeDetector(double CannyWindowSize,
 		double thresholdCannyLow,double thresholdCannyHigh);
+	vector<lineParameters> ApplyEdgeDrawingEdgeDetector(int MinLineLength);
 	CvSeq* ApplyHoughLineDetection(int HoughThreshold,
 		double HoughMinLengthDetection,double HoughMaxGapBetweenLines);
 	lineIntersection GetLineIntersection(lineParameters L1, lineParameters L2);
 	vector<LICFs_Structure> ApplyLICF_Detection(CvSeq *imageHoughLines,int LICF_MaxDistanceBetweenLines);
+	vector<LICFs_Structure> ApplyLICF_Detection(vector<lineParameters> LineSegments,int LICF_MaxDistanceBetweenLines);
 	double GetLICFs_NCC(CvMat *LICF_feature,CvMat *LICF_featureOtherImage);
 	vector<Matching_LICFs> ApplyMatchingLICFs(IplImage *SubImageToMatch,vector<LICFs_Structure> LICFs_otherImage,float threshold, int Windowsize);
-	LICFs_EpipolarConstraintResult GetEpipolarConstraintError(CvMat* F_matrix,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
+	vector<Matching_LICFs> RefineMatchingLICFs(CvMat* F_matrix,vector<Matching_LICFs> actualMatchingLICFs,
+		SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR, float maxError);
+	LICFs_EpipolarConstraintResult GetEpipolarConstraintError(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
 	CvMat* FindLICF_BasedHomography(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix, CvMat *epipole, CvMat *epipole_prim,
 		SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
 

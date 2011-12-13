@@ -93,7 +93,7 @@ else (UNIX)
 
 endif (UNIX)
 
-set(ARtools_SRCS ${CMAKE_SOURCE_DIR}/haptic/haptic.cpp ${CMAKE_SOURCE_DIR}/imageProcess/pointer_3D.cpp ARtools.cpp client.cpp stereovideo.cpp hapticConnection.cpp LICFs.cpp SoStereoTexture.cpp  main.cpp ${SOURCES_MOC} ${Forms_UIS})
+set(ARtools_SRCS ${CMAKE_SOURCE_DIR}/haptic/haptic.cpp ${CMAKE_SOURCE_DIR}/imageProcess/pointer_3D.cpp ARtools.cpp client.cpp stereovideo.cpp hapticConnection.cpp LICFs.cpp  EDlines.cpp SoStereoTexture.cpp  main.cpp ${SOURCES_MOC} ${Forms_UIS})
 qt4_automoc(${ARtools_SRCS})
 add_executable(ARtools ${ARtools_SRCS})
 if (UNIX)

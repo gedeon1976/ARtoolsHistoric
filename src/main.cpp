@@ -4,7 +4,7 @@
     ARtools main GUI
     
     this is the main GUI for the results of my PhD thesis
-    so this was long hard work (maybe excesive time)
+    so this was long hard work (maybe extra time)
     
     copyright(2010) Henry Portilla
     

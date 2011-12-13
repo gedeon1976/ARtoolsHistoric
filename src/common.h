@@ -13,6 +13,31 @@ struct imagePoints{
   float uo_R;
   float vo_R;
 };
+struct Gradient_Properties{
+	// this structure save information about the
+	// gradient properties of a given pixel
+	float x;
+	float y;
+	float gradientMagnitude;
+	float gradientMagnitudeX;
+	float gradientMagnitudeY;
+	float direction;	
+};
+struct Anchors_ED{
+	// this structure save information about the
+	// anchors of the EDlines method
+	float x;
+	float y;
+	bool is_Anchor;
+	bool is_inEdgel_Map;
+};
+struct EdgePoint{
+	// this structure save a pixel belonging to
+	// one line segment
+	float x;
+	float y;
+};
+
 
 struct SubArea_Structure{
 	// this structure save the limits points for
@@ -65,6 +90,8 @@ struct Matching_LICFs{
 	// being analyzed
 	LICFs_Structure MatchLICFs_L;
 	LICFs_Structure MatchLICFs_R;
+	float epipolar_error;
+	float line_matching_error;
 };
 
 
