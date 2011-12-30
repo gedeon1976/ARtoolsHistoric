@@ -1,21 +1,20 @@
-/*
-
+/*****************************************************************
     HapticConnection class
     
-    Description:  this class allows to connect to 
-		  a haptic server and receive the 
-		  current haptic position
+    Description:	this class allows to connect to 
+					a haptic server and receive the 
+					current haptic position
 		  
-    author:	  Henry Portilla (c) 2011
-		  this code use IOCCOMM a library 
-		  done by Alexander Perez
+    author:			Henry Portilla (c) 2011
+					this code use IOCCOMM a library 
+					done by Alexander Perez
     
     This code is freely available and is delivered as is
     without any warranty
     
     Copyright: See COPYING file that comes with this distribution
 
-*/
+*****************************************************************/
 // include definitions
 #include "hapticConnection.h"
 
@@ -73,6 +72,7 @@ void hapticConnection::getHapticPosition(void )
 	Vect6 HapticData(6);
 	HapticDevice->getPosition(HapticPosition);
 	position = HapticPosition.getTranslation();
+	orientation = HapticPosition.getRotation();
 	
 
 	/*   std::stringstream sstream;
@@ -97,7 +97,8 @@ void hapticConnection::enable_haptic_readings()
   getHapticPosition();
   // emit signal to update data on GUI and other components
   //emit sendHapticData(HapticData0);
-  emit sendHapticData(position);
+  //emit sendHapticData(position);
+  emit sendHapticData(HapticPosition);
 }
 
 #include "hapticConnection..moc"

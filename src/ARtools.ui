@@ -426,58 +426,7 @@
         <string>value</string>
        </property>
       </widget>
-      <widget class="QLabel" name="label_12">
-       <property name="geometry">
-        <rect>
-         <x>103</x>
-         <y>30</y>
-         <width>35</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>alpha</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_10">
-       <property name="geometry">
-        <rect>
-         <x>103</x>
-         <y>50</y>
-         <width>29</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="acceptDrops">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>beta</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_11">
-       <property name="geometry">
-        <rect>
-         <x>102</x>
-         <y>69</y>
-         <width>46</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="acceptDrops">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>gamma</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-      <widget class="QLabel" name="gammaHaptic">
+      <widget class="QLabel" name="rollHaptic">
        <property name="geometry">
         <rect>
          <x>160</x>
@@ -490,7 +439,7 @@
         <string>value</string>
        </property>
       </widget>
-      <widget class="QLabel" name="betaHaptic">
+      <widget class="QLabel" name="pitchHaptic">
        <property name="geometry">
         <rect>
          <x>160</x>
@@ -503,7 +452,7 @@
         <string>value</string>
        </property>
       </widget>
-      <widget class="QLabel" name="alphaHaptic">
+      <widget class="QLabel" name="yawHaptic">
        <property name="geometry">
         <rect>
          <x>160</x>
@@ -518,6 +467,51 @@
        <property name="text">
         <string>value</string>
        </property>
+      </widget>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>30</y>
+         <width>29</width>
+         <height>56</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>yaw</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_10">
+          <property name="acceptDrops">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>pitch</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_11">
+          <property name="acceptDrops">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>roll</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
      <widget class="QGroupBox" name="groupBox_5">

@@ -1,21 +1,20 @@
-/*
-
+/*****************************************************************
     HapticConnection class
     
-    Description:  this class allows to connect to 
-		  a haptic server and receive the 
-		  current haptic position
+    Description:	this class allows to connect to 
+					a haptic server and receive the 
+					current haptic position
 		  
-    author:	  Henry Portilla (c) 2011
-		  this code use IOCCOMM a library 
-		  done by Alexander Perez
+    author:			Henry Portilla (c) 2011
+					this code use IOCCOMM a library 
+					done by Alexander Perez
     
     This code is freely available and is delivered as is
-    without warranty
+    without any warranty
     
     Copyright: See COPYING file that comes with this distribution
 
-*/
+*****************************************************************/
 
 #ifndef HAPTICCONNECTION_H
 #define HAPTICCONNECTION_H
@@ -44,6 +43,7 @@ class hapticConnection:public QObject{
     bool hapticStatus;
 	mt::Transform HapticPosition;
 	mt::Vector3 position;
+	mt::Rotation orientation;
 	haptic::Haptic* HapticDevice;	// haptic device
 	
     //ioc_comm::Client* hapticClient;
@@ -55,7 +55,9 @@ class hapticConnection:public QObject{
   private slots:
     void enable_haptic_readings();
   signals:
-   void sendHapticData(mt::Vector3 position);
+	void sendHapticData(mt::Transform HapticPosition);
+	//void sendHapticData(mt::Vector3 position);
+   
    //void sendHapticData(Vect6 HapticData);
   
 };

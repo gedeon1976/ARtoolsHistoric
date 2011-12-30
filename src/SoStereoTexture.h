@@ -109,9 +109,12 @@ SoSFImage       imageL;
 SoSFImage       imageR;
 int             w;              //      save image size in integers
 int             h;
-int				X_haptic;	// 	Haptic position values
+int				X_haptic;		// 		haptic position values
 int				Y_haptic;
 int				Z_haptic;
+float			Yaw_haptic;		//		haptic rotation values yaw(Z),pitch(Y),roll(X)
+float			Pitch_haptic;
+float			Roll_haptic;
 unsigned char   *image_L;       //      left image in unsigned char format
 unsigned char   *image_R;       //      right image
 SoSFFloat       IOD;            //      inter-ocular distance
@@ -123,8 +126,7 @@ CvMat		*Left_WorldTransform;//		extrinsic matrices
 CvMat		*Rigth_WorldTransform;
 CvMat		*P_L;				//		projection matrices
 CvMat		*P_R;
-CvMat 		*Transform_L;
-CvMat 		*Transform_R;
+
 CvMat 		*imageL_points;
 CvMat 		*imageR_points;
 CvMat 		*hapticPoint;
@@ -139,6 +141,10 @@ int 		xi_nL;				//		matched stereo points
 int 		yi_nL;
 int 		xi_nR;
 int 		yi_nR;
+float		alphaX_L;			//		focal length in pixels for x and y image axis
+float		alphaX_R;			//		from calibration
+float		alphaY_L;
+float		alphaY_R;
 float		uo_L;				//		center of cameras from calibration
 float		uo_R;
 float		vo_L;
@@ -147,12 +153,16 @@ float 		SfL;
 float 		SfR;
 float		hapticSpanX;		//		range of movements on X for the Haptic device
 float		hfW;				//		haptic scaling on image width
-								//		where hfW = hapticSpanX/ImageWidth
+float		hapticXmin;			//		where hfW = 1/hapticSpanX
+float		hapticXmax;
 float		hapticSpanY;
 float		hfH;				//		haptic scaling on image height
-								//		where hfH = hapticSpanY/ImageHeight
+float		hapticYmin;			//		where hfH = 1/hapticSpanY
+float		hapticYmax;
 float		hapticSpanZ;
 float		hfZ;				//		haptic Scaling for image depth?
+float		hapticZmin;			//		where hfW = hapticSpanZ/100;
+float		hapticZmax;
 
                                 //      time that must be waited to
                                 //      synchronize the render of two video streams
@@ -169,6 +179,7 @@ float		Xh;					//		Biswas inspired method to get the corresponding points
 float		Yh;
 float		Zh;
 float		X1;
+float		X2;
 
 // Initialize the class
 static void initClass();        //      to define the type of information of the class

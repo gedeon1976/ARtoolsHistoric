@@ -1,21 +1,21 @@
-/*
+/************************************************************************
 
     StereoVideo class
     
-    Description:  this class allows to connect to 
-		  a video server and show the video
-		  in a local machine through a coin node
+    Description:	this class allows to connect to 
+					a video server and show the video
+					in a local machine through a coin node
 		  
-    author:	  Henry Portilla (c) 2010
-		  Some code is based on code by Adolfo Rodriguez
-		  and Leopoldo Palomo
+    author:			Henry Portilla (c) 2010
+					Some code is based on code by Adolfo Rodriguez
+					and Leopoldo Palomo
     
     This code is freely available and is delivered as is
     without any warranty
     
     Copyright: See COPYING file that comes with this distribution
 
-*/
+************************************************************************/
 
 #include "stereovideo.h"
 //#if _WIN32
@@ -139,14 +139,31 @@ void StereoVideo::update()
 	 
 }
 
-void StereoVideo::set_haptic_data(mt::Vector3 hapticData)
+void StereoVideo::set_haptic_data(mt::Transform HapticPosition)
 {
     // set the haptic values to the StereoNode
-   
+	// position
+	mt::Vector3 hapticData = HapticPosition.getTranslation();
 	realNode->X_haptic = hapticData[0];
 	realNode->Y_haptic = hapticData[1];
 	realNode->Z_haptic = hapticData[2];
-     
+
+	// rotation
+	mt::Rotation orientation; 
+	mt::Scalar yaw(mt::Scalar(0.0));
+	mt::Scalar pitch(mt::Scalar(0.0));
+	mt::Scalar roll(mt::Scalar(0.0));
+
+	orientation = HapticPosition.getRotation();
+	orientation.getYpr(yaw,pitch,roll);
+	// convert to degrees to show
+	yaw = mt::radToDeg(yaw);
+	pitch = mt::radToDeg(pitch);
+	roll = mt::radToDeg(roll);
+	realNode->Yaw_haptic = yaw;
+	realNode->Pitch_haptic = pitch;
+	realNode->Roll_haptic = roll;
+
 }
 
 //void StereoVideo::sendimagepoints(imagePoints actualPoints)

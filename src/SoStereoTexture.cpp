@@ -415,10 +415,7 @@ Filters[5] =
 	cvSetIdentity(P_R,value);
 
 	// initializes haptic transforms
-	Transform_L = cvCreateMat(4,4,CV_32FC1);
-	Transform_R = cvCreateMat(4,4,CV_32FC1);
-	cvSetZero(Transform_L);
-	cvSetZero(Transform_R);
+	
 	// initializes image variables
 	imageL_points = cvCreateMat(4,4,CV_32FC1);
 	imageR_points = cvCreateMat(4,4,CV_32FC1);
@@ -426,20 +423,27 @@ Filters[5] =
 	cvSetZero(imageR_points);
 	hapticPoint = cvCreateMat(4,4,CV_32FC1);
 	cvSetZero(hapticPoint);
+	//	calibration intrinsic camera parameters
+	alphaX_L = 1;alphaX_R = 1;			
+	alphaY_L = 1;alphaY_R = 1;
 	xiL = 1; xiR = 1; uo_L = 1; vo_L = 1;
 	yiL = 1; yiR = 1; uo_R = 1; vo_R = 1;
 	ziL = 1; ziR = 1;
 	// initializes values for haptic readings
-	X_haptic = 1;
-	Y_haptic = 1;
-	Z_haptic = 1;
+	X_haptic = 1; Yaw_haptic = 0;
+	Y_haptic = 1; Pitch_haptic = 0;
+	Z_haptic = 1; Roll_haptic = 0;
 	xi_nL = 1; yi_nL = 1;
 	xi_nR = 1; yi_nR = 1;
 	currentPositionDisparity = 0;
 	// set Haptic Workspace
-	hapticSpanX = 200;//764;
-	hapticSpanY = 400;//593;
-	hapticSpanZ = 300;//403;
+	hapticSpanX = 300;//764;  only take a reduced one cube box the other
+	hapticSpanY = 300;//593;  values are the complete workspace values
+	hapticSpanZ = 250;//403;
+	hapticXmin = -150;hapticXmax = 150;		// defines the cubic box workspace
+	hapticYmin =  0;  hapticYmax = 300;
+	hapticZmin = -100;hapticZmax = 150;
+
 	hfW = 1;
 	hfH = 1;
 	hfZ = 1;
@@ -624,14 +628,24 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	
 	// Haptic transforms ////////////////////////////////////////////////////////////////////////////////////////
 	
+	// initializes these variables to use after in the openGL internal code
+    //      this give a desired behavior at the time of configure the
+    //      openGL textures
+    w = (int)width.getValue();
+    h = (int)heigh.getValue();
+	CvMat 	*Transform_L;
+	CvMat 	*Transform_R;
+	float X_hapticF = 0,Y_hapticF = 0,Z_hapticF = 0;
+	float Zh_Inv;
 	float thetaAngle = 0;
-	float f = 780;//800;				// 	focal length to be found
+	float Kd = 6500;// Depth scaling constant
+	float f = 4;// according to C270 specifications // 	focal length to be found
 	float Baseline = 72;//110	// 	measured in haptic coordinates (in real world correspond
 								//	to a separation of 11 cm between the cameras)
 	float cTheta,sTheta, delta_X;
 	sTheta = sin(thetaAngle);
 	cTheta = cos(thetaAngle);
-	delta_X = 0.5*Baseline;
+	delta_X = Baseline;
 	float ZcL =  Z_haptic*cTheta - (X_haptic - delta_X)*sTheta;
 	float ZcR =  Z_haptic*cTheta - (X_haptic + delta_X)*sTheta;
 	if (Z_haptic != 0)
@@ -642,107 +656,107 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	    SfL = 1;
 	    SfR = 1; 
 	}
-	float Transform_L_values[] = {cTheta, 	0, 	sTheta,	-delta_X,
+	// reinitializate matrices
+	Transform_L = cvCreateMat(4,4,CV_32FC1);
+	Transform_R = cvCreateMat(4,4,CV_32FC1);
+	float Transform_L_values[] = {cTheta, 	0, 	sTheta,	0,
 				      0,	1,	0,	0,
 				      -sTheta,	0,	cTheta,	0,
 				      0,	0,	0,	1
 				      };
 	Transform_L = cvInitMatHeader(Transform_L,4,4,CV_32FC1,Transform_L_values);
 	
-	float Transform_R_values[] = {cTheta, 	0, 	sTheta,	delta_X,
+	float Transform_R_values[] = {cTheta, 	0, 	sTheta,	-delta_X,
 				      0,	1,	0,	0,
 				      -sTheta,	0,	cTheta,	0,
 				      0,	0,	0,	1
 				      };
 	Transform_R = cvInitMatHeader(Transform_R,4,4,CV_32FC1,Transform_R_values);
 	
-	float HIP [] = {X_haptic,0,0,0,
-			Y_haptic,0,0,0,
-			Z_haptic,0,0,0,
-			1,0,0,0};
-	hapticPoint = cvInitMatHeader(hapticPoint,4,4,CV_32FC1,HIP);
-	// find left transform
-	cvMatMul(Transform_L,hapticPoint,imageL_points);
-	// find right transform
-	cvMatMul(Transform_R,hapticPoint,imageR_points);
-	
-	// get projected values on images
-	
-	xiL = SfL*cvmGet(imageL_points,0,0);
-	yiL = SfL*cvmGet(imageL_points,1,0);
-	
-	xiR = SfR*cvmGet(imageR_points,0,0);
-	yiR = SfR*cvmGet(imageR_points,1,0);
-	
-	ziL = SfL*cvmGet(imageL_points,2,0);
-	ziR = SfR*cvmGet(imageR_points,2,0);
-	
-	
-	
-	///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-        //      initializes this variables to use after in the openGL internal code
-        //      this give a desired behavior at the time of configure the
-        //      openGL textures
-        w = (int)width.getValue();
-        h = (int)heigh.getValue();
-	
-	// final coordinates mapped from haptic to be rendered at the textures
-	xi_nL = xiR - 0.5*w;//-0.5*Baseline +  
-	yi_nL = yiL;
-	xi_nR = xiL + 0.5*w;// 0.5*Baseline + 
-	yi_nR = yiR;
-
 	// Calibration values for both cameras
 	float Intrinsic_K_L[] ={777.7588,	 0,		288.3929,	0,
 							0,		786.8474,	262.8120,	0,
 							0,			 0,			1,		0,
 							0,			 0,			0,		0};
 	K_L = cvInitMatHeader(K_L,4,4,CV_32FC1, Intrinsic_K_L);
+
+	alphaX_L = cvmGet(K_L,0,0);
+	alphaY_L = cvmGet(K_L,1,1);
 	uo_L = cvmGet(K_L,0,2);
 	vo_L = cvmGet(K_L,1,2);
+
 	float Intrinsic_K_R[] ={771.1128,	 0,		298.7664,	0,
 							0,		780.9084,	252.5712,	0,
 							0,			 0,			1,		0,
 							0,			 0,			0,		0};
 	K_R = cvInitMatHeader(K_R,4,4,CV_32FC1, Intrinsic_K_R);
+
+	alphaX_R = cvmGet(K_R,0,0);
+	alphaY_R = cvmGet(K_R,1,1);
 	uo_R = cvmGet(K_R,0,2);
 	vo_R = cvmGet(K_R,1,2);
+	
+	// haptic current position
+
+	float HIP [] = {X_haptic,0,0,0,
+			Y_haptic,0,0,0,
+			Z_haptic,0,0,0,
+			1,0,0,0};
+	hapticPoint = cvInitMatHeader(hapticPoint,4,4,CV_32FC1,HIP);
 
 	// Scaling factors haptic to images
-	// It maintains the Haptic movements within the image limits
+
+
+	// It maintains the Haptic movements within the image limits 
 	if (hapticSpanX > w){
-		hfW =  w/hapticSpanX;
+		hfW =  1/hapticSpanX;//w
 		
 	}else{
-		hfW = w/hapticSpanX;
+		hfW = 1/hapticSpanX;
 	}
-	if (hapticSpanY > h){
+	if (hapticSpanY > h){//h
 	
-		hfH = h/hapticSpanY;	
+		hfH = 1/hapticSpanY;	
 		
 	}else{
-		hfH = h/hapticSpanY;
+		hfH = 1/hapticSpanY;
 		
 	}
-	int DisparityDepth = 100;
-	hfZ = hapticSpanZ/DisparityDepth;
+	int DisparityDepth = 1;
+	hfZ = 1/hapticSpanZ;
 
-	// calculus of positions using prof. Biswas (Indian Institute) inspired method
-	
-	Xh = X_haptic*hfW;
-	Yh = Y_haptic*hfH;
-	Zh = Z_haptic*hfZ;
+	// Redefines haptic coordinates according to image scaling and limits
 
-	// left point
-	xi_nL = Xh - uo_L;//=f*Xhaptic/Zh;
-	yi_nL = Yh - vo_L;//=yiL;
-	// right point	
-	X1 = (Zh - f)*(-xi_nL)/f;
-	xi_nR = f*(Baseline - X1)/(Zh - f);
-	yi_nR = yi_nL + 10;
-	//currentPositionDisparity = fabs(fabs(xi_nL) - fabs(xi_nR));
+	// check X values and set limits
+	if (X_haptic>= hapticXmax){
+		X_hapticF = hapticXmax;
+	}else if(X_haptic<= hapticXmin){
+		X_hapticF = hapticXmin;
+	}else{
+		X_hapticF = X_haptic;
+	}
+	// check Y values and set limits
+	if (Y_haptic>= hapticYmax){
+		Y_hapticF = hapticYmax;
+	}else if(Y_haptic<= hapticYmin){
+		Y_hapticF = hapticYmin;
+	}else{
+		Y_hapticF = Y_haptic;
+	}
+	// check Z values and set limits
+	if (Z_haptic>= hapticZmax){
+		Z_hapticF = hapticZmax;
+	}else if(Z_haptic<= hapticZmin){
+		Z_hapticF = hapticZmin;
+	}else{
+		Z_hapticF = Z_haptic;
+	}
+
+	Xh = (X_hapticF - hapticXmin)*hfW;
+	Yh = (Y_hapticF - hapticYmin)*hfH;
+	Zh_Inv = (Z_hapticF - hapticZmin)*hfZ;
+	// invert the haptic Z axis
+	Zh =  Kd*(1-Zh_Inv);
 
 	// Calculus using Zissermann and Biswas approach
 
@@ -750,19 +764,67 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			Yh,0,0,0,
 			Zh,0,0,0,
 			1,0,0,0};
-	hapticPoint = cvInitMatHeader(hapticPoint,4,4,CV_32FC1,HIP2);
-	
-	
+	hapticPoint = cvInitMatHeader(hapticPoint,4,4,CV_32FC1,HIP2);	
+/*	
 	// find left Projection matrix
-	cvMatMul(K_L,Left_WorldTransform,P_L);
+	cvMatMul(K_L,Transform_L,P_L);
 	// find right Projection Matrix
-	cvmSet(Rigth_WorldTransform,0,3,Baseline);
-	cvMatMul(K_R,Rigth_WorldTransform,P_R);
+	cvMatMul(K_R,Transform_R,P_R);
 
 	// find left points
 	cvMatMul(P_L,hapticPoint,imageL_points);
 	// find right points
 	cvMatMul(P_R,hapticPoint,imageR_points);
+*/
+	// get projected values on images
+	if (Zh != 0){
+		Zh = Zh;
+	}else{
+		Zh = 1;
+	}
+	// passing to image coordinates from homogeneus
+	float xiL2,yiL2,xiR2,yiR2;
+
+		//xiL = Xh*w;//cvmGet(imageL_points,0,0)/Zh;
+		//yiL = Yh*h;//cvmGet(imageL_points,1,0)/Zh;
+/*
+		xiL2 = (alphaX_L*Xh)/Zh + uo_L;
+		yiL2 = (alphaY_L*Yh)/Zh + vo_L;
+	
+		xiR = cvmGet(imageR_points,0,0)/Zh;
+		yiR = cvmGet(imageR_points,1,0)/Zh;
+
+		xiR2 = (alphaX_R*Xh)/Zh + uo_R;
+		yiR2 = (alphaY_R*Xh)/Zh + vo_R;
+	
+		ziL = cvmGet(imageL_points,2,0)/Zh;
+		ziR = cvmGet(imageR_points,2,0)/Zh;	 
+*/	
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+	
+
+
+	////xi_nL = xiR - 0.5*w;//-0.5*Baseline +  
+	////yi_nL = yiL;
+	////xi_nR = xiL + 0.5*w;// 0.5*Baseline + 
+	////yi_nR = yiR;
+
+	// calculus of positions using prof. Biswas (Indian Institute) inspired method	
+
+	// left point at image coordinates
+	  xiL = Xh*w;
+	  yiL = Yh*h;
+
+	// right point at image coordinates
+
+	  X1 = (Zh*xiL)/(2*f);//(Zh - f)*(xiL)/f; // apply pinhole real behavior camera model -xi_nL
+	  X2 = Baseline - X1;
+	  //xiR = (-2*f*X2/Zh) + Baseline;//(-f*X2/(Zh - f)) ;
+	  xiR = xiL - (2*100*f*Baseline/Zh); //xiR = alphaX_R*Xh/Zh + uo_R - alphaX_R*Baseline/Zh;
+	  yiR = yiL;//alphaY_R*Yh/Zh ;//+ vo_R;
+
+
+	//currentPositionDisparity = fabs(fabs(xi_nL) - fabs(xi_nR));	
 
 	// get projected values on images
 	
@@ -771,9 +833,6 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	//
 	//xiR = cvmGet(imageR_points,0,0);
 	//yiR = cvmGet(imageR_points,1,0);
-
-	//xi_nL = xiL;
-	//yi_nL = yiL;
 
 	//xi_nR = xiR;
 	//yi_nR = yiR;
@@ -1183,11 +1242,17 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			hfWL = hapticSpanX/X_deltaL;
 			hfWR = hapticSpanX/X_deltaR;
 
+			// stereo mapping
+			xi_nL = xiL - 0.5*w; 
+			yi_nL = yiL - 0.5*h;
+			xi_nR = xiR - 0.5*w;  
+ 			yi_nR = yiR - 0.5*h;
+/*
 			xi_nL =  -0.5*w + xi_nL + uo_L;
 			xi_nR =  -0.5*w + xi_nR + uo_R;
 			yi_nL =  -0.5*h + yi_nL + vo_L;
 			yi_nR =  -0.5*h + (yi_nR + vo_R);
-
+*/
 		/*	if (hapticSpanX > X_deltaL){
 				xi_nL  = X_haptic/hfWL - 0.25*X_deltaL;
 				    
@@ -1274,13 +1339,36 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    // move to tha actual position given by the haptic
 			// use negative values to correct the real movement on the screen
 			
+			// add haptic traslations
 		    glTranslatef(-xi_nL,yi_nL,screenZ);//
 		    // drawing a 3D pointer
-		    GLUquadric* quadL = gluNewQuadric();
-		    GLdouble radius = 5;
-		    GLdouble slices = 20;
-		    GLdouble stacks = 20;
-		    gluSphere(quadL,radius,slices,stacks);
+
+			GLUquadric* quadL_base = gluNewQuadric();
+			GLUquadric* quadL_top = gluNewQuadric();
+			GLdouble topRadius = 8;
+			GLdouble baseRadius = 0;
+			GLdouble heightBase = 20;
+			GLdouble heightTop = 5;
+			GLdouble radius = 5;
+			GLdouble slices = 20;
+			GLdouble stacks = 20;
+
+			// add haptic rotations to pointer
+			glRotatef(Yaw_haptic,0.0,0.0,1.0);
+			glRotatef(Pitch_haptic,0.0,1.0,0.0);
+			glRotatef(Roll_haptic,1.0,0.0,0.0);
+
+			glTranslatef(0.0,0.0,-heightBase);
+			gluCylinder(quadL_base,topRadius,baseRadius,heightBase,slices,stacks);
+			glTranslatef(0.0,0.0,-heightTop);	
+			gluCylinder(quadL_top,baseRadius,topRadius,heightTop,slices,stacks);
+			glTranslatef(0.0,0.0,heightTop);
+			glTranslatef(0.0,0.0,heightBase);
+			// come back to normal rotation
+			glRotatef(-Roll_haptic,1.0,0.0,0.0);
+			glRotatef(-Pitch_haptic,0.0,1.0,0.0);
+			glRotatef(-Yaw_haptic,0.0,0.0,1.0);
+			//gluSphere(quadL,radius,slices,stacks);
 		    glTranslatef(xi_nL,-yi_nL,-screenZ);
 
 		    glPopMatrix();
@@ -1345,10 +1433,30 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		    // move to tha actual position given by the haptic
 			
 			//xi_nR = xi_nR - Z_haptic;//hfZ
+
+			// add haptic traslation
 		    glTranslatef(-xi_nR ,yi_nR,screenZ);
 		    // drawing a 3D pointer
-		    GLUquadric* quadR = gluNewQuadric();
-		    gluSphere(quadR,radius,slices,stacks);
+
+			GLUquadric* quadR_base = gluNewQuadric();
+			GLUquadric* quadR_top = gluNewQuadric();
+			
+			// add haptic rotations to pointer
+			glRotatef(Yaw_haptic,0.0,0.0,1.0);
+			glRotatef(Pitch_haptic,0.0,1.0,0.0);
+			glRotatef(Roll_haptic,1.0,0.0,0.0);
+			
+			glTranslatef(0.0,0.0,-heightBase);
+			gluCylinder(quadR_base,topRadius,baseRadius,heightBase,slices,stacks);
+			glTranslatef(0.0,0.0,-heightTop);	
+			gluCylinder(quadR_top,baseRadius,topRadius,heightTop,slices,stacks);
+			glTranslatef(0.0,0.0,heightTop);
+			glTranslatef(0.0,0.0,heightBase);
+			// come back to normal rotation
+			glRotatef(-Roll_haptic,1.0,0.0,0.0);
+			glRotatef(-Pitch_haptic,0.0,1.0,0.0);
+			glRotatef(-Yaw_haptic,0.0,0.0,1.0);
+
 			glTranslatef(xi_nR,-yi_nL,-screenZ);
 		    
 		    glPopMatrix();
@@ -1498,7 +1606,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
                 glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV,0,0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,pthis->imageR.getValue(size,components));
                 glBegin(GL_QUADS);
                         glTexCoord2f(0.0,0.0);
-                                glVertex3f( 0.0, heigh.getValue()/2.0,0.0);
+                                glVertex3f( 0.0, heigh.getValue()/2.0,0.0); 
                         glTexCoord2f(0.0,heigh.getValue());     
                                 glVertex3f( 0.0,-heigh.getValue()/2.0 ,0.0);
                         glTexCoord2f(width.getValue(),heigh.getValue());
@@ -1512,11 +1620,18 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         //glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
         //glReadPixels(0,0,720,576,GL_RGB,GL_FLOAT,resultCg);
 
-		// RENDERING 3D POINTER PIXELS POSITIONS
+		// RENDERING 3D POINTER PIXELS POSITIONS      
 		//  Scaling factor for showing the 2 images for left and right
 		//  it is the case where no Stereo has been selected
 
-		if (hapticSpanX > w){
+			// Separate View Mapping
+		// final coordinates mapped from haptic to be rendered at the textures
+		xi_nL = xiL - w;// 
+		yi_nL = yiL - 0.5*h;
+		xi_nR = xiR;  
+ 		yi_nR = yiR - 0.5*h;
+
+		/*	if (hapticSpanX > w){
 			xi_nL  = - w + (xi_nL + uo_L );
 			xi_nR  =   xi_nR + uo_R;
 		}else{
@@ -1530,7 +1645,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		}else{
 			yi_nL =  -0.5*h + (yi_nL + vo_L);	
 			yi_nR =  -0.5*h + (yi_nR + vo_R );
-		}
+		}*/
 	
 	#if _WIN32
 		// check for support for 
@@ -1570,14 +1685,33 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		// use negative values to correct the real movement on the screen
 		glTranslatef(xi_nL,yi_nL,5.0);
 		// drawing a 3D pointer
-		GLUquadric* quadL = gluNewQuadric();
-		GLdouble radius = 3;
+
+		// add haptic rotations to pointer
+		glRotatef(Yaw_haptic,0.0,0.0,1.0);
+		glRotatef(Pitch_haptic,0.0,1.0,0.0);
+		glRotatef(Roll_haptic,1.0,0.0,0.0);
+
+		GLUquadric* quadL_base = gluNewQuadric();
+		GLUquadric* quadL_top = gluNewQuadric();
+		GLdouble topRadius = 5;
+		GLdouble baseRadius = 0;
+		GLdouble heightBase = 15;
+		GLdouble heightTop = 3;
+		GLdouble radius = 5;
 		GLdouble slices = 20;
 		GLdouble stacks = 20;
-		gluSphere(quadL,radius,slices,stacks);
+		gluCylinder(quadL_base,baseRadius,topRadius,heightBase,slices,stacks);
+		glTranslatef(0.0,0.0,heightBase);	
+		gluCylinder(quadL_top,topRadius,baseRadius,heightTop,slices,stacks);
+		glTranslatef(0.0,0.0,-heightBase);	
+		// come back to normal rotation
+		glRotatef(-Roll_haptic,1.0,0.0,0.0);
+		glRotatef(-Pitch_haptic,0.0,1.0,0.0);
+		glRotatef(-Yaw_haptic,0.0,0.0,1.0);
 		// drift to compensate the before traslation, it keep at the final
 		// of the transform the correct frame reference
-		glTranslatef(-xi_nL,-yi_nL,-5.0);		
+		glTranslatef(-xi_nL,-yi_nL,-5.0);
+		
 		// draw the right texture
 		dataToTexture(pthis->imageR.getValue(size,components),w,h,iTexture[1]);
 
@@ -1612,8 +1746,22 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		// move to tha actual position given by the haptic
 		glTranslatef(xi_nR,yi_nR,5.0);
 		// drawing a 3D pointer
-		GLUquadric* quadR = gluNewQuadric();
-		gluSphere(quadR,radius,slices,stacks);
+		
+		// add haptic rotations to pointer
+		glRotatef(Yaw_haptic,0.0,0.0,1.0);
+		glRotatef(Pitch_haptic,0.0,1.0,0.0);
+		glRotatef(Roll_haptic,1.0,0.0,0.0);
+
+		GLUquadric* quadR_top = gluNewQuadric();
+		GLUquadric* quadR_base = gluNewQuadric();
+		gluCylinder(quadR_top,baseRadius,topRadius,heightBase,slices,stacks);
+		glTranslatef(0.0,0.0,heightBase);	
+		gluCylinder(quadL_base,topRadius,baseRadius,heightTop,slices,stacks);
+		glTranslatef(0.0,0.0,-heightBase);
+		// come back to normal rotation
+		glRotatef(-Roll_haptic,1.0,0.0,0.0);
+		glRotatef(-Pitch_haptic,0.0,1.0,0.0);
+		glRotatef(-Yaw_haptic,0.0,0.0,1.0);
 		// drift to compensate the before traslation, it keep at the final
 		// of the transform the correct frame reference
 		glTranslatef(-xi_nR,-yi_nR,-5.0);	
@@ -1675,10 +1823,10 @@ void SoStereoTexture::show()
 imagePoints SoStereoTexture::getProjectedPoints()
 {
 	imagePoints points;
-	points.xiL = xi_nL;
-	points.xiR = xi_nR;
-	points.yiL = yi_nL;
-	points.yiR = yi_nR;
+	points.xiL = xiL;
+	points.xiR = xiR;
+	points.yiL = yiL;
+	points.yiR = yiR;
 	// center of cameras
 	points.uo_L = uo_L;
 	points.vo_L = vo_L;

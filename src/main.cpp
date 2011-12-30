@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     selection->addChild(camera);
     
     SoBaseColor *color = new SoBaseColor;
-    color->rgb = SbColor(1,1,0.5);
+    color->rgb = SbColor(1.0,1.0,0.0);
     root->addChild(color);
     ////selection->addChild(color);
     
@@ -120,11 +120,11 @@ int main(int argc, char** argv)
 	hapticDevice0.startConnection();
     
     QObject::connect(timer,SIGNAL(timeout()),&hapticDevice0,SLOT(enable_haptic_readings()));
-    QObject::connect(&hapticDevice0,SIGNAL(sendHapticData(mt::Vector3)),
-		     &mainGUI,SLOT(show_haptic_data(mt::Vector3)));
+	QObject::connect(&hapticDevice0,SIGNAL(sendHapticData(mt::Transform)),
+		     &mainGUI,SLOT(show_haptic_data(mt::Transform)));
     // send the haptic values to the virtual pointer
-    QObject::connect(&hapticDevice0,SIGNAL(sendHapticData(mt::Vector3)),
-  		     &video,SLOT(set_haptic_data(mt::Vector3)));
+    QObject::connect(&hapticDevice0,SIGNAL(sendHapticData(mt::Transform)),
+  		     &video,SLOT(set_haptic_data(mt::Transform)));
     //// send image projected points to main GUI
     QObject::connect(&video,SIGNAL(sendimagepoints(imagePoints)),
 		     &mainGUI,SLOT(get_image_points(imagePoints)));

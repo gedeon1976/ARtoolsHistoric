@@ -96,20 +96,37 @@ void ARtools::show_fps()
 	#endif
 }
 // show data from haptic device
-void ARtools::show_haptic_data(mt::Vector3 position)
+void ARtools::show_haptic_data(mt::Transform HapticPosition)
 {
   // show haptic values on corresponding labels
   QString X;QString Y;QString Z;
-  QString alpha;QString beta;QString gamma;
+  QString Yaw;QString Pitch;QString Roll;
   QString StylusButton;
-             
-    // default values
+  mt::Vector3 position;
+  mt::Rotation orientation;           
+  
+  mt::Scalar yaw(mt::Scalar(0.0));
+  mt::Scalar pitch(mt::Scalar(0.0));
+  mt::Scalar roll(mt::Scalar(0.0));
+  // get HIP values
+  // traslation
+  position = HapticPosition.getTranslation();
+
   X.setNum(position[0]);Xhaptic->setText(X);X_Haptic = position[0];
   Y.setNum(position[1]);Yhaptic->setText(Y);Y_Haptic = position[1];
   Z.setNum(position[2]);Zhaptic->setText(Z);Z_Haptic = position[2];
-  alpha.setNum(0);alphaHaptic->setText(alpha);
-  beta.setNum(0);betaHaptic->setText(beta);
-  gamma.setNum(0);gammaHaptic->setText(gamma);    
+
+  // rotation
+  orientation = HapticPosition.getRotation();
+  orientation.getYpr(yaw,pitch,roll);
+  // convert to degrees to show
+  yaw = mt::radToDeg(yaw);
+  pitch = mt::radToDeg(pitch);
+  roll = mt::radToDeg(roll);
+
+  Yaw.setNum(yaw);yawHaptic->setText(Yaw);
+  Pitch.setNum(pitch);pitchHaptic->setText(Pitch);
+  Roll.setNum(roll);rollHaptic->setText(Roll);    
       
    
 }
@@ -157,8 +174,9 @@ void ARtools::get_image_points(imagePoints actualPoints)
 
   // fix: set automatic parameters w,h,B and stereo condition
   float w = 640; float h = 480;
-  float f = 780;
+  float f = 4;
   float B = 72;
+  float Kd = 100;// Scaling Konstant
 
   // save current points from haptic mapping to images
   switch(rendering_type){
@@ -171,9 +189,8 @@ void ARtools::get_image_points(imagePoints actualPoints)
   case RENDERING_OPENCV:// OpenCV
 		actualImages_Points.xiL = abs(w + actualPoints.xiL);
 		actualImages_Points.xiR = abs(actualPoints.xiR);
-		actualImages_Points.yiL = abs(actualPoints.yiL - 0.5*h);
-		actualImages_Points.yiR = abs(actualPoints.yiR - 0.5*h);
-
+		actualImages_Points.yiL = abs(actualPoints.yiL + 0.5*h);
+		actualImages_Points.yiR = abs(actualPoints.yiR + 0.5*h);
   }
  // show data on GUI
   xil.setNum(actualPoints.xiL);xiL->setText(xil);
@@ -185,7 +202,7 @@ void ARtools::get_image_points(imagePoints actualPoints)
   currentPositionDisparity.setNum(currentPixelDisparity);
   lbl_disparityValue->setText(currentPositionDisparity);
   // show current depth of pointer
-  currentPixelDepth = f*B/currentPixelDisparity;
+  currentPixelDepth = 2*Kd*f*B/currentPixelDisparity;
   currentPositionDepth.setNum(currentPixelDepth);
   lbl_depthValue->setText(currentPositionDepth);
   // show X, Y world coordinates from left camera

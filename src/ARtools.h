@@ -44,7 +44,7 @@ public:
   public slots:
 
   void show_fps();
-  void show_haptic_data(mt::Vector3);
+  void show_haptic_data(mt::Transform);
   void get_image_points(imagePoints actualPoints);
   void get_IplImageStereo(IplImage *actualImageL,IplImage *actualImageR);
   void get_IplImageL(IplImage *actualImageL);

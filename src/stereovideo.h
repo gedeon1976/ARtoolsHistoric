@@ -1,21 +1,21 @@
-/*
+/************************************************************************
 
     StereoVideo class
     
-    Description:  this class allows to connect to 
-		  a video server and show the video
-		  in a local machine through a coin node
+    Description:	this class allows to connect to 
+					a video server and show the video
+					in a local machine through a coin node
 		  
-    author:	  Henry Portilla (c) 2010
-		  Some code is based on code by Adolfo Rodriguez
-		  and Leopoldo Palomo
+    author:			Henry Portilla (c) 2010
+					Some code is based on code by Adolfo Rodriguez
+					and Leopoldo Palomo
     
     This code is freely available and is delivered as is
-    without warranty, not for commercial use.
+    without any warranty
     
     Copyright: See COPYING file that comes with this distribution
 
-*/
+************************************************************************/
 
 #ifndef STEREOVIDEO_H
 #define STEREOVIDEO_H
@@ -58,7 +58,7 @@ class StereoVideo:public QObject
     
   private slots:
     void update();
-    void set_haptic_data(mt::Vector3);
+    void set_haptic_data(mt::Transform);
   signals:
     void updatedone();
     void sendimagepoints(imagePoints actualPoints);
