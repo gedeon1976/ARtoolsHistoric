@@ -104,7 +104,7 @@ int main(int argc, char** argv)
     root->addChild(new SoCone);    
     //rtsp://sonar.upc.es:7070/cam1
 	StereoVideo video("rtsp://147.83.37.135:5544/CameraStreamL","rtsp://147.83.37.135:5545/CameraStreamR",640,480,Stereo);
-    QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
+    //QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
     // timer for update the image every 40 ms = 25fps	
     QTimer* timer = new QTimer;
     timer->setInterval(40);
@@ -112,8 +112,8 @@ int main(int argc, char** argv)
     QObject::connect(timer,SIGNAL(timeout()),&mainGUI,SLOT(show_fps())); 
     
     // add haptic connection
-    const char* URLserver = "localhost";
-    const char* port = "5000";
+    //const char* URLserver = "localhost";
+    //const char* port = "5000";
     //hapticConnection hapticDevice(URLserver,port);    
     //hapticDevice.startConnection();
 	hapticConnection hapticDevice0;   
@@ -131,6 +131,9 @@ int main(int argc, char** argv)
 	// send left and right captured images to openCV processing
 	QObject::connect(&video,SIGNAL(sendIplImageStereo(IplImage*,IplImage*)),
 			&mainGUI,SLOT(get_IplImageStereo(IplImage*,IplImage*)));
+	// send haptic limits to the haptic device
+	QObject::connect(&mainGUI,SIGNAL(SetWorkSpaceLimits(mt::Vector3, mt::Vector3)),
+			&hapticDevice0,SLOT(getWorkSpaceLimits(mt::Vector3, mt::Vector3)));
 	
    
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);

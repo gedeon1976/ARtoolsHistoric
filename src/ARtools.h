@@ -52,6 +52,8 @@ public:
   float get_X_value();
   float get_Y_value();
   float get_Z_value();
+signals:
+  void SetWorkSpaceLimits(mt::Vector3 MinCubicLimits, mt::Vector3 MaxCubicLimits);
   
 private slots:
 	void AboutAct();
@@ -112,6 +114,9 @@ private:
    float X_Haptic;
    float Y_Haptic;
    float Z_Haptic;
+   float Xmin,Xmax;
+   float Ymin,Ymax;
+   float Zmin,Zmax;
    bool matrixF_calculated;
    bool images_alignment;
    

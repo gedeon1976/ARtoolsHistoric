@@ -70,8 +70,6 @@ ARtools::ARtools()
 		this,SLOT(SetHoughLICF_MaxDistanceBetweenLines(int)));
 	QObject::connect(this->spinBoxLICF_EpipolarErrorLimitThreshold,SIGNAL(valueChanged(int)),
 		this,SLOT(SetLICF_EpipolarErrorConstraintThreshold(int)));
-
-
   
 }
 
@@ -212,6 +210,19 @@ void ARtools::get_image_points(imagePoints actualPoints)
   currentPositionY_World.setNum(currentPixelY_World);
   lbl_XWorldValue->setText(currentPositionX_World);
   lbl_YWorldValue->setText(currentPositionY_World);
+  // update workspace limits
+  mt::Vector3 MinCubicLimits,MaxCubicLimits;
+  Xmin = -150;
+  Xmax =  150;
+  Ymin =    0;
+  Ymax =  300;
+  Zmin =  -80;
+  Zmax =   80;
+  MinCubicLimits[0] = Xmin; MaxCubicLimits[0] = Xmax;
+  MinCubicLimits[1] = Xmin; MaxCubicLimits[1] = Ymax;
+  MinCubicLimits[2] = Zmin; MaxCubicLimits[2] = Zmax;  
+  // emit signal for haptic
+  emit SetWorkSpaceLimits(MinCubicLimits,MaxCubicLimits);
 
 }
 
@@ -1021,6 +1032,7 @@ void ARtools::GetLICF_EpipolarErrorConstraintValue(float ActualValue)
 	}
 }
 
+
 void ARtools::AboutAct(){
 	// Show a message about the application 
 	
@@ -1040,8 +1052,6 @@ void ARtools::createActions(){
 	connect(showleftCamera,SIGNAL(triggered()),
 			this,SLOT(ShowLeftVideo()));
 	
-
-	
 }
 void ARtools::createMenus(){
 	// create the menus
@@ -1051,9 +1061,6 @@ void ARtools::createMenus(){
 	// Help
 	help_Menu = this->menuBar()->addMenu("&Help");
 	help_Menu->addAction(aboutApp);
-	
-
-
 	
 }
 

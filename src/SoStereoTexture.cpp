@@ -616,6 +616,9 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
         void *pboMemoryL,*pboMemoryR;
         GLboolean isPBO,isFBO;                  //      boolean flags
         GLboolean isStereo;
+
+		// HAPTIC VARIABLES
+		HHLRC hHLRC = NULL;
        
 #if _WIN32
 	HDC Surface;				//	Windows variables to do the SwapBuffer
@@ -822,6 +825,9 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	  //xiR = (-2*f*X2/Zh) + Baseline;//(-f*X2/(Zh - f)) ;
 	  xiR = xiL - (2*100*f*Baseline/Zh); //xiR = alphaX_R*Xh/Zh + uo_R - alphaX_R*Baseline/Zh;
 	  yiR = yiL;//alphaY_R*Yh/Zh ;//+ vo_R;
+
+
+
 
 
 	//currentPositionDisparity = fabs(fabs(xi_nL) - fabs(xi_nR));	
@@ -1477,6 +1483,28 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
                 
 	    //      attach texture to FBO offscreen render
 
+				  // HAPTIC FORCE FEEDBACK
+	  
+				//HHD hHD = hdGetCurrentDevice();		//	Get haptic Handle
+				//hHLRC = hlCreateContext(hHD);		//	Create Haptic  context
+				//hlMakeCurrent(hHLRC);				//  Make this the current context
+				//
+				//hlWorkspace(-80, -80, -70, 80, 80, 20);
+				//hlBeginFrame();						//	begin haptics frame
+
+				//HLuint myShapeId;
+				//myShapeId = hlGenShapes(1);
+				//// start the haptic shape
+				//hlHinti(HL_SHAPE_FEEDBACK_BUFFER_VERTICES, 4);
+				//hlBeginShape(HL_SHAPE_FEEDBACK_BUFFER, myShapeId);
+				//glBegin(GL_POLYGON);
+				//	glVertex3f(0, 0, 0);
+				//	glVertex3f(100, 0, 0);
+				//	glVertex3f(100, 200, 0);
+				//	glVertex3f(0, 200, 0);
+				//glEnd();
+				//hlEndShape();
+				//hlEndFrame();						//	finish haptics frame
                 //      load data
 
                 dataToTexture(pthis->imageL.getValue(size,components),w,h,iTexture[0]);
@@ -1766,6 +1794,11 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		// of the transform the correct frame reference
 		glTranslatef(-xi_nR,-yi_nR,-5.0);	
 
+
+
+		// HAPTIC FORCE FEEDBACK
+	   
+
 	    }
 
         //      restore viewport
@@ -1783,6 +1816,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		glPopMatrix();
         
      // endSolidShape(action);
+
         
 }
 //      generate triangles representing texture planes

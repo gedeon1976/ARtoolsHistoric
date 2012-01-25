@@ -69,6 +69,12 @@
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
 
+// include Haptic HLAPI
+#include <HL/hl.h>
+#include <HDU/hdu.h>
+#include <HDU/hduError.h>
+#include <HLU/hlu.h>
+
 class SoStereoTexture :public SoShape
 {
 

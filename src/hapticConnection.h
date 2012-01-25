@@ -38,7 +38,7 @@ class hapticConnection:public QObject{
     ~hapticConnection();    
     void startConnection(void);
     void getHapticPosition(void);
-    void closeConnection(void);
+	void closeConnection(void);
   private:
     bool hapticStatus;
 	mt::Transform HapticPosition;
@@ -54,6 +54,7 @@ class hapticConnection:public QObject{
 
   private slots:
     void enable_haptic_readings();
+	void getWorkSpaceLimits(mt::Vector3 MinCubicLimits, mt::Vector3 MaxCubicLimits); 
   signals:
 	void sendHapticData(mt::Transform HapticPosition);
 	//void sendHapticData(mt::Vector3 position);
