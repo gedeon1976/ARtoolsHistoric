@@ -219,7 +219,7 @@ void ARtools::get_image_points(imagePoints actualPoints)
   Zmin =  -80;
   Zmax =   80;
   MinCubicLimits[0] = Xmin; MaxCubicLimits[0] = Xmax;
-  MinCubicLimits[1] = Xmin; MaxCubicLimits[1] = Ymax;
+  MinCubicLimits[1] = Ymin; MaxCubicLimits[1] = Ymax;
   MinCubicLimits[2] = Zmin; MaxCubicLimits[2] = Zmax;  
   // emit signal for haptic
   emit SetWorkSpaceLimits(MinCubicLimits,MaxCubicLimits);
