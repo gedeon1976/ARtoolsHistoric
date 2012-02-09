@@ -185,10 +185,10 @@ void ARtools::get_image_points(imagePoints actualPoints)
 		actualImages_Points.yiR = abs(-actualPoints.yiR + actualPoints.vo_R - 0.5*h);
 		break;
   case RENDERING_OPENCV:// OpenCV
-		actualImages_Points.xiL = abs(w + actualPoints.xiL);
+		actualImages_Points.xiL = abs(actualPoints.xiL);
 		actualImages_Points.xiR = abs(actualPoints.xiR);
-		actualImages_Points.yiL = abs(actualPoints.yiL + 0.5*h);
-		actualImages_Points.yiR = abs(actualPoints.yiR + 0.5*h);
+		actualImages_Points.yiL = abs(actualPoints.yiL);
+		actualImages_Points.yiR = abs(actualPoints.yiR);
   }
  // show data on GUI
   xil.setNum(actualPoints.xiL);xiL->setText(xil);
@@ -210,7 +210,7 @@ void ARtools::get_image_points(imagePoints actualPoints)
   currentPositionY_World.setNum(currentPixelY_World);
   lbl_XWorldValue->setText(currentPositionX_World);
   lbl_YWorldValue->setText(currentPositionY_World);
-  // update workspace limits
+  // update Haptic Workspace limits
   mt::Vector3 MinCubicLimits,MaxCubicLimits;
   Xmin = -150;
   Xmax =  150;
@@ -417,6 +417,7 @@ void ARtools::ShowStereoVideo(){
 		LICFs LICFs_FeaturesL(leftImageBGR); 
 		//// Get a gray image
 		currentImage = LEFT;
+		//// Get a subImage = 0.1*ImageNormalSize
 		LICFs_FeaturesL.GetSubImage(actualImages_Points,0.1,currentImage);
 		//// Get an Edge image and the lines a t the same time
 		std::vector<lineParameters> lineSegmentsL;
@@ -444,6 +445,7 @@ void ARtools::ShowStereoVideo(){
 		LICFs LICFs_FeaturesR(rightImageBGR_Aligned); 
 		//// Get a gray image
 		currentImage = RIGHT;
+		//// Get a subImage = 0.1*ImageNormalSize
 		LICFs_FeaturesR.GetSubImage(actualImages_Points,0.1,currentImage);
 		//// Get an Edge image and the lines at the same time
 		std::vector<lineParameters> lineSegmentsR;

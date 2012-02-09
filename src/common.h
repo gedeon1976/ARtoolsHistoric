@@ -59,7 +59,7 @@ struct lineParameters{
 	float a;
 	float b;
 	float c;
-	// slope opf line
+	// slope of line
 	float m;
 	// end points within the image
 	float x1;

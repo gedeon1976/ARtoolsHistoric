@@ -11,10 +11,9 @@
 						in an image. The code is inspired by the papers from Kim 
 						and Lee (ICRA'10, ICRA'11, IROS'10)
 
-		License:		This code can be used freely for research purposes
+		License:		This code can be used freely for research(no military) purposes
 
-
-                                                                                */
+**********************************************************************************/
 #ifndef LICFS_H
 #define LICFS_H
 
@@ -57,22 +56,27 @@ public:
 	void GetSubImage(imagePoints actualImages_Points, float percentage, IMAGE_TYPE imageType);
 	void ApplyCannyEdgeDetector(double CannyWindowSize,
 		double thresholdCannyLow,double thresholdCannyHigh);
+
 	vector<lineParameters> ApplyEdgeDrawingEdgeDetector(int MinLineLength);
 	CvSeq* ApplyHoughLineDetection(int HoughThreshold,
 		double HoughMinLengthDetection,double HoughMaxGapBetweenLines);
+
 	lineIntersection GetLineIntersection(lineParameters L1, lineParameters L2);
 	vector<LICFs_Structure> ApplyLICF_Detection(CvSeq *imageHoughLines,int LICF_MaxDistanceBetweenLines);
 	vector<LICFs_Structure> ApplyLICF_Detection(vector<lineParameters> LineSegments,int LICF_MaxDistanceBetweenLines);
 	double GetLICFs_NCC(CvMat *LICF_feature,CvMat *LICF_featureOtherImage);
-	vector<Matching_LICFs> ApplyMatchingLICFs(IplImage *SubImageToMatch,vector<LICFs_Structure> LICFs_otherImage,float threshold, int Windowsize);
+	vector<Matching_LICFs> ApplyMatchingLICFs(IplImage *SubImageToMatch,vector<LICFs_Structure> LICFs_otherImage,
+		float threshold, int Windowsize);
 	vector<Matching_LICFs> RefineMatchingLICFs(CvMat* F_matrix,vector<Matching_LICFs> actualMatchingLICFs,
 		SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR, float maxError);
-	LICFs_EpipolarConstraintResult GetEpipolarConstraintError(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
-	CvMat* FindLICF_BasedHomography(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix, CvMat *epipole, CvMat *epipole_prim,
-		SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
 
-	CvMat* FindLICF_BasedHomographyZissermman(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix, CvMat *epipole, CvMat *epipole_prim,
+	LICFs_EpipolarConstraintResult GetEpipolarConstraintError(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix,
 		SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
+	CvMat* FindLICF_BasedHomography(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix, CvMat *epipole,
+		CvMat *epipole_prim,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
+
+	CvMat* FindLICF_BasedHomographyZissermman(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix, CvMat *epipole,
+		CvMat *epipole_prim,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
 	// methods to obtain internal variables
 	SubArea_Structure GetSubAreaBoundaries(void);
 	IplImage* GetSubImageGray(void);
