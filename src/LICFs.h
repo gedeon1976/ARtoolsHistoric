@@ -22,13 +22,13 @@
 #include <algorithm>
 #include <list>
 
+//#include EDlines class
+#include "EDlines.h"
 // openCV headers
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>			
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
-//#include EDlines class
-#include "EDlines.h"
 
 enum IMAGE_TYPE{LEFT = 1, RIGHT = 2};
 using namespace std;
@@ -80,6 +80,10 @@ public:
 	// methods to obtain internal variables
 	SubArea_Structure GetSubAreaBoundaries(void);
 	IplImage* GetSubImageGray(void);
+	// fast testing do the Occlusion methods here
+	Visibility_Status visibility(IplImage *leftGrayImage,imagePoints &actualImages_Points, IplImage *OcclusionSubImage);
+	void MatchCensusTemplate(CvMat *ImageToSearch,CvMat *feature,CvMat *Results);
+	CvMat* CensusTransform(CvMat* Image);
 
 
 //signals:

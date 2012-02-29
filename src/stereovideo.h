@@ -59,6 +59,7 @@ class StereoVideo:public QObject
   private slots:
     void update();
     void set_haptic_data(mt::Transform);
+	void set_3DpointerVisibility(Visibility_Status);
   signals:
     void updatedone();
     void sendimagepoints(imagePoints actualPoints);
@@ -68,7 +69,7 @@ class StereoVideo:public QObject
    
   private:
     IMAGE set_format;		// set the left and right cameras
-    STREAM CamL;		// create the stream objects
+    STREAM CamL;			// create the stream objects
     STREAM CamR;
     
     SoStereoTexture *StereoNode;// a coin node for stereo visualization management

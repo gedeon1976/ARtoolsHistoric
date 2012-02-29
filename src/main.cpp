@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     Stereo->IOD.setValue(7.0);//IOD
   ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
     root->addChild(Stereo);
-    root->addChild(new SoCone);    
+    //root->addChild(new SoCone);    
     //rtsp://sonar.upc.es:7070/cam1
 	StereoVideo video("rtsp://147.83.37.135:5544/CameraStreamL","rtsp://147.83.37.135:5545/CameraStreamR",640,480,Stereo);
     //QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
@@ -134,6 +134,9 @@ int main(int argc, char** argv)
 	// send haptic limits to the haptic device
 	QObject::connect(&mainGUI,SIGNAL(SetWorkSpaceLimits(mt::Vector3, mt::Vector3)),
 			&hapticDevice0,SLOT(getWorkSpaceLimits(mt::Vector3, mt::Vector3)));
+	// send 3D pointer visibility status
+	QObject::connect(&mainGUI,SIGNAL(SetVisibility3Dpointer(Visibility_Status)),
+			&video,SLOT(set_3DpointerVisibility(Visibility_Status)));
 	
    
     SoQtExaminerViewer *viewer = new SoQtExaminerViewer(mainwin);

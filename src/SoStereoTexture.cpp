@@ -429,6 +429,8 @@ Filters[5] =
 	xiL = 1; xiR = 1; uo_L = 1; vo_L = 1;
 	yiL = 1; yiR = 1; uo_R = 1; vo_R = 1;
 	ziL = 1; ziR = 1;
+	disparity_Shifment = 0;
+	xiR_Occ_Limit = 1;
 	// initializes values for haptic readings
 	X_haptic = 1; Yaw_haptic = 0;
 	Y_haptic = 1; Pitch_haptic = 0;
@@ -641,6 +643,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	float X_hapticF = 0,Y_hapticF = 0,Z_hapticF = 0;
 	float Zh_Inv;
 	float thetaAngle = 0;
+	float KDepth = 100;
 	float Kd = 6500;// Depth scaling constant
 	float f = 4;// according to C270 specifications // 	focal length to be found
 	float Baseline = 72;//110	// 	measured in haptic coordinates (in real world correspond
@@ -812,6 +815,7 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	////xi_nR = xiL + 0.5*w;// 0.5*Baseline + 
 	////yi_nR = yiR;
 
+	//	IMAGE POINT POSITION CALCULUS
 	// calculus of positions using prof. Biswas (Indian Institute) inspired method	
 
 	// left point at image coordinates
@@ -823,7 +827,16 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 	  X1 = (Zh*xiL)/(2*f);//(Zh - f)*(xiL)/f; // apply pinhole real behavior camera model -xi_nL
 	  X2 = Baseline - X1;
 	  //xiR = (-2*f*X2/Zh) + Baseline;//(-f*X2/(Zh - f)) ;
-	  xiR = xiL - (2*100*f*Baseline/Zh); //xiR = alphaX_R*Xh/Zh + uo_R - alphaX_R*Baseline/Zh;
+
+	  // invert the haptic Z axis for Zh, and normal for Zh_Inv
+	  // calculate the x2 position as a stereo camera positioning + disparity shifment
+	  // that depends from the Zhaptic Value
+	  float max_disparity_shifment = 0.3*w;
+	  float tmp_disparity;
+	  disparity_Shifment =  max_disparity_shifment*(Zh_Inv);
+	  xiR_Occ_Limit = xiL - (2*KDepth*f*Baseline/Zh);
+	  //tmp_disparity = abs(abs(xiL) - abs(xiR));
+	  xiR = xiL - disparity_Shifment; //xiR = alphaX_R*Xh/Zh + uo_R - alphaX_R*Baseline/Zh;
 	  yiR = yiL;//alphaY_R*Yh/Zh ;//+ vo_R;
 
 
@@ -1363,6 +1376,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			glRotatef(Yaw_haptic,0.0,0.0,1.0);
 			glRotatef(Pitch_haptic,0.0,1.0,0.0);
 			glRotatef(Roll_haptic,1.0,0.0,0.0);
+			// set visibility color
+			glColor4f(color3Dpointer.r,color3Dpointer.g,color3Dpointer.b,color3Dpointer.a);
 
 			glTranslatef(0.0,0.0,-heightBase);
 			gluCylinder(quadL_base,topRadius,baseRadius,heightBase,slices,stacks);
@@ -1451,7 +1466,9 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 			glRotatef(Yaw_haptic,0.0,0.0,1.0);
 			glRotatef(Pitch_haptic,0.0,1.0,0.0);
 			glRotatef(Roll_haptic,1.0,0.0,0.0);
-			
+			// set visibility color
+			glColor4f(color3Dpointer.r,color3Dpointer.g,color3Dpointer.b,color3Dpointer.a);
+
 			glTranslatef(0.0,0.0,-heightBase);
 			gluCylinder(quadR_base,topRadius,baseRadius,heightBase,slices,stacks);
 			glTranslatef(0.0,0.0,-heightTop);	
@@ -1728,6 +1745,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 		GLdouble radius = 5;
 		GLdouble slices = 20;
 		GLdouble stacks = 20;
+		// set visibility color
+		glColor4f(color3Dpointer.r,color3Dpointer.g,color3Dpointer.b,color3Dpointer.a);
 		gluCylinder(quadL_base,baseRadius,topRadius,heightBase,slices,stacks);
 		glTranslatef(0.0,0.0,heightBase);	
 		gluCylinder(quadL_top,topRadius,baseRadius,heightTop,slices,stacks);
@@ -1782,6 +1801,8 @@ void SoStereoTexture::GLRender(SoGLRenderAction *action)
 
 		GLUquadric* quadR_top = gluNewQuadric();
 		GLUquadric* quadR_base = gluNewQuadric();
+		// set visibility color
+		glColor4f(color3Dpointer.r,color3Dpointer.g,color3Dpointer.b,color3Dpointer.a);
 		gluCylinder(quadR_top,baseRadius,topRadius,heightBase,slices,stacks);
 		glTranslatef(0.0,0.0,heightBase);	
 		gluCylinder(quadL_base,topRadius,baseRadius,heightTop,slices,stacks);
@@ -1861,6 +1882,8 @@ imagePoints SoStereoTexture::getProjectedPoints()
 	points.xiR = xiR;
 	points.yiL = yiL;
 	points.yiR = yiR;
+	points.disparityShifment = disparity_Shifment;
+	points.xiR_occlusion_limit =  xiR_Occ_Limit;
 	// center of cameras
 	points.uo_L = uo_L;
 	points.vo_L = vo_L;

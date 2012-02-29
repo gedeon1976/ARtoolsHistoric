@@ -179,16 +179,24 @@ void ARtools::get_image_points(imagePoints actualPoints)
   // save current points from haptic mapping to images
   switch(rendering_type){
   case RENDERING_3D:// 3D
-		actualImages_Points.xiL = abs(-actualPoints.xiL + actualPoints.uo_L - w);
+	/*	actualImages_Points.xiL = abs(-actualPoints.xiL + actualPoints.uo_L - w);
 		actualImages_Points.xiR = abs(actualPoints.xiR - actualPoints.uo_R + w);
 		actualImages_Points.yiL = abs(-actualPoints.yiL + actualPoints.vo_L - 0.5*h);
-		actualImages_Points.yiR = abs(-actualPoints.yiR + actualPoints.vo_R - 0.5*h);
+		actualImages_Points.yiR = abs(-actualPoints.yiR + actualPoints.vo_R - 0.5*h);*/
+		actualImages_Points.xiL = abs(actualPoints.xiL);
+		actualImages_Points.xiR = abs(actualPoints.xiR);
+		actualImages_Points.yiL = abs(actualPoints.yiL);
+		actualImages_Points.yiR = abs(actualPoints.yiR);
+		actualImages_Points.disparityShifment = actualPoints.disparityShifment;
+		actualImages_Points.xiR_occlusion_limit = actualPoints.xiR_occlusion_limit;
 		break;
   case RENDERING_OPENCV:// OpenCV
 		actualImages_Points.xiL = abs(actualPoints.xiL);
 		actualImages_Points.xiR = abs(actualPoints.xiR);
 		actualImages_Points.yiL = abs(actualPoints.yiL);
 		actualImages_Points.yiR = abs(actualPoints.yiR);
+		actualImages_Points.disparityShifment = actualPoints.disparityShifment;
+		actualImages_Points.xiR_occlusion_limit = actualPoints.xiR_occlusion_limit;
   }
  // show data on GUI
   xil.setNum(actualPoints.xiL);xiL->setText(xil);
@@ -273,6 +281,7 @@ void ARtools::ShowStereoVideo(){
 	try{
 		CvSize imgSize;
 		IMAGE_TYPE currentImage = LEFT;
+		Visibility_Status VisibleStatus;
 		CvPoint2D32f leftSubImageCenter;
 		CvPoint2D32f rightSubImageCenter;
 		SubArea_Structure SubAreaLimitsL;
@@ -370,7 +379,7 @@ void ARtools::ShowStereoVideo(){
 					
 					
 				}
-				// Charge again the correct images pair
+				// Load again the correct images pair
 				dstCmp = cvCloneImage(testImageR);
 				ImageProcessing.LoadImages(testImageL,shiftedVerticalImage);
 				matchPoints = ImageProcessing.MatchPoints(0.995);
@@ -410,7 +419,7 @@ void ARtools::ShowStereoVideo(){
 		
 
 		// CORRECT THE VERTICAL SHIFMENT
-		actualImages_Points.yiR = actualImages_Points.yiR - verticalShift;
+		actualImages_Points.yiR = actualImages_Points.yiR + verticalShift;
 		// Detect Edges using EDlines		
 
 		// detect LICFs features for the left image
@@ -430,6 +439,7 @@ void ARtools::ShowStereoVideo(){
 		//Actual_LICFs_L = LICFs_FeaturesL.ApplyLICF_Detection(linesL,LICF_MaxDistanceBetweenLines);
 		//// Get the limits for the area selected to analysis on the left image
 		SubAreaLimitsL = LICFs_FeaturesL.GetSubAreaBoundaries();
+
 		// draw a rectangle  and a circle to identify the area selected
 		CvPoint upperLeft_L,lowerRight_L;
 		upperLeft_L = cvPoint(SubAreaLimitsL.x_AreaCenter - abs(0.5*SubAreaLimitsL.width),
@@ -468,10 +478,13 @@ void ARtools::ShowStereoVideo(){
 		cvRectangle(rightImageBGR_Aligned,upperLeft_R,lowerRight_R,CV_RGB(0,255,0));
 		cvCircle(rightImageBGR_Aligned,cvPoint((int)SubAreaLimitsR.x_AreaCenter,(int)SubAreaLimitsR.y_AreaCenter)
 			,2,CV_RGB(0,255,0));
-
+		
 		// GET THE MATCHING BETWEEN IMAGES: here left is the reference image
 		SubGrayToMatch = LICFs_FeaturesR.GetSubImageGray();
 		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.995,15);
+
+		// GET THE VISIBILITY STATUS FOR THE POINTER
+		VisibleStatus = LICFs_FeaturesL.visibility(testImageL,actualImages_Points,shiftedVerticalImage);
 
 		// REFINE THE MATCHES USING THE EPIPOLAR ERROR CONSTRAINT
 		CvMat *F_matrix = ImageProcessing.GetFundamentalMatrix();
@@ -910,7 +923,8 @@ void ARtools::ShowStereoVideo(){
 		cvReleaseImage(&RightSubImageGray);*/
 
 		
-
+		// emit visibility signal
+		emit SetVisibility3Dpointer(VisibleStatus);
 	}
 	catch(...){
 	}

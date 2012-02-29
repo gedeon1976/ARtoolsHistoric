@@ -59,7 +59,7 @@
 #include  <Inventor/nodes/SoShape.h>
 #include  <Inventor/nodes/SoPerspectiveCamera.h>
 #include  <Inventor/Qt/SoQtGLWidget.h>          //      to do the swap of buffers
-//      note SoSubNode.h has the macros definitions to
+//      note SoSubNode.h has the macros definitions to 
 //      create the new nodes
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 //GLuint bufferID;                              //      PBO (pixel_buffer_object) name  
@@ -141,6 +141,9 @@ int 		xiL;
 int 		xiR;
 int 		yiL;
 int 		yiR;
+int			xiR_Occ_Limit;			//		this is alimit for testing occlusion status
+float		disparity_Shifment;	//		disparity shifment from correnponding
+								//		matching point
 int 		ziL;
 int 		ziR;
 int 		xi_nL;				//		matched stereo points
@@ -186,6 +189,8 @@ float		Yh;
 float		Zh;
 float		X1;
 float		X2;
+VisibilityColor	color3Dpointer;				
+								//		select the 3D pointer color
 
 // Initialize the class
 static void initClass();        //      to define the type of information of the class

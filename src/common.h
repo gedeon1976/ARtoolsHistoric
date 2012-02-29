@@ -1,12 +1,32 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+// include common headers
+
+// openCV headers
+//#include <opencv/cv.h>
+//#include <opencv/highgui.h>
+
+//using namespace cv;
+
+typedef enum Visibility_Status{UNKNOWN,VISIBLE,INVISIBLE};
+
+struct VisibilityColor{
+	// openGL visibility color
+	float r;
+	float g;
+	float b;
+	float a;
+};
+
 struct imagePoints{
   //	matching image  points
   float xiL;
   float yiL;
   float xiR;
   float yiR;
+  float disparityShifment;
+  float xiR_occlusion_limit;
   //	center of the cameras from calibration methods
   float uo_L;
   float vo_L;

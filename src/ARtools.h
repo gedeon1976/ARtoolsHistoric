@@ -54,6 +54,7 @@ public:
   float get_Z_value();
 signals:
   void SetWorkSpaceLimits(mt::Vector3 MinCubicLimits, mt::Vector3 MaxCubicLimits);
+  void SetVisibility3Dpointer(Visibility_Status);
   
 private slots:
 	void AboutAct();

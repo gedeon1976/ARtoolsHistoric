@@ -166,6 +166,36 @@ void StereoVideo::set_haptic_data(mt::Transform HapticPosition)
 
 }
 
+// this method set the current visibility for the 3D pointer
+void StereoVideo::set_3DpointerVisibility(Visibility_Status Status){
+	Visibility_Status Visibility;
+	Visibility = Status;
+	// set color
+	switch(Visibility)
+	{
+	case UNKNOWN:	//GREEN
+		realNode->color3Dpointer.r = 0.0;
+		realNode->color3Dpointer.g = 1.0;
+		realNode->color3Dpointer.b = 0.0;
+		realNode->color3Dpointer.a = 0.5;
+		break;
+	case VISIBLE:	//YELLOW
+		realNode->color3Dpointer.r = 1.0;
+		realNode->color3Dpointer.g = 1.0;
+		realNode->color3Dpointer.b = 0.0;
+		realNode->color3Dpointer.a = 0.5;
+		break;
+	case INVISIBLE:	//ORANGE
+		realNode->color3Dpointer.r = 1.0;
+		realNode->color3Dpointer.g = 0.5;
+		realNode->color3Dpointer.b = 0.0;
+		realNode->color3Dpointer.a = 0.5;
+		break;
+	default:
+		break;
+	}
+
+}
 //void StereoVideo::sendimagepoints(imagePoints actualPoints)
 //{
 //	//// get projected points
