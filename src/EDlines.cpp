@@ -470,7 +470,7 @@ IplImage* EDlines::EdgeDrawing(IplImage *edgeDst,int WindowSize,double gradient_
 	try{
 		std::vector<Anchors_ED> anchorsList;
 		int scanInterval = 1; 
-		float AnchorThreshold = 0.5, sigma = 1;
+		float AnchorThreshold = 0.1, sigma = 1;//0.5
 		SmoothImage(WindowSize,sigma);
 		ApplyImageGradient(WindowSize,gradient_Threshold);
 		anchorsList = FindEdgeAnchors(scanInterval,AnchorThreshold);
@@ -608,7 +608,7 @@ std::vector<lineParameters> EDlines::LineFit(PixelChain pixels,int MinLineLength
 				//ErrorLimitCounter = ErrorLimitCounter + 1;
 				StartPixel = MinLineLength + StartPixel;
 				lineLen = StartPixel;
-			}else{	
+			}else if (lineFitError <= 1.0){	
 				// O.k An initial line segment detected
 				// try to extend the line segment detected
 				while(lineLen < noPixels){

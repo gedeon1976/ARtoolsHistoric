@@ -311,8 +311,8 @@ void ARtools::ShowStereoVideo(){
 		IplImage *RightSubImage,*RightSubImageGray,*EdgeRightSubImage;
 		IplImage *SubGrayToMatch;
 
-		CvMat *e = cvCreateMat(3,3,CV_32FC1);
-		CvMat *e_prim = cvCreateMat(3,3,CV_32FC1);
+		//CvMat e;// = cvCreateMat(3,3,CV_32FC1);
+		//CvMat e_prim;// = cvCreateMat(3,3,CV_32FC1);
 
 		// copy image from camera and convert to OpenCV format: BGR
 		IplImage *leftImageBGR = cvCloneImage(leftImage);
@@ -333,11 +333,11 @@ void ARtools::ShowStereoVideo(){
 		// create images to show the effect of the homographies		
 
 		// Epipolar geometry calculus
-		CvMat *H_matrix = cvCreateMat(3,3,CV_32FC1);
-		CvMat *H_matrix2 = cvCreateMat(3,3,CV_32FC1);
+		cv::Mat H_matrix = cv::Mat(3,3,CV_32FC1,cv::Scalar::all(1));
+		cv::Mat H_matrix2 = cv::Mat(3,3,CV_32FC1,cv::Scalar::all(1));
 		
-		cvSetIdentity(H_matrix);
-		cvSetIdentity(H_matrix2);
+		//cvSetIdentity(H_matrix);
+		//cvSetIdentity(H_matrix2);
 		
 
 		int matchPoints = 0;
@@ -351,7 +351,10 @@ void ARtools::ShowStereoVideo(){
 			
 			if (images_alignment == false){
 				ImageProcessing.LoadImages(testImageL,testImageR);
-				matchPoints = ImageProcessing.MatchPoints(0.995);
+				//matchPoints = ImageProcessing.MatchPoints(0.995);
+				matchPoints = ImageProcessing.MatchPointsSURF();
+				verticalShiftSURF = ImageProcessing.GetVerticalShifmentSURF();
+				printf("VerticalShift SURF: %f\n",verticalShiftSURF);
 			}
 					
 			// the minimum number of matches needed are 8
@@ -361,18 +364,21 @@ void ARtools::ShowStereoVideo(){
 					H_alignment = cvCreateMat(3,3,CV_32FC1);
 					cvSetIdentity(H_alignment);
 
-					firstMatchedPoints = ImageProcessing.GetMatchPoints();
-					leftPoints = firstMatchedPoints.pointsL;
-					rightPoints = firstMatchedPoints.pointsR;
-					for (int i=1;i<firstMatchedPoints.pointsCount;i++){
-						p1 = cvGet2D(firstMatchedPoints.pointsL,0,i);					
-						p2 = cvGet2D(firstMatchedPoints.pointsR,0,i);
-						counterY1 = (p1.val[1] - p2.val[1]) + counterY1;
-					}
+					//firstMatchedPoints = ImageProcessing.GetMatchPoints();
+					//leftPoints = firstMatchedPoints.pointsL;
+					//rightPoints = firstMatchedPoints.pointsR;
+					//for (int i=1;i<firstMatchedPoints.pointsCount;i++){
+					//	p1 = cvGet2D(firstMatchedPoints.pointsL,0,i);					
+					//	p2 = cvGet2D(firstMatchedPoints.pointsR,0,i);
+					//	counterY1 = (p1.val[1] - p2.val[1]) + counterY1;
+					//}
 					
+					
+					//verticalShift = abs(counterY1)/(firstMatchedPoints.pointsCount-1);
+					//printf("VerticalShift TemplateMatching: %f\n",verticalShift);
+
 					// get vertical shift and set transformation
-					verticalShift = abs(counterY1)/(firstMatchedPoints.pointsCount-1);	
-					cvmSet(H_alignment,1,2,-verticalShift);
+					cvmSet(H_alignment,1,2,-2*verticalShiftSURF);
 					// transform the right image to be correctly aligned
 					cvWarpPerspective(testImageR,shiftedVerticalImage,H_alignment);
 					imgwithHomography_gray = cvCloneImage(testImageR);
@@ -380,18 +386,22 @@ void ARtools::ShowStereoVideo(){
 					
 				}
 				// Load again the correct images pair
+				//
 				dstCmp = cvCloneImage(testImageR);
-				ImageProcessing.LoadImages(testImageL,shiftedVerticalImage);
-				matchPoints = ImageProcessing.MatchPoints(0.995);
+				//ImageProcessing.LoadImages(testImageL,shiftedVerticalImage);
+				//matchPoints = ImageProcessing.MatchPoints(0.995);
+				
 				if (matchPoints >= 8){
 					// find fundamental matrix
-					ImageProcessing.FindFundamentalMatrix();
-					CvMat *tmpF = ImageProcessing.GetFundamentalMatrix();
-					float scalarValue = floor(cvmGet(tmpF,2,2));
-					double detValue = floor(cvDet(tmpF));
+					ImageProcessing.FindFundamentalMatrixSURF();
+					cv::Mat tmpF = ImageProcessing.GetFundamentalMatrixSURF();
+					float scalarValue = floor(tmpF.ptr<double>(2)[2]);
+					double EpsilonF = 0.001;
+					double detValue = floor(cv::determinant(tmpF));
+					printf("SURF Det: %f\n\n",detValue);
 					// check validity of F_matrix
-					if ((scalarValue == 1.0f)){
-						ImageProcessing.FindEpipoles();
+					if ((detValue < EpsilonF)){
+						ImageProcessing.FindEpipolesSURF();
 						matrixF_calculated = true;
 						images_alignment = true;
 						
@@ -417,9 +427,33 @@ void ARtools::ShowStereoVideo(){
 			EDlines Edges(testImageL);
 			EdgeImageED = Edges.EdgeDrawing(testImageED,5,HoughMinLengthDetection);*/		
 		
-
+		// CORRECT EPIPOLAR LINE DISTORSION
+		vector<cv::Point2f> PointsL = ImageProcessing.GetLeftMatchPointsSURF();
+		vector<cv::Point2f> PointsR = ImageProcessing.GetRightMatchPointsSURF();
+		cv::Mat F = ImageProcessing.GetFundamentalMatrixSURF();
+		cv::Mat H1 = cv::Mat(3,3,F.type());
+		cv::Mat H2 = cv::Mat(3,3,F.type());
+		cv::Mat ImageL = cv::cvarrToMat(leftImageBGR,true);
+		cv::Mat ImageR = cv::cvarrToMat(rightImageBGR,true);
+		cv::Mat Undistorted_ImageL = ImageL.clone();
+		cv::Mat Undistorted_ImageR = ImageR.clone();
+		//show epipolar lines
+		int pointsFrom;
+		pointsFrom = 1;
+		ImageProcessing.DrawEpipolarLines(ImageR,F,PointsL,pointsFrom);
+		pointsFrom = 2;
+		ImageProcessing.DrawEpipolarLines(ImageL,F,PointsR,pointsFrom);
+		cv::imshow("Epipolar Lines L ",ImageL);
+		cv::imshow("Epipolar Lines R ",ImageR);
+		cv::stereoRectifyUncalibrated(PointsL,PointsR,F,ImageL.size(),H1,H2);
+		cv::warpPerspective(ImageL,Undistorted_ImageL,H1,ImageL.size(),cv::INTER_LINEAR);
+		cv::warpPerspective(ImageR,Undistorted_ImageR,H2,ImageR.size(),cv::INTER_LINEAR);
+		// show corrected images
+		cv::imshow("Left Undistorted",Undistorted_ImageL);
+		cv::imshow("Right Undistorted",Undistorted_ImageR);
+		
 		// CORRECT THE VERTICAL SHIFMENT
-		actualImages_Points.yiR = actualImages_Points.yiR + verticalShift;
+		actualImages_Points.yiR = actualImages_Points.yiR + 2*verticalShiftSURF;
 		// Detect Edges using EDlines		
 
 		// detect LICFs features for the left image
@@ -430,7 +464,7 @@ void ARtools::ShowStereoVideo(){
 		LICFs_FeaturesL.GetSubImage(actualImages_Points,0.1,currentImage);
 		//// Get an Edge image and the lines a t the same time
 		std::vector<lineParameters> lineSegmentsL;
-		lineSegmentsL = LICFs_FeaturesL.ApplyEdgeDrawingEdgeDetector(12);
+		lineSegmentsL = LICFs_FeaturesL.ApplyEdgeDrawingEdgeDetector(10);
 		//LICFs_FeaturesL.ApplyCannyEdgeDetector(CannyWindowSize,thresholdCannyLow,thresholdCannyHigh);
 		//// Get the lines of the image		
 		//linesL = LICFs_FeaturesL.ApplyHoughLineDetection(HoughThreshold,HoughMinLengthDetection,HoughMaxGapBetweenLines);
@@ -459,7 +493,7 @@ void ARtools::ShowStereoVideo(){
 		LICFs_FeaturesR.GetSubImage(actualImages_Points,0.1,currentImage);
 		//// Get an Edge image and the lines at the same time
 		std::vector<lineParameters> lineSegmentsR;
-		lineSegmentsR = LICFs_FeaturesR.ApplyEdgeDrawingEdgeDetector(12);
+		lineSegmentsR = LICFs_FeaturesR.ApplyEdgeDrawingEdgeDetector(10);
 		//LICFs_FeaturesR.ApplyCannyEdgeDetector(CannyWindowSize,thresholdCannyLow,thresholdCannyHigh);
 		//// Get the lines of the image
 		//linesR = LICFs_FeaturesR.ApplyHoughLineDetection(HoughThreshold,HoughMinLengthDetection,HoughMaxGapBetweenLines);
@@ -481,48 +515,67 @@ void ARtools::ShowStereoVideo(){
 		
 		// GET THE MATCHING BETWEEN IMAGES: here left is the reference image
 		SubGrayToMatch = LICFs_FeaturesR.GetSubImageGray();
-		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.995,15);
+		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.9,15);
 
 		// GET THE VISIBILITY STATUS FOR THE POINTER
 		VisibleStatus = LICFs_FeaturesL.visibility(testImageL,actualImages_Points,shiftedVerticalImage);
 
 		// REFINE THE MATCHES USING THE EPIPOLAR ERROR CONSTRAINT
-		CvMat *F_matrix = ImageProcessing.GetFundamentalMatrix();
+		cv::Mat F_matrixCV2 = ImageProcessing.GetFundamentalMatrixSURF();
 		LICFs_EpipolarConstraintResult errorConstraint;
-	
 		
-		Actual_Matched_LICFs_Refined = LICFs_FeaturesL.RefineMatchingLICFs(F_matrix,Actual_Matched_LICFs,SubAreaLimitsL,SubAreaLimitsR,256);
-		errorConstraint = LICFs_FeaturesL.GetEpipolarConstraintError(Actual_Matched_LICFs_Refined,F_matrix,SubAreaLimitsL,SubAreaLimitsR);
+		CvMat F_matrix = F_matrixCV2;
+		Actual_Matched_LICFs_Refined = LICFs_FeaturesL.RefineMatchingLICFs(&F_matrix,Actual_Matched_LICFs,SubAreaLimitsL,SubAreaLimitsR,128);
+		errorConstraint = LICFs_FeaturesL.GetEpipolarConstraintError(Actual_Matched_LICFs_Refined,&F_matrix,SubAreaLimitsL,SubAreaLimitsR);
 		this->lcdActualEpipolarErrorValue->display(errorConstraint.errorValue);
-
 		// FIND THE CORRESPONDENT LICF BASED HOMOGRAPHY
 		int maxEpipolarPixelErr = 200;// equivalent to 10 px error:200
 		//if((errorConstraint.errorValue > 0)&(errorConstraint.errorValue < maxEpipolarPixelErr)){
-		if (Actual_Matched_LICFs_Refined.size() >= 1){
+		cv::Mat eCV2 = cv::Mat(3,3,CV_32FC1);
+		cv::Mat e_primCV2 = cv::Mat(3,3,CV_32FC1);
+		CvMat e = eCV2;
+		CvMat e_prim = e_primCV2;
+		cv::Mat LeftTransformed = cv::cvarrToMat(leftImageBGR,true);
+		cv::Mat LeftTransformed2 = LeftTransformed.clone();
+		cv::Mat LeftImage = LeftTransformed.clone();
+		cv::Mat planeFound_Image = cv::cvarrToMat(rightImageBGR,true);
+		cv::Mat planeFound_Image2 = planeFound_Image.clone();
+		cv::Mat Right_AlignedBGR = cv::cvarrToMat(rightImageBGR_Aligned,true);
 
-			e = ImageProcessing.Get_e_epipole();
-			e_prim = ImageProcessing.Get_e_prim_epipole();
-			H_matrix = LICFs_FeaturesL.FindLICF_BasedHomography(Actual_Matched_LICFs_Refined,F_matrix,e,e_prim,
+		if (Actual_Matched_LICFs_Refined.size() >= 1){
+			
+			eCV2 = ImageProcessing.Get_e_epipole();
+			e_primCV2 = ImageProcessing.Get_e_prim_epipole();			
+			// use openCV homography method			
+			H_matrix = LICFs_FeaturesL.FindLICF_BasedHomography(Actual_Matched_LICFs_Refined,F_matrixCV2,eCV2,e_primCV2,
 				SubAreaLimitsL,SubAreaLimitsR);
 			// use Hartley Zisserman method
-			H_matrix2 = LICFs_FeaturesL.FindLICF_BasedHomographyZissermman(Actual_Matched_LICFs_Refined,F_matrix,e,e_prim,
+			H_matrix2 = LICFs_FeaturesL.FindLICF_BasedHomographyZissermman(Actual_Matched_LICFs_Refined,F_matrixCV2,eCV2,e_primCV2,
 				SubAreaLimitsL,SubAreaLimitsR);
-			leftWithHomography = cvCloneImage(leftImageBGR);
-			leftWithHomography2 = cvCloneImage(leftImageBGR);
-			cvWarpPerspective(leftImageBGR,leftWithHomography,H_matrix,CV_WARP_FILL_OUTLIERS);  
-			cvWarpPerspective(leftImageBGR,leftWithHomography2,H_matrix2,CV_WARP_FILL_OUTLIERS); 
+			//leftWithHomography = cvCloneImage(leftImageBGR);
+			
+		//	leftWithHomography2 = cvCloneImage(leftImageBGR);
+			//cvWarpPerspective(leftImageBGR,leftWithHomography,H_matrix,CV_WARP_FILL_OUTLIERS);
+			
+			cv::warpPerspective(LeftImage,LeftTransformed,H_matrix,LeftTransformed.size(),cv::INTER_LINEAR);
+			cv::warpPerspective(LeftImage,LeftTransformed2,H_matrix2,LeftTransformed2.size(),cv::INTER_LINEAR);
+
+		//	cvWarpPerspective(leftImageBGR,leftWithHomography2,H_matrix2,CV_WARP_FILL_OUTLIERS); 
+			
 			// Show plane results
 			// use right and leftwithhomography2
-			planeFound_onImage = cvCloneImage(rightImageBGR);
-			cvAddWeighted(rightImageBGR_Aligned,1.0,leftWithHomography2,1.0,0.0,planeFound_onImage);
-			cvCvtColor(leftWithHomography2,imgwithHomography_gray,CV_BGR2GRAY);
+				//planeFound_onImage = cvCloneImage(rightImageBGR);
+			
+			planeFound_Image = Right_AlignedBGR + LeftTransformed;
+			planeFound_Image2 = Right_AlignedBGR + LeftTransformed2;
+			cv::imshow("Plane Found on Right",planeFound_Image);
+			cv::imshow("Plane Found on Right2",planeFound_Image2);
+			//cvAddWeighted(rightImageBGR_Aligned,1.0,leftWithHomography,1.0,0.0,planeFound_onImage);
+			//cvCvtColor(leftWithHomography,imgwithHomography_gray,CV_BGR2GRAY);
 			// test comparing images
-			dstCmp = cvCloneImage(testImageR);
-			cvCmp(shiftedVerticalImage,imgwithHomography_gray,dstCmp,CV_CMP_EQ);
-		}
-		
-		
-		
+			//dstCmp = cvCloneImage(testImageR);
+			//cvCmp(shiftedVerticalImage,imgwithHomography_gray,dstCmp,CV_CMP_EQ);
+		}		
 
 		// draw results
 		// LEFT IMAGE
@@ -583,13 +636,13 @@ void ARtools::ShowStereoVideo(){
 		e_prim = ImageProcessing.Get_e_prim_epipole();
 		CvScalar Value_e,Value_e_prim;
 		//e
-		Value_e.val[2] = cvmGet(e,0,2);
-		Value_e.val[0] = cvmGet(e,0,0)/Value_e.val[2];
-		Value_e.val[1] = cvmGet(e,0,1)/Value_e.val[2];
+		Value_e.val[2] = cvmGet(&e,0,2);
+		Value_e.val[0] = cvmGet(&e,0,0)/Value_e.val[2];
+		Value_e.val[1] = cvmGet(&e,0,1)/Value_e.val[2];
 		// e'
-		Value_e_prim.val[2] = cvmGet(e_prim,2,0);
-		Value_e_prim.val[0] = cvmGet(e_prim,0,0)/Value_e_prim.val[2];
-		Value_e_prim.val[1] = cvmGet(e_prim,1,0)/Value_e_prim.val[2];
+		Value_e_prim.val[2] = cvmGet(&e_prim,2,0);
+		Value_e_prim.val[0] = cvmGet(&e_prim,0,0)/Value_e_prim.val[2];
+		Value_e_prim.val[1] = cvmGet(&e_prim,1,0)/Value_e_prim.val[2];
 
 		for(int i=0;i< Actual_Matched_LICFs_Refined.size();i++){
 			// Matched Points			
@@ -684,12 +737,12 @@ void ARtools::ShowStereoVideo(){
 			char H_value[100];
 			for (int i=0;i<3;i++){
 				for(int j=0;j<3;j++){
-					H_matrixValue = cvmGet(H_matrix,i,j);
+					H_matrixValue = H_matrix.ptr<float>(i)[j];
 					sprintf_s(H_value,100,"%f",H_matrixValue);
 					matchNumber.assign(H_value);
 					cvPutText(leftWithHomography,matchNumber.data(),cvPoint((j+1)*100,(i+1)*20),&font,CV_RGB(255,255,255));
 					// show values for Zisserman matrix
-					H_matrixValue = cvmGet(H_matrix2,i,j);
+					 //H_matrixValue = cvmGet(H_matrix2,i,j);
 					sprintf_s(H_value,100,"%f",H_matrixValue);
 					matchNumber.assign(H_value);
 					cvPutText(leftWithHomography2,matchNumber.data(),cvPoint((j+1)*100,(i+1)*20),&font,CV_RGB(255,255,255));

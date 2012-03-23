@@ -25,8 +25,8 @@
 //#include EDlines class
 #include "EDlines.h"
 // openCV headers
-#include <opencv/cv.h>
-#include <opencv/cvaux.h>			
+//#include <opencv/cv.h>
+//#include <opencv/cvaux.h>			
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
 
@@ -72,11 +72,14 @@ public:
 
 	LICFs_EpipolarConstraintResult GetEpipolarConstraintError(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix,
 		SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
-	CvMat* FindLICF_BasedHomography(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix, CvMat *epipole,
-		CvMat *epipole_prim,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
 
-	CvMat* FindLICF_BasedHomographyZissermman(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix, CvMat *epipole,
-		CvMat *epipole_prim,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
+	cv::Mat FindLICF_BasedHomography(vector<Matching_LICFs> matchedPoints,cv::Mat F_matrix, cv::Mat epipole,
+		cv::Mat epipole_prim,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
+
+	cv::Mat FindLICF_BasedHomographyZissermman(vector<Matching_LICFs> matchedPoints,cv::Mat F_matrix, cv::Mat epipole,
+		cv::Mat epipole_prim,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
+
+	double CheckHomographyMatrix(vector<cv::Point2f> x, vector<cv::Point2f> x_prim, cv::Mat H_matrix);
 	// methods to obtain internal variables
 	SubArea_Structure GetSubAreaBoundaries(void);
 	IplImage* GetSubImageGray(void);

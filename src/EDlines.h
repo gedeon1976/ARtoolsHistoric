@@ -14,7 +14,9 @@
 						and information from their website
 						http://ceng.anadolu.edu.tr/CV/EdgeDrawing/ visited on 09/11/2011
 
-		License:		This code can be used freely for research purposes                                                                                */
+		License:		This code can be used freely for research purposes but not for 
+						military purposes
+*/
 
 
 #ifndef EDLINES_H

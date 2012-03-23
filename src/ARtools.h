@@ -23,8 +23,8 @@
 // include EDlines class
 #include "EDlines.h"
 // openCV headers
-#include <opencv/cv.h>
-#include <opencv/cvaux.h>			
+//#include <opencv/cv.h>
+//#include <opencv/cvaux.h>			
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
 #include "pointer_3D.h"
@@ -98,6 +98,7 @@ private:
    imagePoints actualImages_Points;
    CvMat *H_alignment;
    double verticalShift;
+   float verticalShiftSURF; 
    double CannyWindowSize;
    double thresholdCannyLow;
    double thresholdCannyHigh;
