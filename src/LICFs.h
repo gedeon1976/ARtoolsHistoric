@@ -67,7 +67,7 @@ public:
 	double GetLICFs_NCC(CvMat *LICF_feature,CvMat *LICF_featureOtherImage);
 	vector<Matching_LICFs> ApplyMatchingLICFs(IplImage *SubImageToMatch,vector<LICFs_Structure> LICFs_otherImage,
 		float threshold, int Windowsize);
-	vector<Matching_LICFs> RefineMatchingLICFs(CvMat* F_matrix,vector<Matching_LICFs> actualMatchingLICFs,
+	vector<Matching_LICFs> RefineMatchingLICFs(cv::Mat F_matrix,vector<Matching_LICFs> actualMatchingLICFs,
 		SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR, float maxError);
 
 	LICFs_EpipolarConstraintResult GetEpipolarConstraintError(vector<Matching_LICFs> matchedPoints,CvMat* F_matrix,
@@ -78,8 +78,9 @@ public:
 
 	cv::Mat FindLICF_BasedHomographyZissermman(vector<Matching_LICFs> matchedPoints,cv::Mat F_matrix, cv::Mat epipole,
 		cv::Mat epipole_prim,SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR);
-
+	// check results
 	double CheckHomographyMatrix(vector<cv::Point2f> x, vector<cv::Point2f> x_prim, cv::Mat H_matrix);
+	double CheckHomographyConformity(cv::Mat H_matrix, cv::Mat F_matrix);
 	// methods to obtain internal variables
 	SubArea_Structure GetSubAreaBoundaries(void);
 	IplImage* GetSubImageGray(void);
@@ -88,6 +89,10 @@ public:
 	void MatchCensusTemplate(CvMat *ImageToSearch,CvMat *feature,CvMat *Results);
 	CvMat* CensusTransform(CvMat* Image);
 
+	// drawing Results
+	void DrawLICF_Matches(cv::Mat leftImage, cv::Mat rightImage, vector<Matching_LICFs> matchedPoints);
+	void DrawLICF_detectedPlane(cv::Mat x_prim, cv::Mat Hx, cv::Mat H, double epsilon);
+ 
 
 //signals:
 	//void SendEpipolarErrorConstraint(float ErrorValue);

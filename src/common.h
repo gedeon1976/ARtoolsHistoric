@@ -90,6 +90,7 @@ struct lineParameters{
 	float thetaAngle;
 	float x_farthest;
 	float y_farthest;
+	float length;
 };
 struct LICFs_Structure{
 	// LICFs features in an image

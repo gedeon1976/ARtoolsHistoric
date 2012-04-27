@@ -261,6 +261,7 @@ int pointer_3D::MatchPointsSURF(void){
 
 	// use flann (Fast Approximate Nearest Neighbor Search Library)
 	// to find good matches
+	good_matches.clear();	
 	cv::FlannBasedMatcher matcher;
 	vector<cv::DMatch> matches;
 	matcher.match(descriptorsL,descriptorsR,matches);
@@ -270,7 +271,7 @@ int pointer_3D::MatchPointsSURF(void){
 	// Calculation of distances of max and min distances among keypoints
 	double max_dist = 0; double min_dist = 100;
 	double dist = 1;
-	for (int i =0; i < descriptorsL.rows;i++){
+	for (int i =0; i < matches.size();i++){
 		dist = matches[i].distance;
 		if (dist < min_dist){ min_dist = dist;}
 		if (dist > max_dist){ max_dist = dist;}
@@ -279,8 +280,8 @@ int pointer_3D::MatchPointsSURF(void){
 	printf(" Flann min dist: %f\n",min_dist);
 
 	// get good matches, which distance < 2*min_dist	
-	for(int i=0; i < descriptorsL.rows;i++){
-		if(matches[i].distance < 2.5*min_dist)
+	for(int i=0; i < matches.size();i++){
+		if(matches[i].distance < 3.5*min_dist)
 		{
 			good_matches.push_back(matches[i]);
 		}

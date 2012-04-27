@@ -95,6 +95,7 @@ private:
    IplImage *imgwithHomography_gray;
    IplImage *dstCmp; 
    pointer_3D ImageProcessing;
+   pointer_3D SubWindows;
    imagePoints actualImages_Points;
    CvMat *H_alignment;
    double verticalShift;

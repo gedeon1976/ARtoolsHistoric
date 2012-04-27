@@ -155,6 +155,7 @@ public:
     void FindEpipolarLines(void);//CvMat* F_matrix, MatchedPoints points
 	void DrawEpipolarLines(cv::Mat &Image,cv::Mat F_matrix,vector<cv::Point2f> points,int pointsFrom);
     EpipolarLines GetEpipolarLines(void);
+	
     //void FindProjectiveMatrices(void);
 
     //float FindMinorValue(CvMat* Matrix,int i, int j);

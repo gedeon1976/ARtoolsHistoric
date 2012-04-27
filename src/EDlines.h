@@ -32,7 +32,7 @@
 #include <opencv/highgui.h>
 
 enum Route {LEFT_ROUTE,UP_ROUTE,RIGHT_ROUTE,DOWN_ROUTE};
-enum Orientation {HORIZONTAL, VERTICAL=90};
+enum Orientation {HORIZONTAL, VERTICAL=255};
 typedef std::vector<EdgePoint> PixelChain;
 
 class EDlines
@@ -47,7 +47,7 @@ public:
 	void ApplyImageGradient(int WindowsSize,double gradient_Threshold);
 	std::vector<Anchors_ED> FindEdgeAnchors(int ScanInterval,float AnchorThreshold);
 	void EdgeLinking(std::vector<Anchors_ED> Anchors);
-	IplImage* EdgeDrawing(IplImage* edgeImage,int WindowSize,double gradient_Threshold);
+	cv::Mat EdgeDrawing(cv::Mat edgeImage,int WindowSize,double gradient_Threshold);
 	void GoTroughRoute(Route path,Orientation EdgeDirection,int x,int y,double currentPixelGradient,double currentPixelDirection,double currentPixelEdgel);
 	// ED lines
 	std::vector<lineParameters> LineFit(PixelChain pixels,int MinLineLength,double &leastSquareError,Orientation lineType);
@@ -56,19 +56,20 @@ public:
 	std::vector<lineParameters> EdgeFindLines(int MinimalLength); 
 
 
-	CvMat* getSmoothImage();
-	CvMat* getGradientImage();
-	Gradient_Properties GetImagePointGradient(CvMat *image,int x,int y);
+	cv::Mat getSmoothImage();
+	cv::Mat getGradientImage();
+	Gradient_Properties GetImagePointGradient(cv::Mat image,int x,int y);
 	
 private:
 	IplImage *InputImage;
 	IplImage *imageToProcess;
-	CvMat *SmoothedImage;
-	CvMat *GradientImage;
-	CvMat *AnchorsImage;
-	CvMat *EdgeImage;
-	CvMat *GradientMap;
-	CvSize imgSize;
+	cv::Mat SmoothedImage;
+	cv::Mat GradientImage;
+	cv::Mat GradientImageOriginal;
+	cv::Mat AnchorsImage;
+	cv::Mat EdgeImage;
+	cv::Mat GradientMap;
+	cv::Size imgSize;
 	std::vector<PixelChain> FoundLineSegments;
 
 };

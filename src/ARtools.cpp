@@ -451,6 +451,15 @@ void ARtools::ShowStereoVideo(){
 		// show corrected images
 		cv::imshow("Left Undistorted",Undistorted_ImageL);
 		cv::imshow("Right Undistorted",Undistorted_ImageR);
+
+		// Undistort IplImages to test behavior
+		/*IplImage *leftImageUndistorted = cvCloneImage(leftImageBGR);
+		rightImageBGR_Aligned = cvCloneImage(rightImageBGR);
+		CvMat H1_oldStyle = H1;
+		CvMat H2_oldStyle = H2;
+		
+		cvWarpPerspective(leftImageUndistorted,leftImageBGR,&H1_oldStyle);
+		cvWarpPerspective(rightImageBGR,rightImageBGR_Aligned,&H2_oldStyle);*/
 		
 		// CORRECT THE VERTICAL SHIFMENT
 		actualImages_Points.yiR = actualImages_Points.yiR + 2*verticalShiftSURF;
@@ -515,7 +524,12 @@ void ARtools::ShowStereoVideo(){
 		
 		// GET THE MATCHING BETWEEN IMAGES: here left is the reference image
 		SubGrayToMatch = LICFs_FeaturesR.GetSubImageGray();
-		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.9,15);
+		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.99,15);
+
+		// FIND MATCHES ON SUB WINDOWS TO FIND CORRECT MATCHES FOR LICFs
+		LeftSubImageGray = LICFs_FeaturesL.GetSubImageGray();
+		SubWindows.LoadImages(LeftSubImageGray,SubGrayToMatch);
+		int nPoints = SubWindows.MatchPointsSURF();
 
 		// GET THE VISIBILITY STATUS FOR THE POINTER
 		VisibleStatus = LICFs_FeaturesL.visibility(testImageL,actualImages_Points,shiftedVerticalImage);
@@ -525,7 +539,7 @@ void ARtools::ShowStereoVideo(){
 		LICFs_EpipolarConstraintResult errorConstraint;
 		
 		CvMat F_matrix = F_matrixCV2;
-		Actual_Matched_LICFs_Refined = LICFs_FeaturesL.RefineMatchingLICFs(&F_matrix,Actual_Matched_LICFs,SubAreaLimitsL,SubAreaLimitsR,128);
+		Actual_Matched_LICFs_Refined = LICFs_FeaturesL.RefineMatchingLICFs(&F_matrix,Actual_Matched_LICFs,SubAreaLimitsL,SubAreaLimitsR,16);
 		errorConstraint = LICFs_FeaturesL.GetEpipolarConstraintError(Actual_Matched_LICFs_Refined,&F_matrix,SubAreaLimitsL,SubAreaLimitsR);
 		this->lcdActualEpipolarErrorValue->display(errorConstraint.errorValue);
 		// FIND THE CORRESPONDENT LICF BASED HOMOGRAPHY
@@ -539,14 +553,23 @@ void ARtools::ShowStereoVideo(){
 		cv::Mat LeftTransformed2 = LeftTransformed.clone();
 		cv::Mat LeftImage = LeftTransformed.clone();
 		cv::Mat planeFound_Image = cv::cvarrToMat(rightImageBGR,true);
-		cv::Mat planeFound_Image2 = planeFound_Image.clone();
+		//cv::Mat planeFound_Image2 = planeFound_Image.clone();
+		cv::Mat planeFound_Image2 = cv::Mat(planeFound_Image.size(),CV_8UC1);
 		cv::Mat Right_AlignedBGR = cv::cvarrToMat(rightImageBGR_Aligned,true);
-
+		cv::Mat leftLICF_Draw = cv::cvarrToMat(LeftSubImageGray,true);
+		cv::Mat rightLICF_Draw = cv::cvarrToMat(SubGrayToMatch,true);
+		cv::Mat HSVImage,RGBImage;
+		cv::Mat PlaneFoundGray;
+		cv::Scalar minColor,maxColor;
+		double epsilonHx = 50;
 		if (Actual_Matched_LICFs_Refined.size() >= 1){
 			
 			eCV2 = ImageProcessing.Get_e_epipole();
 			e_primCV2 = ImageProcessing.Get_e_prim_epipole();			
-			// use openCV homography method			
+			// use openCV homography method	
+			// draw current LICFS matches
+			LICFs_FeaturesL.DrawLICF_Matches(leftLICF_Draw,rightLICF_Draw,Actual_Matched_LICFs_Refined);
+			
 			H_matrix = LICFs_FeaturesL.FindLICF_BasedHomography(Actual_Matched_LICFs_Refined,F_matrixCV2,eCV2,e_primCV2,
 				SubAreaLimitsL,SubAreaLimitsR);
 			// use Hartley Zisserman method
@@ -556,6 +579,7 @@ void ARtools::ShowStereoVideo(){
 			
 		//	leftWithHomography2 = cvCloneImage(leftImageBGR);
 			//cvWarpPerspective(leftImageBGR,leftWithHomography,H_matrix,CV_WARP_FILL_OUTLIERS);
+			// CONVERT TO GRAY IMAGES TO APPLY AND COMPARE HOMOGRAPHIES
 			
 			cv::warpPerspective(LeftImage,LeftTransformed,H_matrix,LeftTransformed.size(),cv::INTER_LINEAR);
 			cv::warpPerspective(LeftImage,LeftTransformed2,H_matrix2,LeftTransformed2.size(),cv::INTER_LINEAR);
@@ -566,10 +590,30 @@ void ARtools::ShowStereoVideo(){
 			// use right and leftwithhomography2
 				//planeFound_onImage = cvCloneImage(rightImageBGR);
 			
-			planeFound_Image = Right_AlignedBGR + LeftTransformed;
+			// DRAW PLANES FOUND
+			planeFound_Image = Right_AlignedBGR - LeftTransformed;
 			planeFound_Image2 = Right_AlignedBGR + LeftTransformed2;
-			cv::imshow("Plane Found on Right",planeFound_Image);
+			cv::compare(Right_AlignedBGR,LeftTransformed2,RGBImage,cv::CMP_EQ);
+			//check error x' - Hx <= epsilon
+			cv::Mat RightAlignedGray,LeftTransformedGray;
+			cv::cvtColor(Right_AlignedBGR,RightAlignedGray,CV_BGR2GRAY);
+			cv::cvtColor(LeftTransformed2,LeftTransformedGray,CV_BGR2GRAY);
+			LICFs_FeaturesL.DrawLICF_detectedPlane(RightAlignedGray,LeftTransformedGray,H_matrix2,epsilonHx);
+			// check H conformity with H 
+			// Htrans*F + Ftrans*H = 0  according to Zisserman Chapter 13.
+			double ConformityValue = LICFs_FeaturesL.CheckHomographyConformity(H_matrix2,F_matrixCV2);
+
+
+			/*cv::cvtColor(planeFound_Image2,HSVImage,CV_BGR2HSV);
+			minColor = CV_RGB(0,0,10);// RGB color
+			maxColor = CV_RGB(10,10,255);
+			cv::inRange(HSVImage,minColor,maxColor,PlaneFoundGray);
+			cv::cvtColor(PlaneFoundGray,RGBImage,CV_GRAY2RGB);*/
+
+			//cv::imshow("Plane Found on Right",planeFound_Image);
 			cv::imshow("Plane Found on Right2",planeFound_Image2);
+			//cv::imshow("RGB plane",RGBImage);
+
 			//cvAddWeighted(rightImageBGR_Aligned,1.0,leftWithHomography,1.0,0.0,planeFound_onImage);
 			//cvCvtColor(leftWithHomography,imgwithHomography_gray,CV_BGR2GRAY);
 			// test comparing images
@@ -760,20 +804,20 @@ void ARtools::ShowStereoVideo(){
 		
 		// SHOW TRANSFORMED IMAGE USING HOMOGRAPHY
 
-		cvNamedWindow("Comparing images");
-		cvShowImage("Comparing images",dstCmp);
+		/*cvNamedWindow("Comparing images");
+		cvShowImage("Comparing images",dstCmp);*/
 
 		cvNamedWindow("Vertical Shifment");
 		cvShowImage("Vertical Shifment",shiftedVerticalImage);
 
-		cvNamedWindow("Left With Homography");
+		/*cvNamedWindow("Left With Homography");
 		cvShowImage("Left With Homography",leftWithHomography);
 
 		cvNamedWindow("Left With Homography2");
 		cvShowImage("Left With Homography2",leftWithHomography2);
 
 		cvNamedWindow("Plane Found");
-		cvShowImage("Plane found",planeFound_onImage);
+		cvShowImage("Plane found",planeFound_onImage);*/
 
 		// show images
 		cvNamedWindow("Left Video");
