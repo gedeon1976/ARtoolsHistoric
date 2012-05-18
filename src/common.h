@@ -97,6 +97,8 @@ struct LICFs_Structure{
 	// position of intersection
 	float x_xK;
 	float y_xK;
+	float angleBetweenLines;
+	float crossRatio;
 	// extreme corners of the area patch
 	float x_UpperL_Pk;
 	float y_UpperL_Pk;

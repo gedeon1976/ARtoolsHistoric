@@ -472,7 +472,7 @@ std::vector<Anchors_ED> EDlines::FindEdgeAnchors(int ScanInterval, float AnchorT
 	{
 	}
 }
-// Find the corresponding edges from the Anchor lists
+/// Find the corresponding edges from the Anchor lists
 void EDlines::EdgeLinking(std::vector<Anchors_ED> Anchors){
 	try{
 		// get the size of pixels to look	

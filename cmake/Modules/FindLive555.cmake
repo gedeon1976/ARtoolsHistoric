@@ -45,7 +45,7 @@
   find_library(LIVE_MEDIA_LIB liveMedia 
     PATH ${LIBRARY_OUTPUT_PATH}/Debug)
   find_library(LIVE_GROUP_LIB groupsock 
-    PATH ${LIBRARY_OUTPUT_PATH}//Debug)
+    PATH ${LIBRARY_OUTPUT_PATH}/Debug)
   find_library(LIVE_BASIC_LIB BasicUsageEnvironment 
     PATH ${LIBRARY_OUTPUT_PATH}/Debug)
   find_library(LIVE_USAGE_LIB UsageEnvironment 

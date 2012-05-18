@@ -378,7 +378,7 @@ void ARtools::ShowStereoVideo(){
 					//printf("VerticalShift TemplateMatching: %f\n",verticalShift);
 
 					// get vertical shift and set transformation
-					cvmSet(H_alignment,1,2,-2*verticalShiftSURF);
+					cvmSet(H_alignment,1,2,-verticalShiftSURF);
 					// transform the right image to be correctly aligned
 					cvWarpPerspective(testImageR,shiftedVerticalImage,H_alignment);
 					imgwithHomography_gray = cvCloneImage(testImageR);
@@ -462,7 +462,7 @@ void ARtools::ShowStereoVideo(){
 		cvWarpPerspective(rightImageBGR,rightImageBGR_Aligned,&H2_oldStyle);*/
 		
 		// CORRECT THE VERTICAL SHIFMENT
-		actualImages_Points.yiR = actualImages_Points.yiR + 2*verticalShiftSURF;
+		actualImages_Points.yiR = actualImages_Points.yiR + verticalShiftSURF;
 		// Detect Edges using EDlines		
 
 		// detect LICFs features for the left image
@@ -524,7 +524,7 @@ void ARtools::ShowStereoVideo(){
 		
 		// GET THE MATCHING BETWEEN IMAGES: here left is the reference image
 		SubGrayToMatch = LICFs_FeaturesR.GetSubImageGray();
-		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.99,15);
+		Actual_Matched_LICFs = LICFs_FeaturesL.ApplyMatchingLICFs(SubGrayToMatch,Actual_LICFs_R,0.85,15);
 
 		// FIND MATCHES ON SUB WINDOWS TO FIND CORRECT MATCHES FOR LICFs
 		LeftSubImageGray = LICFs_FeaturesL.GetSubImageGray();
@@ -631,10 +631,10 @@ void ARtools::ShowStereoVideo(){
 			if (Actual_LICFs_L.size() != 0){
 			 tmp_currentLICF = Actual_LICFs_L.at(i);
 			 cvLine(leftImageBGR, cvPoint(tmp_currentLICF.x_xK + xo_L,tmp_currentLICF.y_xK + yo_L),
-				 cvPoint(tmp_currentLICF.L_1.x_farthest + xo_L,tmp_currentLICF.L_1.y_farthest + yo_L), CV_RGB(0,128,255), 1, 8 );
+				 cvPoint(tmp_currentLICF.L_1.x_farthest + xo_L,tmp_currentLICF.L_1.y_farthest + yo_L), CV_RGB(255,20,0), 2, 8 );
 			 cvLine(leftImageBGR, cvPoint(tmp_currentLICF.x_xK + xo_L,tmp_currentLICF.y_xK + yo_L),
-				 cvPoint(tmp_currentLICF.L_2.x_farthest + xo_L,tmp_currentLICF.L_2.y_farthest + yo_L), CV_RGB(0,255,128), 1, 8 );
-			 cvCircle(leftImageBGR,cvPoint(tmp_currentLICF.x_xK + xo_L,tmp_currentLICF.y_xK + yo_L),2,CV_RGB(0,0,255),1,3,0);
+				 cvPoint(tmp_currentLICF.L_2.x_farthest + xo_L,tmp_currentLICF.L_2.y_farthest + yo_L), CV_RGB(100,255,0), 2, 8 );
+			 cvCircle(leftImageBGR,cvPoint(tmp_currentLICF.x_xK + xo_L,tmp_currentLICF.y_xK + yo_L),2,CV_RGB(0,0,255),2,3,0);
 			}
 		}
 		// RIGHT IMAGE
@@ -645,10 +645,10 @@ void ARtools::ShowStereoVideo(){
 			if (Actual_LICFs_R.size() != 0){
 			 tmp_currentLICF_R = Actual_LICFs_R.at(i);
 			 cvLine(rightImageBGR_Aligned, cvPoint(tmp_currentLICF_R.x_xK + xo_R,tmp_currentLICF_R.y_xK + yo_R),
-				 cvPoint(tmp_currentLICF_R.L_1.x_farthest + xo_R,tmp_currentLICF_R.L_1.y_farthest + yo_R), CV_RGB(0,128,255), 1, 8 );
+				 cvPoint(tmp_currentLICF_R.L_1.x_farthest + xo_R,tmp_currentLICF_R.L_1.y_farthest + yo_R), CV_RGB(255,20,0), 2, 8 );
 			 cvLine(rightImageBGR_Aligned, cvPoint(tmp_currentLICF_R.x_xK + xo_R,tmp_currentLICF_R.y_xK + yo_R),
-				 cvPoint(tmp_currentLICF_R.L_2.x_farthest + xo_R,tmp_currentLICF_R.L_2.y_farthest + yo_R), CV_RGB(0,255,128), 1, 8 );
-			 cvCircle(rightImageBGR_Aligned,cvPoint(tmp_currentLICF_R.x_xK + xo_R,tmp_currentLICF_R.y_xK + yo_R),2,CV_RGB(0,0,255),1,3,0);
+				 cvPoint(tmp_currentLICF_R.L_2.x_farthest + xo_R,tmp_currentLICF_R.L_2.y_farthest + yo_R), CV_RGB(100,255,0), 2, 8 );
+			 cvCircle(rightImageBGR_Aligned,cvPoint(tmp_currentLICF_R.x_xK + xo_R,tmp_currentLICF_R.y_xK + yo_R),2,CV_RGB(0,0,255),2,3,0);
 			}
 		}
 

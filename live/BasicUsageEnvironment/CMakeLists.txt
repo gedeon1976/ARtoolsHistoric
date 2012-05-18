@@ -15,6 +15,7 @@
 #####################################################
 #       Include header and source directories
 #####################################################
+#project(BasicUsageEnvironment)
 INCLUDE_DIRECTORIES(./include 
                    ../UsageEnvironment/include
                    ../groupsock/include )

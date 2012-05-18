@@ -18,7 +18,7 @@
 
 */
 
-#include "reportingHook.h"
+//#include "reportingHook.h"
 
 #ifndef _SOSTEREOTEXTURE_H_
 #define _SOSTEREOTEXTURE_H_
