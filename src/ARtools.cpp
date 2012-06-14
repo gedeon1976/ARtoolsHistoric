@@ -321,6 +321,9 @@ void ARtools::ShowStereoVideo(){
 		cvCvtColor(leftImage,leftImageBGR,CV_RGB2BGR);
 		cvCvtColor(rightImage,rightImageBGR,CV_RGB2BGR);
 
+		// copy Images
+		
+
 		// Convert to gray values to process the images
 		cvCvtColor(leftImage,testImageL,CV_RGB2GRAY);
 		cvCvtColor(rightImage,testImageR,CV_RGB2GRAY);
@@ -552,6 +555,8 @@ void ARtools::ShowStereoVideo(){
 		cv::Mat LeftTransformed = cv::cvarrToMat(leftImageBGR,true);
 		cv::Mat LeftTransformed2 = LeftTransformed.clone();
 		cv::Mat LeftImage = LeftTransformed.clone();
+		cv::Mat LeftImageToSegment = cv::cvarrToMat(leftImage,true);
+		cv::cvtColor(LeftImageToSegment,LeftImageToSegment,CV_RGB2BGR);
 		cv::Mat planeFound_Image = cv::cvarrToMat(rightImageBGR,true);
 		//cv::Mat planeFound_Image2 = planeFound_Image.clone();
 		cv::Mat planeFound_Image2 = cv::Mat(planeFound_Image.size(),CV_8UC1);
@@ -560,8 +565,11 @@ void ARtools::ShowStereoVideo(){
 		cv::Mat rightLICF_Draw = cv::cvarrToMat(SubGrayToMatch,true);
 		cv::Mat HSVImage,RGBImage;
 		cv::Mat PlaneFoundGray;
+		cv::Mat LeftSegmented,FilteredSegmented,LeftSegmentedPlane;
+		planeEquation foundPlane;
 		cv::Scalar minColor,maxColor;
-		double epsilonHx = 50;
+		double epsilonHx = 2;
+		int Matrix_isZero = 0;
 		if (Actual_Matched_LICFs_Refined.size() >= 1){
 			
 			eCV2 = ImageProcessing.Get_e_epipole();
@@ -582,7 +590,24 @@ void ARtools::ShowStereoVideo(){
 			// CONVERT TO GRAY IMAGES TO APPLY AND COMPARE HOMOGRAPHIES
 			
 			cv::warpPerspective(LeftImage,LeftTransformed,H_matrix,LeftTransformed.size(),cv::INTER_LINEAR);
-			cv::warpPerspective(LeftImage,LeftTransformed2,H_matrix2,LeftTransformed2.size(),cv::INTER_LINEAR);
+			// check correct matrix H values
+			Matrix_isZero = cv::countNonZero(H_matrix2);
+			if (Matrix_isZero != 0){
+				cv::warpPerspective(LeftImage,LeftTransformed2,H_matrix2,LeftTransformed2.size(),cv::INTER_LINEAR);
+				// Find plane
+				LeftSegmented = LICFs_FeaturesL.SegmentImageWaterShed(LeftImageToSegment);	
+				cv::imshow("Segmented Image",LeftSegmented);
+				
+				LeftSegmentedPlane = LICFs_FeaturesL.FindCurrentDetectedPlane(LeftSegmented,SubAreaLimitsL,
+					Actual_Matched_LICFs_Refined.at(0).MatchLICFs_L,foundPlane);
+				cv::imshow("Segmented Plane",LeftSegmentedPlane);
+
+	
+				/*LeftSegmented = LICFs_FeaturesL.SegmentImageGrabCut(LeftImage,cv::Rect(SubAreaLimitsL.x_AreaCenter,
+					SubAreaLimitsL.y_AreaCenter,2*SubAreaLimitsL.width,2*SubAreaLimitsL.heigh));
+				cv::imshow("Segmented Image",LeftSegmented);*/
+
+			}
 
 		//	cvWarpPerspective(leftImageBGR,leftWithHomography2,H_matrix2,CV_WARP_FILL_OUTLIERS); 
 			
@@ -595,10 +620,11 @@ void ARtools::ShowStereoVideo(){
 			planeFound_Image2 = Right_AlignedBGR + LeftTransformed2;
 			cv::compare(Right_AlignedBGR,LeftTransformed2,RGBImage,cv::CMP_EQ);
 			//check error x' - Hx <= epsilon
-			cv::Mat RightAlignedGray,LeftTransformedGray;
-			cv::cvtColor(Right_AlignedBGR,RightAlignedGray,CV_BGR2GRAY);
-			cv::cvtColor(LeftTransformed2,LeftTransformedGray,CV_BGR2GRAY);
-			LICFs_FeaturesL.DrawLICF_detectedPlane(RightAlignedGray,LeftTransformedGray,H_matrix2,epsilonHx);
+			//cv::Mat RightAlignedGray,LeftTransformedGray;
+			//cv::cvtColor(Right_AlignedBGR,RightAlignedGray,CV_BGR2GRAY);
+			//cv::cvtColor(LeftTransformed2,LeftTransformedGray,CV_BGR2GRAY);
+			// 	LICFs_FeaturesL.DrawLICF_detectedPlane(RightAlignedGray,LeftTransformedGray,H_matrix2,epsilonHx);
+			LICFs_FeaturesL.DrawLICF_detectedPlane(Right_AlignedBGR,LeftTransformed2,H_matrix2,epsilonHx);
 			// check H conformity with H 
 			// Htrans*F + Ftrans*H = 0  according to Zisserman Chapter 13.
 			double ConformityValue = LICFs_FeaturesL.CheckHomographyConformity(H_matrix2,F_matrixCV2);
@@ -611,7 +637,7 @@ void ARtools::ShowStereoVideo(){
 			cv::cvtColor(PlaneFoundGray,RGBImage,CV_GRAY2RGB);*/
 
 			//cv::imshow("Plane Found on Right",planeFound_Image);
-			cv::imshow("Plane Found on Right2",planeFound_Image2);
+//			cv::imshow("Plane Found on Right2",planeFound_Image2);
 			//cv::imshow("RGB plane",RGBImage);
 
 			//cvAddWeighted(rightImageBGR_Aligned,1.0,leftWithHomography,1.0,0.0,planeFound_onImage);

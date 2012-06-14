@@ -92,6 +92,13 @@ struct lineParameters{
 	float y_farthest;
 	float length;
 };
+struct planeEquation{
+	// This structure save the parameters of a plane
+	float A;
+	float B;
+	float C;
+	float D;
+};
 struct LICFs_Structure{
 	// LICFs features in an image
 	// position of intersection

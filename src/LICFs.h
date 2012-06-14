@@ -63,19 +63,6 @@ public:
 
 	// methods to process the image
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// @fn	void LICFs::GetSubImage(imagePoints actualImages_Points, float percentage,
-	/// 	IMAGE_TYPE imageType);
-	///
-	/// @brief	Gets a sub image.
-	///
-	/// @date	15/05/2012
-	///
-	/// @param	actualImages_Points	The actual images points.
-	/// @param	percentage		   	The percentage.
-	/// @param	imageType		   	Type of the image.
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	void GetSubImage(imagePoints actualImages_Points, float percentage, IMAGE_TYPE imageType);
 	void ApplyCannyEdgeDetector(double CannyWindowSize,
 		double thresholdCannyLow,double thresholdCannyHigh);
@@ -87,72 +74,15 @@ public:
 	lineIntersection GetLineIntersection(lineParameters L1, lineParameters L2);
 	vector<LICFs_Structure> ApplyLICF_Detection(CvSeq *imageHoughLines,int LICF_MaxDistanceBetweenLines);
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// @fn	vector<LICFs_Structure> LICFs::ApplyLICF_Detection(vector<lineParameters> LineSegments,
-	/// 	int LICF_MaxDistanceBetweenLines);
-	///
-	/// @brief	Applies the licf detection.
-	///
-	///
-	/// @param	LineSegments					The line segments.
-	/// @param	LICF_MaxDistanceBetweenLines	The licf maximum distance between lines.
-	///
-	/// @return	.
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	vector<LICFs_Structure> ApplyLICF_Detection(vector<lineParameters> LineSegments,int LICF_MaxDistanceBetweenLines);
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// @fn	double LICFs::GetLICFs_NCC(CvMat *LICF_feature,CvMat *LICF_featureOtherImage);
-	///
-	/// @brief	Gets a lic file system ncc.
-	///
-	/// @author	Henry.portilla
-	/// @date	15/05/2012
-	///
-	/// @param [in,out]	LICF_feature		  	If non-null, the licf feature.
-	/// @param [in,out]	LICF_featureOtherImage	If non-null, the licf feature other image.
-	///
-	/// @return	The lic file system ncc.
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	double GetLICFs_NCC(CvMat *LICF_feature,CvMat *LICF_featureOtherImage);
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// @fn	vector<Matching_LICFs> LICFs::ApplyMatchingLICFs(IplImage *SubImageToMatch,
-	/// 	vector<LICFs_Structure> LICFs_otherImage, float threshold, int Windowsize);
-	///
-	/// @brief	Applies the matching for licfs.
-	///
-	/// @date	15/05/2012
-	///
-	/// @param [in,out]	SubImageToMatch	If non-null, a match specifying the sub image to.
-	/// @param	LICFs_otherImage	   	The licf in other image.
-	/// @param	threshold			   	The threshold.
-	/// @param	Windowsize			   	The windowsize.
-	///
-	/// @return	.
-	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	vector<Matching_LICFs> ApplyMatchingLICFs(IplImage *SubImageToMatch,vector<LICFs_Structure> LICFs_otherImage,
 		float threshold, int Windowsize);
 
 	vector<Matching_LICFs> RefineMatchingLICFs(cv::Mat F_matrix,vector<Matching_LICFs> actualMatchingLICFs,
 		SubArea_Structure SubAreaImageL, SubArea_Structure SubAreaImageR, float maxError);
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// @fn	float LICFs::GetCrossRatio(float AngleBetweenLines);
-	///
-	/// @brief	Gets the cross ratio. used to find correct line matches under perspective distorsion
-	/// 		Idea is based on paper Feature Matching by cross ratio invariance 
-	/// 		by A. Branca, Pattern Recognition 33(2000)
-	///
-	/// @date	15/05/2012
-	///
-	/// @param	AngleBetweenLines	The angle between lines of the LICF.
-	///
-	/// @return	The cross ratio.
-	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	float GetCrossRatio(float AngleBetweenLines);
 
@@ -173,8 +103,18 @@ public:
 	IplImage* GetSubImageGray(void);
 	// fast testing do the Occlusion methods here
 	Visibility_Status visibility(IplImage *leftGrayImage,imagePoints &actualImages_Points, IplImage *OcclusionSubImage);
-	void MatchCensusTemplate(CvMat *ImageToSearch,CvMat *feature,CvMat *Results);
-	CvMat* CensusTransform(CvMat* Image);
+//	void MatchCensusTemplate(CvMat *ImageToSearch,CvMat *feature,CvMat *Results);
+//	
+
+	// Segmmentation
+	cv::Mat SegmentImageWaterShed(cv::Mat InputImage);
+	cv::Mat SegmentImageGrabCut(cv::Mat InputImage, cv::Rect rectangleMarker);
+	cv::Mat FindCurrentDetectedPlane(cv::Mat SegmentedImage,SubArea_Structure AreatoSearch, LICFs_Structure currentLICF, planeEquation &foundPlane);
+
+	// Census transform
+	cv::Mat CensusTransform(cv::Mat GrayImage, int CensusWidth, int CensusHeight);
+	cv::Mat HammingDistance(cv::Mat Img1,cv::Mat Img2, cv::Size censusWindow, int disparityLevel);
+	cv::Mat DecimalToBinary(double value);
 
 	// drawing Results
 	void DrawLICF_Matches(cv::Mat leftImage, cv::Mat rightImage, vector<Matching_LICFs> matchedPoints);
