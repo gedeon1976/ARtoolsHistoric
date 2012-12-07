@@ -73,7 +73,7 @@ void blueCherryCard::open_video_dev(QString name, int width, int height){
       // get the current input to open
       const char* dev = name.toStdString().c_str();
       
-      if ((vfd = open(dev, O_RDWR)) < 0)
+      if ((vfd = open(dev, O_RDWR | O_NONBLOCK)) < 0)
 	err_out("Opening video device");
 
       /* Verify this is the correct type */
