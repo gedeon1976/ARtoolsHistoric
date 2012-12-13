@@ -3,7 +3,8 @@ add_definitions(-DQT_NO_KEYWORDS)
 # add also -D__STDC_CONSTANT_MACROS to CXX Flags
 
 # add include directories
-include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${FFMPEG_INCLUDE_DIRS} ${LIVE555_INCLUDE_DIRS})
+include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${FFMPEG_INCLUDE_DIRS} ${LIVE555_INCLUDE_DIRS}
+		    ${H264BITSTREAM_INCLUDE_DIRS})
 
 # generate UI's files *.h and *.cpp
 message("CMAKE_SOURCE_DIR:" ${CMAKE_SOURCE_DIR})
@@ -23,11 +24,11 @@ add_executable(H264Server ${H264Server_SRCS})
 if(UNIX)
 	target_link_libraries(H264Server ${FFMPEG_avcodec_LIBRARY} 
 		${FFMPEG_avformat_LIBRARY} ${FFMPEG_avutil_LIBRARY} ${QT_QTGUI_LIBRARY} 
-		${QT_LIBRARIES}  ${LIVE555_LIBRARIES})
+		${QT_LIBRARIES}  ${LIVE555_LIBRARIES} ${H264BITSTREAM_LIBRARIES})
 		message("Linking with: " ${FFMPEG_avcodec_LIBRARY})
 		
 endif(UNIX)
 if(WIN32)
 	target_link_libraries(H264Server ${QT_QTGUI_LIBRARY} 
-		${QT_LIBRARIES} ${FFMPEG_LIBRARIES} )#${LIVE555_LIBRARIES}
+		${QT_LIBRARIES} ${FFMPEG_LIBRARIES} ${H264BITSTREAM_LIBRARIES})#${LIVE555_LIBRARIES}
 endif(WIN32)

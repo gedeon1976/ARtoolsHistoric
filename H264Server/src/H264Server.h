@@ -48,7 +48,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 		void saveVideoProperties(QWidget *parameters);
 		void closeVideoProperties(int index);
 		void startCameraPreview(int tabIndex);
-		void update(void);
+		void updatePreview(void);
 
 	Q_SIGNALS:
 		void saveProperties(VideoProperties properties);

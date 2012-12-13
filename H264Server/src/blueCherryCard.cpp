@@ -73,7 +73,7 @@ void blueCherryCard::open_video_dev(QString name, int width, int height){
       // get the current input to open
       const char* dev = name.toStdString().c_str();
       
-      if ((vfd = open(dev, O_RDWR | O_NONBLOCK)) < 0)
+      if ((vfd = open(dev, O_RDWR)) < 0)// | O_NONBLOCK)
 	err_out("Opening video device");
 
       /* Verify this is the correct type */
@@ -229,7 +229,7 @@ void blueCherryCard::av_prepare(void){
       if (avcodec_open2(video_st->codec, codec, NULL) < 0)
 	err_out("Error opening video encoder");
 
-      /* Open output file */  // here we cahnge to save in a buffer or send a signal better
+      /* Open output file */  // here we change to save in a buffer or send a signal better
    //   if (avio_open(&oc->pb, outfile, URL_RDWR) < 0)
    //	err_out("Error opening out file");
 
@@ -240,8 +240,55 @@ void blueCherryCard::av_prepare(void){
   }catch(...){
   }
 }
-// save the current frame
-void blueCherryCard::video_out(v4l2_buffer *vb){
+
+// prepare some structures for decode the frames
+void blueCherryCard::decode_prepare(void )
+{
+    try{
+	AVCodec *codec;
+	decodeCtx = NULL;
+	
+	// find the video decoder
+	codec = avcodec_find_decoder(CODEC_ID_H264);
+	if (!codec) {
+	    printf("Codec not found\n");
+	    exit(1);
+	}	
+	// allocate a codec context
+	decodeCtx = avcodec_alloc_context3(codec);
+	if (!decodeCtx) {
+	    printf("Could not allocate video codec context\n");
+	    exit(1);
+	}
+	
+	// start some values of codec context
+	avcodec_get_context_defaults(decodeCtx);
+	decodeCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+	decodeCtx->pix_fmt = PIX_FMT_YUV420P;
+	decodeCtx->width = videoWidth;
+	decodeCtx->height = videoHeight;
+	decodeCtx->time_base.den = video_st->time_base.den;
+	decodeCtx->time_base.num = video_st->time_base.num;
+	// add SPS, PPS NAL units
+	decodeCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
+	decodeCtx->extradata = video_st->codec->extradata;
+	decodeCtx->extradata_size = video_st->codec->extradata_size;
+	 
+	// open the codec
+	if (avcodec_open2(decodeCtx,codec,NULL) < 0){
+	    printf("Could not open codec\n");
+	}
+	
+	
+    }catch(...){
+    }
+    
+}
+
+
+
+// get the current compressed frame from the card
+AVPacket blueCherryCard::get_CompressedFrame(v4l2_buffer *vb){
   try{
     
       AVCodecContext *c = video_st->codec;
@@ -262,9 +309,12 @@ void blueCherryCard::video_out(v4l2_buffer *vb){
 	pkt.pts = av_rescale_q(c->coded_frame->pts, c->time_base,
 	video_st->time_base);
 	pkt.stream_index = video_st->index;
+      
+      // return current compressed frames
+      return pkt;
 
-      if (av_write_frame(oc, &pkt))
-	err_out("Error writing frame to file");   
+    /*  if (av_write_frame(oc, &pkt))
+	err_out("Error writing frame to file");  */ 
 	
   }catch(...){
   }
@@ -305,6 +355,34 @@ v4l2_buffer blueCherryCard::getNextFrame(void)
 
 }
 
+// decode the current packet
+int blueCherryCard::get_decodedFrame(AVPacket *pkt, AVFrame *frame)
+{
+ try{
+    int got_frame = 0;
+    int bytesUsed = 0;
+    frameCounter = frameCounter + 1;
+    
+    // check data size
+    if (pkt->size > 0){
+	bytesUsed = avcodec_decode_video2(decodeCtx,frame,&got_frame,pkt);
+	if (bytesUsed < 0){
+	    printf("Error while decoding frame %d\n", frameCounter);
+	    return bytesUsed;
+	 }
+    
+	if (got_frame!= 0){
+	    printf("Decodind frame %d\n",frameCounter);
+	}  
+    
+	return bytesUsed;
+    }
+	return -1;
+    }
+    catch(...){
+    }
+}
+
 
 // start the capturing of video frames
 void blueCherryCard::start(void )
@@ -320,6 +398,7 @@ void blueCherryCard::start(void )
       // prepare structures and codecs
       v4l_prepare();
       av_prepare();
+      decode_prepare();
       
    
   }catch(...){

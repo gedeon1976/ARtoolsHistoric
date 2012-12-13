@@ -60,7 +60,7 @@ fprintf(stderr, __msg ": %m\n", ## args); \
 exit(1); \
 } while(0)
 
-#define V_BUFFERS 5
+#define V_BUFFERS 8
 struct video_buf{
   void *data;
   size_t size;
@@ -80,10 +80,14 @@ class blueCherryCard:public QObject{
     void set_osd(char* text);
     void v4l_prepare(void);
     void av_prepare(void);
-    void video_out(v4l2_buffer *vb);
+    void decode_prepare(void);
     v4l2_buffer getNextFrame(void);
+    AVPacket get_CompressedFrame(v4l2_buffer *vb);   
+    int get_decodedFrame(AVPacket *pkt, AVFrame *frame);
     void start(void);
     void stop(void);
+    
+    
     
   Q_SIGNALS: 
     void sendVideoFrame(void);
@@ -94,10 +98,12 @@ class blueCherryCard:public QObject{
     v4l2_streamparm vparm;
     int vfd;
     int got_vop;
+    int frameCounter;
     
     AVOutputFormat *fmt_out;
     AVStream *video_st;
     AVFormatContext *oc;
+    AVCodecContext *decodeCtx; 
     video_buf p_buf[V_BUFFERS];
     
     QTimer *framesTimer;

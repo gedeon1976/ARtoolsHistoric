@@ -28,7 +28,7 @@
 			this,SLOT(addVideoInput()));
 	timer = new QTimer(this);
 	connect(timer,SIGNAL(timeout()),
-	    this,SLOT(update()));
+	    this,SLOT(updatePreview()));
  }
  
  H264Server::~H264Server()
@@ -420,7 +420,7 @@ void H264Server::startCameraPreview(int tabIndex)
       // check if preview is enabled
       isValid = checkPreview.at(1)->isChecked();
       if(isValid){
-	  cameraList.at(currentIndex)->start();		// start current camera			
+	  cameraList.at(currentIndex)->start();		// start current camera		
 	  timer->start(40);
       }else{
 	  cameraList.at(currentIndex)->stop();		// stop camera........
@@ -430,18 +430,29 @@ void H264Server::startCameraPreview(int tabIndex)
   }catch(...){
   }
 }
-// update the frames information
-void H264Server::update(void)
+// update the preview frames information
+void H264Server::updatePreview(void)
 {
   try{
       v4l2_buffer videoFrame;
+      AVPacket pkt;
+      AVFrame *decodedFrame;
       int camNumber = cameraList.size();
+      int BytesUsed = 0;
       
-      // get the frames
+      // get the frames from the cameras and set default values
+      decodedFrame = avcodec_alloc_frame();
+      avcodec_get_frame_defaults(decodedFrame);
+      
+      
+      
       for(int i=0;i<camNumber;i++){
 	
 	videoFrame = cameraList.at(i)->getNextFrame();
-	// convert to ffpeg formats
+	pkt = cameraList.at(i)->get_CompressedFrame(&videoFrame);
+	//printf("pkt size %d\n",pkt.size);
+	BytesUsed = cameraList.at(i)->get_decodedFrame(&pkt,decodedFrame);
+	
       
       }
       
