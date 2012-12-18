@@ -686,7 +686,6 @@ void blueCherryCard::wait_semaphore(int sem)
     }
 
 }
-
  // include extra qt moc files
  #include "blueCherryCard.moc"
 
