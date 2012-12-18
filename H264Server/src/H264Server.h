@@ -8,6 +8,8 @@
 #include "ui_H264Server.h"
 // bluecherry Class
 #include "blueCherryCard.h"
+// h264bitstream class
+#include "h264_stream.h"
 #include <iostream>
 
 

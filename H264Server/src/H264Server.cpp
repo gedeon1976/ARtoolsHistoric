@@ -188,6 +188,8 @@
 	 try{
 		int width=704;
 		int height=576;
+		int bufferSize=10;
+		int cameraID;
 		QString name;
 	 	// save parameters
 		VideoInputParameters currentVideoProperties,OldParams;
@@ -207,14 +209,18 @@
 		VideoInputPropertiesList.replace(currentVideoProperties.index-1,currentVideoProperties);
 		
 		// set camera parameters
+		cameraID = currentVideoProperties.index;
 		width = currentVideoProperties.width;
 		height = currentVideoProperties.height;
 		name = currentVideoProperties.sourcePath;
-		
+		bufferSize = currentVideoProperties.bufferSize;
+				
 		blueCherryCard *tmpCam;	
 		tmpCam = cameraList.at(currentVideoProperties.index-1);
+		tmpCam->setInputID(cameraID);
 		tmpCam->setVideoSource(name);
 		tmpCam->setVideoSize(width,height);
+		tmpCam->setBufferSize(bufferSize);
 		
 	
 		cameraList.replace(currentVideoProperties.index-1,tmpCam);
@@ -446,15 +452,16 @@ void H264Server::updatePreview(void)
       
       
       
-      for(int i=0;i<camNumber;i++){
+    //  for(int i=0;i<camNumber;i++){
 	
-	videoFrame = cameraList.at(i)->getNextFrame();
-	pkt = cameraList.at(i)->get_CompressedFrame(&videoFrame);
-	//printf("pkt size %d\n",pkt.size);
-	BytesUsed = cameraList.at(i)->get_decodedFrame(&pkt,decodedFrame);
+// 	videoFrame = cameraList.at(i)->getNextFrame();
+// 	pkt = cameraList.at(i)->get_CompressedFrame(&videoFrame);
+// 	cameraList.at(i)->getSPS_NAL(pkt);
+// 	//printf("pkt size %d\n",pkt.size);
+// 	BytesUsed = cameraList.at(i)->get_decodedFrame(&pkt,decodedFrame);
 	
       
-      }
+    //  }
       
     
   }catch(...){

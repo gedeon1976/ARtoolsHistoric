@@ -32,5 +32,9 @@ add_subdirectory(live/UsageEnvironment)
 add_subdirectory(live/BasicUsageEnvironment)
 find_package(Live555 REQUIRED)
 
+#add h264bitstream library
+add_subdirectory(h264bitstream)
+find_package(H264BITSTREAM REQUIRED)
+
 # add source code
 add_subdirectory(src)

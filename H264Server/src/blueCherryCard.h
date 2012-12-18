@@ -2,7 +2,7 @@
  * 
  * 	H264Server bluecherry interface class
  * 
- * 	brief@	this class serves to capture a video and audio flow
+ * 	brief@	this class serves to capture one video and audio flow
 		from a Bluecherry H.264/AVC 16 ports card 
  * 
  * 	date		November/23/2012
@@ -48,6 +48,14 @@ extern "C"{
 #include <BasicUsageEnvironment.hh>
 #include <GroupsockHelper.hh>
 
+// h264bitstream class
+#include "h264_stream.h"// h264bitstream class
+
+// POSIX threads 
+#include <pthread.h>                                   
+#include <semaphore.h>
+#include <deque>
+
 // special macros
 #define reset_vbuf(__vb) do { \
 memset((__vb), 0, sizeof(*(__vb))); \
@@ -74,18 +82,30 @@ class blueCherryCard:public QObject{
     virtual ~blueCherryCard();
   public Q_SLOTS:   
  
+    void setInputID(int cameraID);  
     void setVideoSize(int width,int height);
     void setVideoSource(QString name);
+    void setBufferSize(int bufferSize);
     void open_video_dev(QString name,int width,int height);
     void set_osd(char* text);
     void v4l_prepare(void);
     void av_prepare(void);
     void decode_prepare(void);
     v4l2_buffer getNextFrame(void);
-    AVPacket get_CompressedFrame(v4l2_buffer *vb);   
+    AVPacket get_CompressedFrame(v4l2_buffer *vb);    
+    void getData(void);
+    void getSPS_NAL(AVPacket pkt);
     int get_decodedFrame(AVPacket *pkt, AVFrame *frame);
     void start(void);
     void stop(void);
+    // threads code
+    int create_Thread(void);
+    static void* Entry_Point(void *pthis);
+    int get_ThreadPriority(void);
+    void init_semaphore(int sem, int value);	/// init the semaphore
+    void set_semaphore(int sem);		/// set the semaphore signal
+    void wait_semaphore(int sem);		/// wait and lock the semaphore
+    
     
     
     
@@ -110,5 +130,12 @@ class blueCherryCard:public QObject{
     QString videoName;
     int videoWidth;
     int videoHeight;
+    int ID;				/// video input ID
+    
+    pthread_t videoInput;		/// thread for this video input
+    sem_t Sem1,Sem2;			/// semaphores
+    int semaphores_global_flag;		/// flag to control semaphores start
+    int BufferMaxSize;			/// maximun size of buffer
+    std::deque<AVPacket> InputBuffer;   /// FIFO buffer to save the frames
 };
 #endif // BLUECHERRYCARDH

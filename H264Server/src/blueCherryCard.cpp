@@ -20,6 +20,8 @@ blueCherryCard::blueCherryCard(){
   try{
       // initialize variables
       got_vop = 0;			// key frame
+      BufferMaxSize = 5;		// buffer size default
+      semaphores_global_flag = -1;      // flag to start semaphore inizialization
     
   }catch(...){
   }
@@ -34,6 +36,9 @@ blueCherryCard::blueCherryCard(QString name, int width, int height){
       videoWidth = width;
       videoHeight = height;
       got_vop = 0;			// key frame
+      BufferMaxSize = 5;		// buffer size default
+      semaphores_global_flag = -1;	// flag to start semaphore inizialization
+    
     
   }catch(...){
   }
@@ -43,6 +48,17 @@ blueCherryCard::blueCherryCard(QString name, int width, int height){
 blueCherryCard::~blueCherryCard(){
   
 }
+// set video input ID
+void blueCherryCard::setInputID(int cameraID)
+{
+    try{
+	ID = cameraID;
+	
+    }catch(...){
+    }
+
+}
+
 
 // set video size
 void blueCherryCard::setVideoSize(int width, int height)
@@ -64,6 +80,17 @@ void blueCherryCard::setVideoSource(QString name)
      
   }catch(...){
   }
+}
+
+// set the buffer size
+void blueCherryCard::setBufferSize(int bufferSize)
+{
+    try{
+	BufferMaxSize = bufferSize;
+	
+    }catch(...){
+    }
+
 }
 
 
@@ -319,6 +346,67 @@ AVPacket blueCherryCard::get_CompressedFrame(v4l2_buffer *vb){
   }catch(...){
   }
 }
+
+// get the compressed data and save in the buffer
+void blueCherryCard::getData(void)
+{
+  try{
+      v4l2_buffer videoFrame;
+      AVPacket pkt;
+      // keep the thread alive
+      while(1){
+	  
+	  // check semaphores flags
+	    if(semaphores_global_flag == 0){
+	      wait_semaphore(1);			
+	    }
+	  
+	    videoFrame = getNextFrame();
+	    pkt = get_CompressedFrame(&videoFrame);
+	    frameCounter = frameCounter + 1;
+	    printf("received frames: %d\n",frameCounter);
+	    
+	    // save to camera buffer
+	    InputBuffer.push_back(pkt);
+	    
+	    // keep the buffer to a limit size
+	    if (InputBuffer.size() < BufferMaxSize){
+		// delete the head frame from FIFO buffer
+		InputBuffer.pop_front();
+	    }
+	
+	    if(semaphores_global_flag == 0){
+	      set_semaphore(1);	     // set the semaphore 	      
+	    }    
+      }      
+  }
+  catch(...){
+    }
+
+}
+
+
+// get the SPS Nal units
+void blueCherryCard::getSPS_NAL(AVPacket pkt)
+{
+ try{
+     int nal_start, nal_end;
+     uint8_t* buf = pkt.data;
+     int len;
+     
+     // read some H264 data into buf
+     h264_stream_t* h = h264_new();
+     find_nal_unit(buf, len, &nal_start, &nal_end);
+     read_nal_unit(h, &buf[nal_start], nal_end - nal_start);
+     debug_nal(h,h->nal);
+	
+    }
+    catch(...){
+    }
+    
+
+}
+
 // get the video frames
 v4l2_buffer blueCherryCard::getNextFrame(void)
 {
@@ -400,6 +488,10 @@ void blueCherryCard::start(void )
       av_prepare();
       decode_prepare();
       
+      // start the capturing
+      init_semaphore(1,1);
+      create_Thread();
+      
    
   }catch(...){
   }
@@ -415,6 +507,183 @@ void blueCherryCard::stop(void )
     
   }catch(...){
   }
+
+}
+
+// create a thread to get data from the bluecherry card
+int blueCherryCard::create_Thread(void)
+{
+  try{
+    int cod, error;
+    int ID = 1;
+
+    pthread_attr_t attr;            //      attribute object
+    struct sched_param param;       //      struct for set the priority
+    
+
+    if (pthread_attr_init(&attr)==0){	
+	
+	//pthread_attr_getschedparam(&attr,&param);
+	pthread_attr_setscope(&attr,PTHREAD_SCOPE_SYSTEM);
+
+	   // param.sched_priority = 10;
+	    // printf("setup thread scope \n");
+	    // set priority to 10; max priority is = ?
+	    // in linux the threads are created with the maximum priority, equal to the kernel
+    }else{
+	    printf("error: %d \n", errno);
+    }      
+    
+    error=pthread_attr_setschedparam(&attr,&param);
+
+    if (error!=0)
+    {
+	    printf("error: %d \n", errno);
+    }
+		    
+    //      create thread
+
+    cod = pthread_create(&videoInput,&attr,blueCherryCard::Entry_Point,this);
+    if (cod!=0)
+    {
+	    printf("error creating thread \n");
+	    return cod;
+    }else{
+	    printf("creating thread %d with a priority of %d \n",ID,get_ThreadPriority());
+	    //printf("creating thread\n");
+	    return cod;
+    }
+	    
+  }
+  catch(...){
+      
+  }
+}
+
+//      Entry point function for the thread in C++
+//      static function
+void *blueCherryCard::Entry_Point(void *pthis)
+{
+        try{
+                blueCherryCard *pS = (blueCherryCard*)pthis; 
+		//  convert to class bluecherryCard to allow correct thread work
+                pS->getData();
+                return 0; // TODO: Revisar el puntero de retorno
+        }
+        catch(...)
+        {
+                printf("%s"," Something wrong happened with the thread ");
+        }
+}
+
+// get the thread running priority
+int blueCherryCard::get_ThreadPriority(void)
+{
+    try{
+        pthread_attr_t attr;            //      attributes
+        int cod, priority;
+        struct sched_param param;       //      contain the priority of the thread
+
+        if (!(cod=pthread_attr_init(&attr)) &&
+        !(cod=pthread_attr_getschedparam(&attr,&param)))
+
+                priority = param.sched_priority;
+       
+        return priority;
+    }
+    catch(...){
+    }
+
+}
+
+// init the semaphore
+void blueCherryCard::init_semaphore(int sem, int value)
+{
+    try{	
+        switch(sem)
+        {
+        case 1:
+	    if (sem_init(&Sem1,0,value)==-1){   
+            // start semaphore to value
+            // 2d parameter = 0; only shared by threads in this process(class)
+               
+		printf("Failed to initialize the semaphore %d in camera %d",Sem1,ID);
+            }     
+            break;
+        case 2:
+	    if (sem_init(&Sem2,0,value)==-1){   
+            // start semaphore to value
+            // 2d parameter = 0; only shared by threads in this process(class)
+               
+		printf("Failed to initialize the semaphore %d in camera %d",Sem2,ID);
+            }
+            break;
+        }
+	
+    }catch(...){
+    }
+
+}
+
+// set the semaphore signal
+void blueCherryCard::set_semaphore(int sem)
+{
+    try{
+	switch(sem)
+        {
+        case 1:
+	    if (sem_post(&Sem1)==-1){ 
+            //	increase semaphore
+		printf("Failed to unlock or increase the semaphore %d in camera %d",Sem1,ID);
+            }else{
+		printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+            }
+            break;
+        case 2:
+            if (sem_post(&Sem2)==-1){
+            //	increase semaphore
+		printf("Failed to unlock or increase the semaphore %d in camera %d",Sem2,ID);
+            }else{
+                printf("camera: %d  Semaphore: %d\n",ID,Sem2);
+                printf("No deberia entrar aqui\n");
+            }
+            break;
+        }
+	
+    }catch(...){
+    }
+
+}
+
+// wait and lock the semaphore
+void blueCherryCard::wait_semaphore(int sem)
+{
+    try{
+        switch(sem)
+        {
+        case 1:
+	    if (sem_wait(&Sem1)==-1){        
+                // decrease semaphore value
+                printf("Failed to lock or decrease the semaphore %d in camera %d",Sem1,ID);
+            }else{
+                printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+            }
+            break;
+        case 2:
+            if (sem_wait(&Sem2)==-1){        
+		// decrease semaphore value
+                printf("Failed to lock or decrease the semaphore %d in camera %d",Sem2,ID);
+            }else{
+                printf("camera: %d  Semaphore: %d\n",ID,Sem2);
+                printf("No deberia entrar aqui\n");
+            }
+            break;
+        }      
+        
+        	
+	
+    }catch(...){
+    }
 
 }
 
