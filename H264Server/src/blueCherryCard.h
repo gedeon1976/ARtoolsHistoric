@@ -55,6 +55,9 @@ extern "C"{
 #include <pthread.h>                                   
 #include <semaphore.h>
 #include <deque>
+// add this for manage thread cancel exceptions
+#include <cxxabi.h>
+
 
 // special macros
 #define reset_vbuf(__vb) do { \
@@ -83,6 +86,7 @@ class blueCherryCard:public QObject{
   public Q_SLOTS:   
  
     void setInputID(int cameraID);  
+    int getInputID(void);
     void setVideoSize(int width,int height);
     void setVideoSource(QString name);
     void setBufferSize(int bufferSize);
@@ -100,6 +104,7 @@ class blueCherryCard:public QObject{
     void stop(void);
     // threads code
     int create_Thread(void);
+    int cancel_Thread(void);
     static void* Entry_Point(void *pthis);
     int get_ThreadPriority(void);
     void init_semaphore(int sem, int value);	/// init the semaphore
@@ -132,6 +137,7 @@ class blueCherryCard:public QObject{
     int videoHeight;
     int ID;				/// video input ID
     
+    int cameraID;			/// camera ID for thread
     pthread_t videoInput;		/// thread for this video input
     sem_t Sem1,Sem2;			/// semaphores
     int semaphores_global_flag;		/// flag to control semaphores start

@@ -59,6 +59,18 @@ void blueCherryCard::setInputID(int cameraID)
 
 }
 
+// get the camera or video input ID
+int blueCherryCard::getInputID(void )
+{
+    try{
+	// save the camera ID
+	cameraID = ID;
+    }
+    catch(...){
+    }
+
+}
+
 
 // set video size
 void blueCherryCard::setVideoSize(int width, int height)
@@ -256,14 +268,6 @@ void blueCherryCard::av_prepare(void){
       if (avcodec_open2(video_st->codec, codec, NULL) < 0)
 	err_out("Error opening video encoder");
 
-      /* Open output file */  // here we change to save in a buffer or send a signal better
-   //   if (avio_open(&oc->pb, outfile, URL_RDWR) < 0)
-   //	err_out("Error opening out file");
-
-   //   avformat_write_header(oc, NULL);
-      
-
-    
   }catch(...){
   }
 }
@@ -364,25 +368,30 @@ void blueCherryCard::getData(void)
 	    videoFrame = getNextFrame();
 	    pkt = get_CompressedFrame(&videoFrame);
 	    frameCounter = frameCounter + 1;
-	    printf("received frames: %d\n",frameCounter);
+	    printf("Camera %d received frames: %d\n",ID,frameCounter);
 	    
 	    // save to camera buffer
 	    InputBuffer.push_back(pkt);
 	    
 	    // keep the buffer to a limit size
-	    if (InputBuffer.size() < BufferMaxSize){
+	    if (InputBuffer.size() > BufferMaxSize){
 		// delete the head frame from FIFO buffer
 		InputBuffer.pop_front();
 	    }
+	    printf("Camera %d buffer size: %d\n",ID,InputBuffer.size());
 	
 	    if(semaphores_global_flag == 0){
 	      set_semaphore(1);	     // set the semaphore 	      
 	    }    
       }      
-  }
-  catch(...){
     }
-
+    // catch to get the thread cancel exception
+    catch (abi::__forced_unwind&) {
+	throw;
+    } catch (...) {
+	// do something
+	printf("thread has been canceled\n");
+    }
 }
 
 
@@ -420,6 +429,7 @@ v4l2_buffer blueCherryCard::getNextFrame(void)
      // set_osd("%s", tm_buf);
 
       reset_vbuf(&vb);
+      // get the current buffer data
       ret = ioctl(vfd, VIDIOC_DQBUF, &vb);
       if (ret < 0) {
 	fprintf(stderr, "Failure in dqbuf\n");
@@ -433,6 +443,8 @@ v4l2_buffer blueCherryCard::getNextFrame(void)
 	}
 	got_vop = 1;
       }
+      // enable buffer refilling
+      ioctl(vfd, VIDIOC_QBUF, &vb);
       //send frame
       return vb;
       
@@ -503,7 +515,7 @@ void blueCherryCard::start(void )
 void blueCherryCard::stop(void )
 {
   try{
-
+	cancel_Thread();
     
   }catch(...){
   }
@@ -560,6 +572,30 @@ int blueCherryCard::create_Thread(void)
   }
 }
 
+// cancel the thread
+int blueCherryCard::cancel_Thread(void )
+{
+    try{
+        //      cancel the camera associated thread
+        int cod;
+	
+        cod = pthread_cancel(videoInput);
+        if (cod!=0)
+        {
+                printf("thread cannot be canceled\n");
+                return cod;
+        }else{
+                printf("canceling thread %d with a priority of %d \n",ID,get_ThreadPriority());
+                //printf("creating thread\n");
+                return cod;
+        }
+    }
+    catch (...) {
+	// do something
+	printf("thread has been canceled\n");
+    }
+}
+
 //      Entry point function for the thread in C++
 //      static function
 void *blueCherryCard::Entry_Point(void *pthis)
@@ -568,12 +604,14 @@ void *blueCherryCard::Entry_Point(void *pthis)
                 blueCherryCard *pS = (blueCherryCard*)pthis; 
 		//  convert to class bluecherryCard to allow correct thread work
                 pS->getData();
+		//cameraID = pS->getInputID();
+		
                 return 0; // TODO: Revisar el puntero de retorno
         }
-        catch(...)
-        {
-                printf("%s"," Something wrong happened with the thread ");
-        }
+        catch (...) {
+	// do something
+	printf("Some wrong had happened with the thread\n");
+   }
 }
 
 // get the thread running priority
