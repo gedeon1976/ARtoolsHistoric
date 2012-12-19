@@ -567,9 +567,13 @@ int blueCherryCard::create_Thread(void)
     }
 	    
   }
-  catch(...){
-      
-  }
+    // catch to get the thread cancel exception
+    catch (abi::__forced_unwind&) {
+	throw;
+    } catch (...) {
+	// do something
+	printf("thread has been canceled\n");
+    }
 }
 
 // cancel the thread
@@ -590,7 +594,10 @@ int blueCherryCard::cancel_Thread(void )
                 return cod;
         }
     }
-    catch (...) {
+    // catch to get the thread cancel exception
+    catch (abi::__forced_unwind&) {
+	throw;
+    } catch (...) {
 	// do something
 	printf("thread has been canceled\n");
     }
@@ -608,10 +615,13 @@ void *blueCherryCard::Entry_Point(void *pthis)
 		
                 return 0; // TODO: Revisar el puntero de retorno
         }
-        catch (...) {
+        // catch to get the thread cancel exception
+	catch (abi::__forced_unwind&) {
+	    throw;
+	} catch (...) {
 	// do something
-	printf("Some wrong had happened with the thread\n");
-   }
+	printf("thread has been canceled\n");
+	}
 }
 
 // get the thread running priority
