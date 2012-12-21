@@ -23,7 +23,7 @@ add_executable(H264Server ${H264Server_SRCS})
 #generate executable files
 if(UNIX)
 	target_link_libraries(H264Server ${FFMPEG_avcodec_LIBRARY} 
-		${FFMPEG_avformat_LIBRARY} ${FFMPEG_avutil_LIBRARY} ${QT_QTGUI_LIBRARY} 
+		${FFMPEG_avformat_LIBRARY} ${FFMPEG_avutil_LIBRARY} ${FFMPEG_swscale_LIBRARY} ${QT_QTGUI_LIBRARY} 
 		${QT_LIBRARIES}  ${LIVE555_LIBRARIES} ${H264BITSTREAM_LIBRARIES})
 		message("Linking with: " ${FFMPEG_avcodec_LIBRARY})
 		
