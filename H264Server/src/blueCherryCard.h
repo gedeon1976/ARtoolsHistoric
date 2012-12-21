@@ -36,6 +36,7 @@
 
 // FFMPEG LIBRARIES
 extern "C"{
+  #include <libswscale/swscale.h>
   #include <libavcodec/avcodec.h>
   #include <libavformat/avformat.h>
   #include <libavutil/avutil.h>
@@ -77,6 +78,10 @@ struct video_buf{
   size_t size;
 };
 
+struct dataFrame{
+    int cameraID;
+    AVFrame *frame;
+};
 class blueCherryCard:public QObject{
   Q_OBJECT
   public:
@@ -99,7 +104,9 @@ class blueCherryCard:public QObject{
     AVPacket get_CompressedFrame(v4l2_buffer *vb);    
     void getData(void);
     void getSPS_NAL(AVPacket pkt);
+    AVCodecContext* get_DecodingContext(void);
     int get_decodedFrame(AVPacket *pkt, AVFrame *frame);
+    void getImage();
     void start(void);
     void stop(void);
     // threads code
@@ -111,11 +118,9 @@ class blueCherryCard:public QObject{
     void set_semaphore(int sem);		/// set the semaphore signal
     void wait_semaphore(int sem);		/// wait and lock the semaphore
     
-    
-    
-    
+            
   Q_SIGNALS: 
-    void sendVideoFrame(void);
+    void sendVideoPreview(dataFrame image);	/// signal used for preview
     
   private:
     v4l2_format vfmt;
@@ -142,6 +147,6 @@ class blueCherryCard:public QObject{
     sem_t Sem1,Sem2;			/// semaphores
     int semaphores_global_flag;		/// flag to control semaphores start
     int BufferMaxSize;			/// maximun size of buffer
-    std::deque<AVPacket> InputBuffer;   /// FIFO buffer to save the frames
+    std::deque<AVPacket> InputBuffer;   /// FIFO buffer to save the compressed frames
 };
 #endif // BLUECHERRYCARDH

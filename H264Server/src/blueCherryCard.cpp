@@ -357,6 +357,12 @@ void blueCherryCard::getData(void)
   try{
       v4l2_buffer videoFrame;
       AVPacket pkt;
+      AVFrame *decodedFrame;
+      dataFrame currentFrame;
+      
+      // get the frames from the cameras and set default values
+      decodedFrame = avcodec_alloc_frame();
+      avcodec_get_frame_defaults(decodedFrame);
       // keep the thread alive
       while(1){
 	  
@@ -370,6 +376,9 @@ void blueCherryCard::getData(void)
 	    frameCounter = frameCounter + 1;
 	    printf("Camera %d received frames: %d\n",ID,frameCounter);
 	    
+	    // decode frameCounter
+	    get_decodedFrame(&pkt,decodedFrame);
+	    
 	    // save to camera buffer
 	    InputBuffer.push_back(pkt);
 	    
@@ -379,6 +388,11 @@ void blueCherryCard::getData(void)
 		InputBuffer.pop_front();
 	    }
 	    printf("Camera %d buffer size: %d\n",ID,InputBuffer.size());
+	    
+	    // emit signal for send video frameCounter
+	    currentFrame.cameraID = ID;
+	    currentFrame.frame = decodedFrame;
+	    Q_EMIT sendVideoPreview(currentFrame);
 	
 	    if(semaphores_global_flag == 0){
 	      set_semaphore(1);	     // set the semaphore 	      
@@ -455,24 +469,37 @@ v4l2_buffer blueCherryCard::getNextFrame(void)
 
 }
 
+// get the decoding context used
+AVCodecContext* blueCherryCard::get_DecodingContext(void)
+{
+    try{
+	AVCodecContext *decodingCtxExport;
+	decodingCtxExport = decodeCtx;
+	return decodingCtxExport;	
+	
+    }catch(...){
+    }
+    
+}
+
 // decode the current packet
 int blueCherryCard::get_decodedFrame(AVPacket *pkt, AVFrame *frame)
 {
  try{
     int got_frame = 0;
     int bytesUsed = 0;
-    frameCounter = frameCounter + 1;
+    //frameCounter = frameCounter + 1;
     
     // check data size
     if (pkt->size > 0){
 	bytesUsed = avcodec_decode_video2(decodeCtx,frame,&got_frame,pkt);
 	if (bytesUsed < 0){
-	    printf("Error while decoding frame %d\n", frameCounter);
+	    printf("Error while decoding frame %d on camera %d\n",frameCounter,ID);
 	    return bytesUsed;
 	 }
     
 	if (got_frame!= 0){
-	    printf("Decodind frame %d\n",frameCounter);
+	    printf("Camera %d decoding frame %d\n",ID,frameCounter);
 	}  
     
 	return bytesUsed;
@@ -483,6 +510,41 @@ int blueCherryCard::get_decodedFrame(AVPacket *pkt, AVFrame *frame)
     }
 }
 
+// get the decoded Image
+void blueCherryCard::getImage()
+{
+    try{
+	AVPacket pkt;
+	// start the global semaphores flag
+	if (semaphores_global_flag == -1){
+	    semaphores_global_flag = 0;
+	}
+	
+	if (semaphores_global_flag == 0){
+	    // look for the semaphore, test if it is in green to get the image            
+	    wait_semaphore(1); 
+	    
+	    printf( "Camera %d buffer size is : %d\n",ID,InputBuffer.size());
+	    if(!InputBuffer.empty()){
+		
+		pkt = InputBuffer.front();
+		
+	    }
+	    
+	    // set the semaphore to green
+	    set_semaphore(1);
+	    
+	}else{
+	}
+	
+	
+	
+	
+	
+    }catch(...){
+    }
+
+ }
 
 // start the capturing of video frames
 void blueCherryCard::start(void )
@@ -684,7 +746,7 @@ void blueCherryCard::set_semaphore(int sem)
             //	increase semaphore
 		printf("Failed to unlock or increase the semaphore %d in camera %d",Sem1,ID);
             }else{
-		printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+		//printf("camera: %d  Semaphore: %d\n",ID,Sem1);
             }
             break;
         case 2:
@@ -714,7 +776,7 @@ void blueCherryCard::wait_semaphore(int sem)
                 // decrease semaphore value
                 printf("Failed to lock or decrease the semaphore %d in camera %d",Sem1,ID);
             }else{
-                printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+               // printf("camera: %d  Semaphore: %d\n",ID,Sem1);
             }
             break;
         case 2:

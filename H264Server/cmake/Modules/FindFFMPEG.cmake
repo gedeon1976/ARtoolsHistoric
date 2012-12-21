@@ -108,14 +108,14 @@ IF (UNIX)
         /usr/local/lib64
       )
 
-         FIND_LIBRARY( FFMPEG_avfilter_LIBRARY libavfilter.so
+         FIND_LIBRARY( FFMPEG_avfilter_LIBRARY libavfilter2
         /usr/lib
         /usr/local/lib
         /usr/lib64
         /usr/local/lib64
       )
           
-      FIND_LIBRARY( FFMPEG_swscale_LIBRARY libswscale.so
+      FIND_LIBRARY( FFMPEG_swscale_LIBRARY libswscale
         /usr/lib
         /usr/local/lib
         /usr/lib64
@@ -126,18 +126,19 @@ IF (UNIX)
       IF( FFMPEG_avformat_LIBRARY )
 
         SET( FFMPEG_FOUND "YES" )
+
+	IF( FFMPEG_swscale_LIBRARY )
+           SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_swscale_LIBRARY} )
+        ENDIF( FFMPEG_swscale_LIBRARY )
+
+	IF ( FFMPEG_avfilter_LIBRARY)
+           SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_avfilter_LIBRARY})
+        ENDIF(FFMPEG_avfilter_LIBRARY)
+	
         SET( FFMPEG_LIBRARIES ${FFMPEG_avformat_LIBRARY} ${FFMPEG_avcodec_LIBRARY} )
         IF( FFMPEG_avutil_LIBRARY )
            SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_avutil_LIBRARY} )
         ENDIF( FFMPEG_avutil_LIBRARY )
-
-        IF( FFMPEG_swscale_LIBRARY )
-           SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_swscale_LIBRARY} )
-        ENDIF( FFMPEG_swscale_LIBRARY )
-                
-        IF ( FFMPEG_avfilter_LIBRARY)
-           SET( FFMPEG_LIBRARIES ${FFMPEG_LIBRARIES} ${FFMPEG_avfilter_LIBRARY})
-        ENDIF(FFMPEG_avfilter_LIBRARY)
     
 	message("FFMPEG LIBS: "${FFMPEG_LIBRARIES})
 	

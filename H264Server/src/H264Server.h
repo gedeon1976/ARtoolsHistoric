@@ -12,7 +12,6 @@
 #include "h264_stream.h"
 #include <iostream>
 
-
 // Data structures
 struct VideoInputParameters{	
 	int index;
@@ -51,6 +50,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 		void closeVideoProperties(int index);
 		void startCameraPreview(int tabIndex);
 		void updatePreview(void);
+		void getPreview(dataFrame image);
 
 	Q_SIGNALS:
 		void saveProperties(VideoProperties properties);

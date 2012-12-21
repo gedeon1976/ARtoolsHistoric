@@ -220,8 +220,7 @@
 		tmpCam->setInputID(cameraID);
 		tmpCam->setVideoSource(name);
 		tmpCam->setVideoSize(width,height);
-		tmpCam->setBufferSize(bufferSize);
-		
+		tmpCam->setBufferSize(bufferSize);		
 	
 		cameraList.replace(currentVideoProperties.index-1,tmpCam);
 		
@@ -299,6 +298,7 @@
 			 QLabel *lbBufferSize = new QLabel(tr("frames on buffer"));
 			 QLabel *lbVideoSize = new QLabel(tr("pixels"));
 			 QLabel *lbRTSPAddress = new QLabel(tr("Rtsp address"));
+			 QLabel *lbVideoPreview = new QLabel();
 
 			 QLCDNumber *fps = new QLCDNumber;
 			 QLCDNumber *Kbps = new QLCDNumber;
@@ -330,6 +330,10 @@
 
 			 videoSize->setDisabled(true);
 			 rtspAddress->setDisabled(true);
+			 
+			 lbVideoPreview->geometry().size().setWidth(160);
+			 lbVideoPreview->geometry().size().setHeight(120);
+			 lbVideoPreview->setFrameStyle(QFrame::Box);
 
 			 const QRect TabLayout = QRect(0,0,480,180);
 			 const QString nameSource = lnVideoInput->text();
@@ -364,6 +368,7 @@
 			 GridBox->addWidget(bufferSize,3,0);GridBox->addWidget(lbBufferSize,3,1);
 			 GridBox->addWidget(videoSize,4,0);GridBox->addWidget(lbVideoSize,4,1);
 			 GridBox->addWidget(lbRTSPAddress,5,0);GridBox->addWidget(rtspAddress,5,1,1,3);
+			 GridBox->addWidget(lbVideoPreview,1,2,4,2);
 
 			 // create signal mappers
 			 if (videoGeneralIndex==0){
@@ -426,9 +431,13 @@ void H264Server::startCameraPreview(int tabIndex)
       // check if preview is enabled
       isValid = checkPreview.at(1)->isChecked();
       if(isValid){
+	  // connect video preview signal and slot
+	  connect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(dataFrame)),this,SLOT(getPreview(dataFrame)));
 	  cameraList.at(currentIndex)->start();		// start current camera		
 	  timer->start(40);
       }else{
+	  // disconnect video preview signal and slot
+	  disconnect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(AVFrame*)),this,SLOT(getPreview(AVFrame*)));
 	  cameraList.at(currentIndex)->stop();		// stop camera........
 	  timer->stop();
       }
@@ -449,24 +458,55 @@ void H264Server::updatePreview(void)
       // get the frames from the cameras and set default values
       decodedFrame = avcodec_alloc_frame();
       avcodec_get_frame_defaults(decodedFrame);
-      
-      
-      
-    //  for(int i=0;i<camNumber;i++){
-	
-// 	videoFrame = cameraList.at(i)->getNextFrame();
-// 	pkt = cameraList.at(i)->get_CompressedFrame(&videoFrame);
-// 	cameraList.at(i)->getSPS_NAL(pkt);
-// 	//printf("pkt size %d\n",pkt.size);
-// 	BytesUsed = cameraList.at(i)->get_decodedFrame(&pkt,decodedFrame);
-	
-      
-    //  }
-      
+            
+      for(int i=0;i<camNumber;i++){
+	  
+	 //cameraList.at(i)->getImage(); 
+    
+      }      
     
   }catch(...){
   }
 }
+
+// get the images to perform a small window video preview
+void H264Server::getPreview(dataFrame image)
+{
+    try{
+	SwsContext *pSwSContext;
+	AVCodecContext *decCtx;
+	AVFrame *tmpFrame = image.frame;
+	AVFrame *pframeRGB;
+	
+	int width = image.frame->width;
+	int height = image.frame->height;
+	int index = image.cameraID -1;
+	
+	// set image size and format
+ 	QImage dataImage(width,height,QImage::Format_RGB888);
+	
+	// get the decoding and scaling context without filters
+	decCtx = cameraList.at(index)->get_DecodingContext();	
+	pSwSContext = sws_getContext(decCtx->width,decCtx->height,
+		decCtx->pix_fmt,width,height,PIX_FMT_RGB24,SWS_BICUBIC,NULL,NULL,NULL);
+	
+	// converts to RGB24
+	pframeRGB = avcodec_alloc_frame();
+	avcodec_get_frame_defaults(pframeRGB);
+	sws_scale(pSwSContext,tmpFrame->data,tmpFrame->linesize,0,height,
+		  pframeRGB->data,pframeRGB->linesize);
+		  
+	// load to image
+	int dataSize = sizeof(pframeRGB->data[0]);
+	dataImage.loadFromData(pframeRGB->data[0],dataSize);
+	
+    }
+    catch(...){
+	
+    }
+
+}
+
 
  
  // include extra qt moc files
