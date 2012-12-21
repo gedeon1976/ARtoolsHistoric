@@ -298,7 +298,7 @@
 			 QLabel *lbBufferSize = new QLabel(tr("frames on buffer"));
 			 QLabel *lbVideoSize = new QLabel(tr("pixels"));
 			 QLabel *lbRTSPAddress = new QLabel(tr("Rtsp address"));
-			 QLabel *lbVideoPreview = new QLabel();
+			 QLabel *lbVideoPreview = new QLabel;
 
 			 QLCDNumber *fps = new QLCDNumber;
 			 QLCDNumber *Kbps = new QLCDNumber;
@@ -358,7 +358,6 @@
 			 GridBox->setColumnMinimumWidth(1,40);
 			 GridBox->setColumnStretch(1,10);
 			 GridBox->setColumnStretch(2,10);
-
 
 
 			 GridBox->addWidget(input,0,0,1,2);GridBox->addWidget(propertiesButton,0,3,1,2);
@@ -431,15 +430,17 @@ void H264Server::startCameraPreview(int tabIndex)
       // check if preview is enabled
       isValid = checkPreview.at(1)->isChecked();
       if(isValid){
+	  // register the own structure type to be used in signal/slot mechanism
+	  qRegisterMetaType<pictureFrame>();
 	  // connect video preview signal and slot
-	  connect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(dataFrame)),this,SLOT(getPreview(dataFrame)));
+	   connect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->start();		// start current camera		
-	  timer->start(40);
+	  //timer->start(40);
       }else{
 	  // disconnect video preview signal and slot
-	  disconnect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(AVFrame*)),this,SLOT(getPreview(AVFrame*)));
+	  disconnect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->stop();		// stop camera........
-	  timer->stop();
+	  //timer->stop();
       }
     
   }catch(...){
@@ -470,7 +471,7 @@ void H264Server::updatePreview(void)
 }
 
 // get the images to perform a small window video preview
-void H264Server::getPreview(dataFrame image)
+void H264Server::getPreview(pictureFrame image)
 {
     try{
 	SwsContext *pSwSContext;
@@ -483,22 +484,41 @@ void H264Server::getPreview(dataFrame image)
 	int index = image.cameraID -1;
 	
 	// set image size and format
- 	QImage dataImage(width,height,QImage::Format_RGB888);
+ 	QImage dataImage(width,height,QImage::Format_RGB32);
+	QImage dstImage(width,height,QImage::Format_RGB32);
 	
 	// get the decoding and scaling context without filters
 	decCtx = cameraList.at(index)->get_DecodingContext();	
 	pSwSContext = sws_getContext(decCtx->width,decCtx->height,
-		decCtx->pix_fmt,width,height,PIX_FMT_RGB24,SWS_BICUBIC,NULL,NULL,NULL);
+		decCtx->pix_fmt,width,height,PIX_FMT_RGBA,SWS_BICUBIC,NULL,NULL,NULL);
 	
-	// converts to RGB24
+	
+	// determine required buffer size for allocate buffer
 	pframeRGB = avcodec_alloc_frame();
-	avcodec_get_frame_defaults(pframeRGB);
+	int numBytes = avpicture_get_size(PIX_FMT_RGBA,width,height);
+	uint8_t* buffer = new uint8_t[numBytes];
+	
+	avpicture_fill((AVPicture*)pframeRGB,buffer,PIX_FMT_RGBA,width,height);
+	//avcodec_get_frame_defaults(pframeRGB);
+	
+	// converts to RGB32
 	sws_scale(pSwSContext,tmpFrame->data,tmpFrame->linesize,0,height,
 		  pframeRGB->data,pframeRGB->linesize);
 		  
 	// load to image
-	int dataSize = sizeof(pframeRGB->data[0]);
-	dataImage.loadFromData(pframeRGB->data[0],dataSize);
+	int dataSize = sizeof(pframeRGB->data);
+	dataImage.loadFromData((const uchar*)pframeRGB->data,dataSize);
+	
+	// show the images
+	QRect rect(0,0,161,121);
+	QPainter painter(&dstImage);;
+	painter.fillRect(dataImage.rect(),Qt::transparent);
+	painter.drawImage(rect,dataImage);
+	painter.end();
+	
+	QList<QLabel*> drawSurface = tabVideoList->currentWidget()->findChildren<QLabel*>();
+	
+	drawSurface.at(5)->setPixmap(QPixmap::fromImage(dstImage));
 	
     }
     catch(...){

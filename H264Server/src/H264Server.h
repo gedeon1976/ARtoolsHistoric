@@ -50,7 +50,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 		void closeVideoProperties(int index);
 		void startCameraPreview(int tabIndex);
 		void updatePreview(void);
-		void getPreview(dataFrame image);
+		void getPreview(pictureFrame image);
 
 	Q_SIGNALS:
 		void saveProperties(VideoProperties properties);

@@ -22,6 +22,7 @@ blueCherryCard::blueCherryCard(){
       got_vop = 0;			// key frame
       BufferMaxSize = 5;		// buffer size default
       semaphores_global_flag = -1;      // flag to start semaphore inizialization
+      
     
   }catch(...){
   }
@@ -358,11 +359,11 @@ void blueCherryCard::getData(void)
       v4l2_buffer videoFrame;
       AVPacket pkt;
       AVFrame *decodedFrame;
-      dataFrame currentFrame;
+      pictureFrame currentFrame;
       
       // get the frames from the cameras and set default values
       decodedFrame = avcodec_alloc_frame();
-      avcodec_get_frame_defaults(decodedFrame);
+
       // keep the thread alive
       while(1){
 	  

@@ -33,6 +33,7 @@
 // include signals and slot capacity
 #include <QObject>
 #include <QTimer>
+#include <QMetaType>
 
 // FFMPEG LIBRARIES
 extern "C"{
@@ -82,6 +83,12 @@ struct dataFrame{
     int cameraID;
     AVFrame *frame;
 };
+
+// define the structures like a type to allow that the signal/slot mechanism
+// understand the  variables correctly
+typedef dataFrame pictureFrame;
+Q_DECLARE_METATYPE(pictureFrame)
+
 class blueCherryCard:public QObject{
   Q_OBJECT
   public:
@@ -120,7 +127,7 @@ class blueCherryCard:public QObject{
     
             
   Q_SIGNALS: 
-    void sendVideoPreview(dataFrame image);	/// signal used for preview
+    void sendVideoPreview(pictureFrame image);	/// signal used for preview
     
   private:
     v4l2_format vfmt;
