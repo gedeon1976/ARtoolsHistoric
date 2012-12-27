@@ -11,6 +11,7 @@
  */
  
  #include "H264Server.h"
+
  
  // constructor
  H264Server::H264Server()
@@ -435,12 +436,12 @@ void H264Server::startCameraPreview(int tabIndex)
 	  // connect video preview signal and slot
 	   connect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->start();		// start current camera		
-	  //timer->start(40);
+	  timer->start(40);
       }else{
 	  // disconnect video preview signal and slot
 	  disconnect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->stop();		// stop camera........
-	  //timer->stop();
+	  timer->stop();
       }
     
   }catch(...){
@@ -450,42 +451,25 @@ void H264Server::startCameraPreview(int tabIndex)
 void H264Server::updatePreview(void)
 {
   try{
-      v4l2_buffer videoFrame;
-      AVPacket pkt;
-      AVFrame *decodedFrame;
-      int camNumber = cameraList.size();
-      int BytesUsed = 0;
-      
-      // get the frames from the cameras and set default values
-      decodedFrame = avcodec_alloc_frame();
-      avcodec_get_frame_defaults(decodedFrame);
-            
-      for(int i=0;i<camNumber;i++){
-	  
-	 //cameraList.at(i)->getImage(); 
-    
-      }      
-    
-  }catch(...){
-  }
-}
-
-// get the images to perform a small window video preview
-void H264Server::getPreview(pictureFrame image)
-{
-    try{
 	SwsContext *pSwSContext;
 	AVCodecContext *decCtx;
-	AVFrame *tmpFrame = image.frame;
-	AVFrame *pframeRGB;
+	AVFrame *pframeRGB;	
+	AVFrame *decodedFrame;
+	int camNumber = cameraList.size();
+	int BytesUsed = 0;
+      
+      // get the frames from the cameras and set default values
+      
+	decodedFrame = frameBuffer.front();
 	
-	int width = image.frame->width;
-	int height = image.frame->height;
-	int index = image.cameraID -1;
-	
+	int width = decodedFrame->width;
+	int height = decodedFrame->height;
+	int index = 0;
+		
 	// set image size and format
  	QImage dataImage(width,height,QImage::Format_RGB32);
 	QImage dstImage(width,height,QImage::Format_RGB32);
+	QImage noVideo("noVideo.jpeg");
 	
 	// get the decoding and scaling context without filters
 	decCtx = cameraList.at(index)->get_DecodingContext();	
@@ -502,12 +486,12 @@ void H264Server::getPreview(pictureFrame image)
 	//avcodec_get_frame_defaults(pframeRGB);
 	
 	// converts to RGB32
-	sws_scale(pSwSContext,tmpFrame->data,tmpFrame->linesize,0,height,
+	sws_scale(pSwSContext,decodedFrame->data,decodedFrame->linesize,0,height,
 		  pframeRGB->data,pframeRGB->linesize);
 		  
 	// load to image
-	int dataSize = sizeof(pframeRGB->data);
-	dataImage.loadFromData((const uchar*)pframeRGB->data,dataSize);
+	int dataSize = sizeof(pframeRGB->data[0]);
+	dataImage.loadFromData((const uchar*)pframeRGB->data[0],dataSize);
 	
 	// show the images
 	QRect rect(0,0,161,121);
@@ -517,8 +501,43 @@ void H264Server::getPreview(pictureFrame image)
 	painter.end();
 	
 	QList<QLabel*> drawSurface = tabVideoList->currentWidget()->findChildren<QLabel*>();
+	//drawSurface.at(5)->setPixmap(QPixmap::fromImage(dataImage));
 	
-	drawSurface.at(5)->setPixmap(QPixmap::fromImage(dstImage));
+	if(dstImage.isNull()){
+	  noVideo.scaledToWidth(width);
+	  noVideo.scaledToHeight(height);
+	  drawSurface.at(5)->setPixmap(QPixmap::fromImage(noVideo)); 
+	}else{
+	   drawSurface.at(5)->setPixmap(QPixmap::fromImage(dataImage)); 
+	}
+	
+	
+            
+      for(int i=0;i<camNumber;i++){
+	  
+	 //cameraList.at(i)->getImage(); 
+    
+      }      
+    
+  }catch(...){
+  }
+}
+
+// get the images to perform a small window video preview
+void H264Server::getPreview(pictureFrame image)
+{
+    try{
+	int maxSize = 10;
+	int camID = image.cameraID;
+	AVFrame *tmpFrame = image.frame;
+	
+	// save the frame to the buffer
+	frameBuffer.push_back(tmpFrame);
+	if (frameBuffer.size()> maxSize){
+	    frameBuffer.pop_front();	// delete the first received frame
+	    printf("camera %d Frame Buffer size is %d\n",camID,frameBuffer.size());
+	}
+	
 	
     }
     catch(...){
