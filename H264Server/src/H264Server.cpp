@@ -457,32 +457,44 @@ void H264Server::updatePreview(void)
 	AVFrame *decodedFrame;
 	int camNumber = cameraList.size();
 	int BytesUsed = 0;
+	int numBytes = 0;
+	
+	int widthPreview,heighPreview;
+	int width = 704;//decodedFrame->width;
+	int height = 576;//decodedFrame->height;
+	int index = 0;
+	bool loaded = false;
       
       // get the frames from the cameras and set default values
+      // set image size and format
+ 	QImage dataImage(width,height,QImage::Format_RGB888);
+	QImage dstImage(width,height,QImage::Format_RGB888);
+	QImage noVideo;
+	QImage noVideoScaled,VideoScaled;
       
 	decodedFrame = frameBuffer.front();
 	
-	int width = decodedFrame->width;
-	int height = decodedFrame->height;
-	int index = 0;
-		
-	// set image size and format
- 	QImage dataImage(width,height,QImage::Format_RGB32);
-	QImage dstImage(width,height,QImage::Format_RGB32);
-	QImage noVideo("noVideo.jpeg");
+	// determine required buffer size for allocate buffer
+	pframeRGB = avcodec_alloc_frame();
+	if (pframeRGB==NULL){
+	    printf("cannot allocate frame\n");	    
+	    throw;
+	}
+	numBytes = avpicture_get_size(PIX_FMT_RGB24,width,height);
+	uint8_t* buffer = new uint8_t[numBytes];
+	
+	avpicture_fill((AVPicture*)pframeRGB,buffer,PIX_FMT_RGB24,width,height);
+			
+	loaded=noVideo.load("/home/users/henry.portilla/projects/H264Server/H264Server/src/images/SMPTE_ColorBars.jpeg");
+	
+	widthPreview = 160;
+	heighPreview = 120;	
 	
 	// get the decoding and scaling context without filters
 	decCtx = cameraList.at(index)->get_DecodingContext();	
 	pSwSContext = sws_getContext(decCtx->width,decCtx->height,
-		decCtx->pix_fmt,width,height,PIX_FMT_RGBA,SWS_BICUBIC,NULL,NULL,NULL);
-	
-	
-	// determine required buffer size for allocate buffer
-	pframeRGB = avcodec_alloc_frame();
-	int numBytes = avpicture_get_size(PIX_FMT_RGBA,width,height);
-	uint8_t* buffer = new uint8_t[numBytes];
-	
-	avpicture_fill((AVPicture*)pframeRGB,buffer,PIX_FMT_RGBA,width,height);
+		decCtx->pix_fmt,width,height,PIX_FMT_RGB24,SWS_BICUBIC,NULL,NULL,NULL);
+		
 	//avcodec_get_frame_defaults(pframeRGB);
 	
 	// converts to RGB32
@@ -490,13 +502,13 @@ void H264Server::updatePreview(void)
 		  pframeRGB->data,pframeRGB->linesize);
 		  
 	// load to image
-	int dataSize = sizeof(pframeRGB->data[0]);
+	int dataSize = sizeof(pframeRGB->data);
 	dataImage.loadFromData((const uchar*)pframeRGB->data[0],dataSize);
 	
 	// show the images
-	QRect rect(0,0,161,121);
+	QRect rect(0,0,159,119);
 	QPainter painter(&dstImage);;
-	painter.fillRect(dataImage.rect(),Qt::transparent);
+	painter.fillRect(dataImage.rect(),Qt::red);
 	painter.drawImage(rect,dataImage);
 	painter.end();
 	
@@ -504,13 +516,13 @@ void H264Server::updatePreview(void)
 	//drawSurface.at(5)->setPixmap(QPixmap::fromImage(dataImage));
 	
 	if(dstImage.isNull()){
-	  noVideo.scaledToWidth(width);
-	  noVideo.scaledToHeight(height);
-	  drawSurface.at(5)->setPixmap(QPixmap::fromImage(noVideo)); 
+	  noVideoScaled = noVideo.scaled(widthPreview,heighPreview);	  
+	  drawSurface.at(5)->setPixmap(QPixmap::fromImage(noVideoScaled)); 
 	}else{
-	   drawSurface.at(5)->setPixmap(QPixmap::fromImage(dataImage)); 
+	  VideoScaled = dstImage.scaled(widthPreview,heighPreview);	  
+	  drawSurface.at(5)->setPixmap(QPixmap::fromImage(VideoScaled));  
 	}
-	
+	update();	// update the widgets
 	
             
       for(int i=0;i<camNumber;i++){
