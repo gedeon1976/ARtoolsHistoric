@@ -459,20 +459,20 @@ void H264Server::updatePreview(void)
 	int BytesUsed = 0;
 	int numBytes = 0;
 	
-	int widthPreview,heighPreview;
-	int width = 704;//decodedFrame->width;
-	int height = 576;//decodedFrame->height;
+	int widthPreview,heighPreview;	
 	int index = 0;
-	bool loaded = false;
-      
-      // get the frames from the cameras and set default values
-      // set image size and format
- 	QImage dataImage(width,height,QImage::Format_RGB888);
-	QImage dstImage(width,height,QImage::Format_RGB888);
-	QImage noVideo;
-	QImage noVideoScaled,VideoScaled;
+	bool loaded = false;      
       
 	decodedFrame = frameBuffer.front();
+	int width = decodedFrame->width;
+	int height = decodedFrame->height;
+	
+	// get the frames from the cameras and set default values
+      // set image size and format
+ 	QImage dataImage(width,height,QImage::Format_RGB32);
+	QImage dstImage(width,height,QImage::Format_RGB32);
+	QImage noVideo;
+	QImage noVideoScaled,VideoScaled;
 	
 	// determine required buffer size for allocate buffer
 	pframeRGB = avcodec_alloc_frame();
@@ -493,12 +493,12 @@ void H264Server::updatePreview(void)
 	// get the decoding and scaling context without filters
 	decCtx = cameraList.at(index)->get_DecodingContext();	
 	pSwSContext = sws_getContext(decCtx->width,decCtx->height,
-		decCtx->pix_fmt,width,height,PIX_FMT_RGB24,SWS_BICUBIC,NULL,NULL,NULL);
+		decCtx->pix_fmt,decCtx->width,decCtx->height,PIX_FMT_RGB24,SWS_BICUBIC,NULL,NULL,NULL);
 		
 	//avcodec_get_frame_defaults(pframeRGB);
 	
 	// converts to RGB32
-	sws_scale(pSwSContext,decodedFrame->data,decodedFrame->linesize,0,height,
+	sws_scale(pSwSContext,decodedFrame->data,decodedFrame->linesize,0,decCtx->height,
 		  pframeRGB->data,pframeRGB->linesize);
 		  
 	// load to image
