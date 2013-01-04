@@ -581,13 +581,14 @@ void H264Server::getPreview(pictureFrame image)
     try{
 	int maxSize = 10;
 	int camID = image.cameraID;
+	videoGeneralIndex = camID;
 	AVFrame *tmpFrame = image.frame;
 	
 	// save the frame to the buffer
-	frameBuffer.push_back(tmpFrame);
-	if (frameBuffer.size()> maxSize){
-	    frameBuffer.pop_front();	// delete the first received frame
-	    printf("camera %d Frame Buffer size is %d\n",camID,frameBuffer.size());
+	cameraBufferList.at(camID).push_back(tmpFrame);
+	if (cameraBufferList.at(camID).size()> maxSize){
+	    cameraBufferList.at(camID).pop_front();	// delete the first received frame
+	    std::printf("camera %d Frame Buffer size is %d\n",camID,cameraBufferList.at(camID).size());
 	}
 	
 	

@@ -63,6 +63,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	int lastPropertiesIndex;					// last and actual properties visited index
 	int actualPropertiesIndex;
 	std::deque<AVFrame*> frameBuffer;   				/// FIFO buffer to save the compressed frames
+	std::deque<frameBuffer> cameraBufferList;				/// contains all buffers from the cameras
 	QList<checkIndex> propertiesIndex;				// to keep control of video properties access
 	QList<VideoInputParameters> VideoInputPropertiesList;		// video parameters list
 	QList<blueCherryCard*> cameraList;
