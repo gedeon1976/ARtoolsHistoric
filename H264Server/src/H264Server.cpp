@@ -11,6 +11,7 @@
  */
  
  #include "H264Server.h"
+ #include "glwidget.h"
 
  
  // constructor
@@ -291,6 +292,8 @@
 		 }else{
 			 int tabIndex = 0;	
 			 int videoIndex = 0;
+			 int widthPreview = 160;
+			 int heighPreview = 120;
 			 QTabWidget *tab = new QTabWidget;
 
 			 // set labels	
@@ -300,6 +303,17 @@
 			 QLabel *lbVideoSize = new QLabel(tr("pixels"));
 			 QLabel *lbRTSPAddress = new QLabel(tr("Rtsp address"));
 			 QLabel *lbVideoPreview = new QLabel;
+			 GLwidget *glPreviewWidget = new GLwidget;
+			 
+			 // set preview area
+			 QScrollArea *glPreviewArea = new QScrollArea;
+			 glPreviewArea->setWidget(glPreviewWidget);
+			 glPreviewArea->setWidgetResizable(true);
+			 glPreviewArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+			 glPreviewArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+			 glPreviewArea->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Ignored);
+			 glPreviewArea->setMinimumSize(widthPreview,heighPreview);
+			 glPreviewArea->setEnabled(true);
 
 			 QLCDNumber *fps = new QLCDNumber;
 			 QLCDNumber *Kbps = new QLCDNumber;
@@ -368,7 +382,7 @@
 			 GridBox->addWidget(bufferSize,3,0);GridBox->addWidget(lbBufferSize,3,1);
 			 GridBox->addWidget(videoSize,4,0);GridBox->addWidget(lbVideoSize,4,1);
 			 GridBox->addWidget(lbRTSPAddress,5,0);GridBox->addWidget(rtspAddress,5,1,1,3);
-			 GridBox->addWidget(lbVideoPreview,1,2,4,2);
+			 GridBox->addWidget(glPreviewArea,1,2,4,2);
 
 			 // create signal mappers
 			 if (videoGeneralIndex==0){
@@ -447,6 +461,30 @@ void H264Server::startCameraPreview(int tabIndex)
   }catch(...){
   }
 }
+// convert a AVframe to a QImage to be used on the preview
+unsigned char* H264Server::AVFrame2QImage(AVFrame* frame, int width, QImage image, int height)
+{
+    try{
+	// load to image
+	unsigned char *src = (unsigned char *)frame->data[0];
+	for (int y = 0; y < height; y++)
+	{	
+	    QRgb *scanLine = (QRgb*)image.scanLine(y);
+	    for (int x = 0; x < width; x++)
+	    {
+		scanLine[x] = qRgb(src[3*x], src[3*x+1], src[3*x+2]);
+	    }
+	src += frame->linesize[0];
+	}
+	return src;
+	
+    }
+    catch(...){
+    }
+
+}
+
+
 // update the preview frames information
 void H264Server::updatePreview(void)
 {
@@ -455,6 +493,7 @@ void H264Server::updatePreview(void)
 	AVCodecContext *decCtx;
 	AVFrame *pframeRGB;	
 	AVFrame *decodedFrame;
+	unsigned char *src;
 	int camNumber = cameraList.size();
 	int BytesUsed = 0;
 	int numBytes = 0;
@@ -463,21 +502,23 @@ void H264Server::updatePreview(void)
 	int index = 0;
 	bool loaded = false;      
       
+	// get the decoded frame
 	decodedFrame = frameBuffer.front();
+	
+	 // set image size and format
 	int width = decodedFrame->width;
 	int height = decodedFrame->height;
 	
 	// get the frames from the cameras and set default values
-      // set image size and format
+     
  	QImage dataImage(width,height,QImage::Format_RGB32);
-	QImage dstImage(width,height,QImage::Format_RGB32);
 	QImage noVideo;
 	QImage noVideoScaled,VideoScaled;
 	
 	// determine required buffer size for allocate buffer
 	pframeRGB = avcodec_alloc_frame();
 	if (pframeRGB==NULL){
-	    printf("cannot allocate frame\n");	    
+	    std::printf("cannot allocate frame\n");	    
 	    throw;
 	}
 	numBytes = avpicture_get_size(PIX_FMT_RGB24,width,height);
@@ -501,36 +542,35 @@ void H264Server::updatePreview(void)
 	sws_scale(pSwSContext,decodedFrame->data,decodedFrame->linesize,0,decCtx->height,
 		  pframeRGB->data,pframeRGB->linesize);
 		  
-	// load to image
-	int dataSize = sizeof(pframeRGB->data);
-	dataImage.loadFromData((const uchar*)pframeRGB->data[0],dataSize);
+	// load data to image
+	src = AVFrame2QImage(pframeRGB,dataImage,width(),height());
+	int dataSize= sizeof(pframeRGB->data);
+	dataImage.loadFromData(src,dataSize);
 	
-	// show the images
-	QRect rect(0,0,159,119);
-	QPainter painter(&dstImage);;
-	painter.fillRect(dataImage.rect(),Qt::red);
-	painter.drawImage(rect,dataImage);
-	painter.end();
+	// get widgets for the current tab
+	QList<QScrollArea*> drawSurface = tabVideoList->currentWidget()->findChildren<QScrollArea*>();
 	
-	QList<QLabel*> drawSurface = tabVideoList->currentWidget()->findChildren<QLabel*>();
-	//drawSurface.at(5)->setPixmap(QPixmap::fromImage(dataImage));
+	QList<GLwidget*> renderArea = drawSurface.at(0)->findChildren<GLwidget*>();
 	
-	if(dstImage.isNull()){
+	if(dataImage.isNull()){
 	  noVideoScaled = noVideo.scaled(widthPreview,heighPreview);	  
-	  drawSurface.at(5)->setPixmap(QPixmap::fromImage(noVideoScaled)); 
+	  renderArea.at(0)->setImage(noVideoScaled);
+	  renderArea.at(0)->repaint();	  
 	}else{
-	  VideoScaled = dstImage.scaled(widthPreview,heighPreview);	  
-	  drawSurface.at(5)->setPixmap(QPixmap::fromImage(VideoScaled));  
+	  VideoScaled = dataImage.scaled(widthPreview,heighPreview);	
+	  renderArea.at(0)->setImage(VideoScaled);
+	  renderArea.at(0)->repaint();	  
 	}
-	update();	// update the widgets
-	
-            
+	            
       for(int i=0;i<camNumber;i++){
 	  
 	 //cameraList.at(i)->getImage(); 
     
       }      
-    
+      // free memory
+      delete [] buffer;
+      av_free(pframeRGB);
+          
   }catch(...){
   }
 }

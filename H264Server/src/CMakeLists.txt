@@ -16,19 +16,19 @@ endif(QT4_FOUND)
 
 
 # set source files
-set(H264Server_SRCS blueCherryCard.cpp H264Server.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
+set(H264Server_SRCS glwidget.cpp blueCherryCard.cpp H264Server.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
 qt4_automoc(${H264Server_SRCS})
 add_executable(H264Server ${H264Server_SRCS})
 
 #generate executable files
 if(UNIX)
 	target_link_libraries(H264Server ${FFMPEG_avcodec_LIBRARY} 
-		${FFMPEG_avformat_LIBRARY} ${FFMPEG_avutil_LIBRARY} ${FFMPEG_swscale_LIBRARY} ${QT_QTGUI_LIBRARY} 
+		${FFMPEG_avformat_LIBRARY} ${FFMPEG_avutil_LIBRARY} ${FFMPEG_swscale_LIBRARY} ${QT_QTOPENGL_LIBRARY} ${QT_QTGUI_LIBRARY} 
 		${QT_LIBRARIES}  ${LIVE555_LIBRARIES} ${H264BITSTREAM_LIBRARIES})
 		message("Linking with: " ${FFMPEG_avcodec_LIBRARY})
 		
 endif(UNIX)
 if(WIN32)
-	target_link_libraries(H264Server ${QT_QTGUI_LIBRARY} 
+	target_link_libraries(H264Server ${QT_QTOPENGL_LIBRARY} 				${QT_QTGUI_LIBRARY} 
 		${QT_LIBRARIES} ${FFMPEG_LIBRARIES} ${H264BITSTREAM_LIBRARIES})#${LIVE555_LIBRARIES}
 endif(WIN32)

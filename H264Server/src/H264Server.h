@@ -11,6 +11,7 @@
 // h264bitstream class
 #include "h264_stream.h"
 #include <iostream>
+#include <cstdio>
 
 // Data structures
 struct VideoInputParameters{	
@@ -49,6 +50,8 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 		void saveVideoProperties(QWidget *parameters);
 		void closeVideoProperties(int index);
 		void startCameraPreview(int tabIndex);
+		unsigned char* AVFrame2QImage(AVFrame *frame,int width,
+					      QImage image,int  height);
 		void updatePreview(void);
 		void getPreview(pictureFrame image);
 
