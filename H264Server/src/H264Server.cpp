@@ -57,8 +57,7 @@
 			for(int i=0;i<videoCounter;i++){
 				propertiesIndex.push_back(propIndex);
 				VideoInputPropertiesList.push_back(params);
-				cameraBufferList.push_back(nullFrame);
-				cameraBufferList.clear();
+				
 			}
 			propertiesIndex.replace(index-1,propIndex);
 			// save the values
@@ -421,9 +420,17 @@
 			 videoCounter = videoCounter + 1;
 			 
 			 // create camera objects
-	
+			 
 			 blueCherryCard *Cam = new blueCherryCard;
 			 cameraList.push_back(Cam);
+			 
+			 frameBuffer tmpFrameBuffer;
+			 cameraBufferList.push_back(tmpFrameBuffer);
+			 cameraBufferList.clear();
+			 
+			 bool status = false;
+			 cameraStatusList.push_back(status);
+			 cameraStatusList.clear();
 	 
 		 }
 	 }catch(...){
@@ -439,6 +446,7 @@ void H264Server::startCameraPreview(int tabIndex)
       bool isValid;
       int width=704;
       int height=576;
+      bool currentStatus = false;
       VideoInputParameters VideoParams;      
       QString videoSource;
       
@@ -454,11 +462,18 @@ void H264Server::startCameraPreview(int tabIndex)
 	   connect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->start();		// start current camera		
 	  timer->start(40);
+	  // set flag of camera started
+	  currentStatus = true;
+	  cameraStatusList.at(currentIndex) = currentStatus;
+	  
       }else{
 	  // disconnect video preview signal and slot
 	  disconnect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->stop();		// stop camera........
 	  timer->stop();
+	  // unset flag for cameras state
+	  currentStatus = false;
+	  cameraStatusList.at(currentIndex) = currentStatus;
       }
     
   }catch(...){
