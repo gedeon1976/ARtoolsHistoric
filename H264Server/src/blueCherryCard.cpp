@@ -598,13 +598,9 @@ int blueCherryCard::create_Thread(void)
 
     if (pthread_attr_init(&attr)==0){	
 	
-	//pthread_attr_getschedparam(&attr,&param);
 	pthread_attr_setscope(&attr,PTHREAD_SCOPE_SYSTEM);
 
-	   // param.sched_priority = 10;
-	    // printf("setup thread scope \n");
-	    // set priority to 10; max priority is = ?
-	    // in linux the threads are created with the maximum priority, equal to the kernel
+	// in linux the threads are created with the maximum priority, equal to the kernel
     }else{
 	    printf("error: %d \n", errno);
     }      

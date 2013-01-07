@@ -50,8 +50,8 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 		void saveVideoProperties(QWidget *parameters);
 		void closeVideoProperties(int index);
 		void startCameraPreview(int tabIndex);
-		unsigned char* AVFrame2QImage(AVFrame *frame,int width,
-					      QImage image,int  height);
+		unsigned char* AVFrame2QImage(AVFrame *frame,QImage image,
+					      int width,int  height);
 		void updatePreview(void);
 		void getPreview(pictureFrame image);
 
@@ -62,8 +62,8 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	int videoCounter;
 	int lastPropertiesIndex;					// last and actual properties visited index
 	int actualPropertiesIndex;
-	std::deque<AVFrame*> frameBuffer;   				/// FIFO buffer to save the compressed frames
-	std::deque<frameBuffer> cameraBufferList;				/// contains all buffers from the cameras
+	typedef std::deque<AVFrame*> frameBuffer;   			/// FIFO buffer to save the compressed frames
+	std::deque<frameBuffer> cameraBufferList;			/// contains all buffers from the cameras
 	QList<checkIndex> propertiesIndex;				// to keep control of video properties access
 	QList<VideoInputParameters> VideoInputPropertiesList;		// video parameters list
 	QList<blueCherryCard*> cameraList;

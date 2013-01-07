@@ -49,6 +49,7 @@
 		params.width = 704;
 		params.height = 576;
 		params.rtspPort = 7000;
+		frameBuffer nullFrame;
 
 		if (lastPropertiesIndex==-1){// first time for properties index
 			propIndex.index = index;
@@ -56,6 +57,8 @@
 			for(int i=0;i<videoCounter;i++){
 				propertiesIndex.push_back(propIndex);
 				VideoInputPropertiesList.push_back(params);
+				cameraBufferList.push_back(nullFrame);
+				cameraBufferList.clear();
 			}
 			propertiesIndex.replace(index-1,propIndex);
 			// save the values
@@ -461,8 +464,8 @@ void H264Server::startCameraPreview(int tabIndex)
   }catch(...){
   }
 }
-// convert a AVframe to a QImage to be used on the preview
-unsigned char* H264Server::AVFrame2QImage(AVFrame* frame, int width, QImage image, int height)
+// convert an AVframe to a QImage to be used on the preview
+unsigned char* H264Server::AVFrame2QImage(AVFrame* frame,QImage image,int width, int height)
 {
     try{
 	// load to image
@@ -494,7 +497,6 @@ void H264Server::updatePreview(void)
 	AVFrame *pframeRGB;	
 	AVFrame *decodedFrame;
 	unsigned char *src;
-	int camNumber = cameraList.size();
 	int BytesUsed = 0;
 	int numBytes = 0;
 	
@@ -503,7 +505,7 @@ void H264Server::updatePreview(void)
 	bool loaded = false;      
       
 	// get the decoded frame
-	decodedFrame = frameBuffer.front();
+	decodedFrame = cameraBufferList.at(videoGeneralIndex).front();
 	
 	 // set image size and format
 	int width = decodedFrame->width;
@@ -543,7 +545,7 @@ void H264Server::updatePreview(void)
 		  pframeRGB->data,pframeRGB->linesize);
 		  
 	// load data to image
-	src = AVFrame2QImage(pframeRGB,dataImage,width(),height());
+	src = AVFrame2QImage(pframeRGB,dataImage,width,height);
 	int dataSize= sizeof(pframeRGB->data);
 	dataImage.loadFromData(src,dataSize);
 	
@@ -561,12 +563,7 @@ void H264Server::updatePreview(void)
 	  renderArea.at(0)->setImage(VideoScaled);
 	  renderArea.at(0)->repaint();	  
 	}
-	            
-      for(int i=0;i<camNumber;i++){
-	  
-	 //cameraList.at(i)->getImage(); 
     
-      }      
       // free memory
       delete [] buffer;
       av_free(pframeRGB);
@@ -581,14 +578,14 @@ void H264Server::getPreview(pictureFrame image)
     try{
 	int maxSize = 10;
 	int camID = image.cameraID;
-	videoGeneralIndex = camID;
+	videoGeneralIndex = camID - 1;
 	AVFrame *tmpFrame = image.frame;
 	
-	// save the frame to the buffer
-	cameraBufferList.at(camID).push_back(tmpFrame);
-	if (cameraBufferList.at(camID).size()> maxSize){
-	    cameraBufferList.at(camID).pop_front();	// delete the first received frame
-	    std::printf("camera %d Frame Buffer size is %d\n",camID,cameraBufferList.at(camID).size());
+	// save the frame to the corresponding camera buffer
+	cameraBufferList.at(videoGeneralIndex).push_back(tmpFrame);
+	if (cameraBufferList.at(videoGeneralIndex).size()> maxSize){
+	    cameraBufferList.at(videoGeneralIndex).pop_front();	// delete the first received frame
+	    std::printf("camera %d Frame Buffer size is %d\n",camID,cameraBufferList.at(videoGeneralIndex).size());
 	}
 	
 	
