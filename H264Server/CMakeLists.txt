@@ -9,6 +9,7 @@
 project(H264Server)
 cmake_minimum_required(VERSION 2.8)
 
+
 # define the path to make the cmake modules available
 add_subdirectory(cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)

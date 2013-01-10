@@ -108,18 +108,19 @@ IF (UNIX)
         /usr/local/lib64
       )
 
-         FIND_LIBRARY( FFMPEG_avfilter_LIBRARY libavfilter2
+         FIND_LIBRARY( FFMPEG_avfilter_LIBRARY libavfilter.so
         /usr/lib
         /usr/local/lib
         /usr/lib64
         /usr/local/lib64
       )
           
-      FIND_LIBRARY( FFMPEG_swscale_LIBRARY libswscale
+      FIND_LIBRARY( FFMPEG_swscale_LIBRARY libswscale.so
         /usr/lib
         /usr/local/lib
         /usr/lib64
         /usr/local/lib64
+        /usr/lib/x86_64-linux-gnu
       )
   
       IF( FFMPEG_avcodec_LIBRARY )

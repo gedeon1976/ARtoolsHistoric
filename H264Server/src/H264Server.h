@@ -4,12 +4,14 @@
 // GUI
 #include <QtGui>
 #include <QtGui/QMainWindow>
+
 // include H264Server GUI
 #include "ui_H264Server.h"
+
 // bluecherry Class
 #include "blueCherryCard.h"
-// h264bitstream class
-#include "h264_stream.h"
+
+// std headers
 #include <iostream>
 #include <cstdio>
 
@@ -35,9 +37,7 @@ struct checkIndex{
 	int passCounter;
 };
 
-
-// LIVE555 libraries
-
+// class declaration
 class H264Server: public QMainWindow,private Ui::MainWindow
 {
 	Q_OBJECT
@@ -54,11 +54,14 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 					      int width,int  height);
 		void updatePreview(void);
 		void getPreview(pictureFrame image);
+		void setupServer(void);
+		void startVideoServer(void);
+		void stopVideoServer(void);
 
 	Q_SIGNALS:
 		void saveProperties(VideoProperties properties);
 	private:
-    int videoGeneralIndex;						// index to keep video inputs
+	int videoGeneralIndex;						// index to keep video inputs
 	int videoCounter;
 	int lastPropertiesIndex;					// last and actual properties visited index
 	int actualPropertiesIndex;
@@ -78,7 +81,16 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	QList<bool> closedWindow;
 	QTimer *timer;							// this timer controls the video
 									// capturing timing
-
+        // live555 variables
+        UsageEnvironment *env;						// main environment
+        H264VideoStreamDiscreteFramer *videoSource;			// video source 
+        RTPSink *videoSink;						// RTP sink
+        TaskScheduler *scheduler;					// RTSP, RTP scheduler
+        struct in_addr destinationAddress;
+	unsigned short rtpPortNum;
+	unsigned short rtcpPortNum;
+	unsigned char ttl;
+	
 };
 
 #endif //H264SERVER_H

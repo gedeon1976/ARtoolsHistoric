@@ -25,7 +25,8 @@ FILE(GLOB INCLUDE_SRC *.cpp *.c)
 #       Add flags to compiler
 #####################################################
 if(UNIX)
-   ADD_DEFINITIONS(-DSOCKLEN_T=socklen_t
+   ADD_DEFINITIONS(-m64
+		-DSOCKLEN_T=socklen_t
                 -D_LARGEFILE_SOURCE=1
                 -D_FILE_OFFSET_BITS=64
                 -DBSD=1)
@@ -39,3 +40,4 @@ endif(UNIX)
 #       build the library
 #####################################################
 ADD_LIBRARY(BasicUsageEnvironment STATIC ${INCLUDE_SRC})
+message ("building libBasicUsageEnvironment.a")

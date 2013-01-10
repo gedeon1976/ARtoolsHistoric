@@ -28,9 +28,16 @@
 	// add video sources
 	connect(buttAddVideoSource,SIGNAL(clicked()),
 			this,SLOT(addVideoInput()));
+	// add preview timer
 	timer = new QTimer(this);
 	connect(timer,SIGNAL(timeout()),
 	    this,SLOT(updatePreview()));
+	// add start video server 
+	connect(butStartServer,SIGNAL(clicked()),
+	  this,SLOT(startVideoServer()));
+	// add stop video server
+	connect(buttStopServer,SIGNAL(clicked(bool)),
+	  this,SLOT(stopVideoServer()));
  }
  
  H264Server::~H264Server()
@@ -355,10 +362,10 @@
 			 const QRect TabLayout = QRect(0,0,480,180);
 			 const QString nameSource = lnVideoInput->text();
 			 QGridLayout *GridBox = new QGridLayout;
-			 QCheckBox *input = new QCheckBox(tr("Enable Streaming"));
+			 QCheckBox *enableInputStream = new QCheckBox(tr("Enable Streaming"));
 			 QCheckBox *preview = new QCheckBox(tr("Preview"));
-			 input->setChecked(false);
-			 input->setEnabled(false);
+			 enableInputStream->setChecked(false);
+			 enableInputStream->setEnabled(false);
 			 preview->setChecked(false);
 			 preview->setEnabled(false);
 
@@ -377,7 +384,7 @@
 			 GridBox->setColumnStretch(2,10);
 
 
-			 GridBox->addWidget(input,0,0,1,2);GridBox->addWidget(propertiesButton,0,3,1,2);
+			 GridBox->addWidget(enableInputStream,0,0,1,2);GridBox->addWidget(propertiesButton,0,3,1,2);
 			 GridBox->addWidget(preview,0,2,1,1);
 			 GridBox->addWidget(fps,1,0,1,1);GridBox->addWidget(lbfps,1,1,1,1);
 			 GridBox->addWidget(Kbps,2,0);GridBox->addWidget(lbKbps,2,1);
@@ -610,7 +617,67 @@ void H264Server::getPreview(pictureFrame image)
     }
 
 }
+// configure the video server
+void H264Server::setupServer(void )
+{
+  try{
+      // Begin by setting up our usage environment:
+      scheduler = BasicTaskScheduler::createNew();
+      env = BasicUsageEnvironment::createNew(*scheduler);
+      
+      // create groupsocks for RTP and RTCP
+      destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*env);
+      // Note:: this is a multicast address
+      
+      // set ports and maximum jumps
+      rtpPortNum = 18888;
+      rtcpPortNum = rtpPortNum + 1;
+      ttl = 255;
+      Port rtpPort(rtpPortNum);
+      Port rtcpPort(rtcpPortNum);
+      
+      
+  }
+  catch(...){
+  }
 
+}
+
+// start video server
+void H264Server::startVideoServer(void)
+{
+  try{
+      bool isStreamEnabled = false;
+      QCheckBox *streamCheckBox;
+      
+     for(int i=0;i<videoCounter;i++){
+	tabVideoList->setCurrentIndex(i+1);
+	// check if input was enabled to be streamed
+	streamCheckBox = tabVideoList->currentWidget()->findChild<QCheckBox*>("enableInputStream");
+	isStreamEnabled = streamCheckBox->isChecked();
+	if(isStreamEnabled==true){
+	  // 
+	  
+	  
+	}
+	
+      
+      }
+    
+  }catch(...){
+  }
+}
+
+// stop video server
+void H264Server::stopVideoServer(void)
+{
+  try{
+      // stop the video server
+      
+    
+  }catch(...){
+  }
+}
 
  
  // include extra qt moc files

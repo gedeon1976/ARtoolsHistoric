@@ -199,7 +199,7 @@
      <string>Video Inputs</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="ButtStop">
+   <widget class="QPushButton" name="buttStopServer">
     <property name="geometry">
      <rect>
       <x>520</x>
@@ -263,7 +263,7 @@
      </property>
     </widget>
    </widget>
-   <widget class="QPushButton" name="butStart">
+   <widget class="QPushButton" name="butStartServer">
     <property name="geometry">
      <rect>
       <x>520</x>

@@ -20,7 +20,7 @@
             ${CMAKE_SOURCE_DIR}/live/BasicUsageEnvironment/include)
   find_path(LIVE_USAGE_INC UsageEnvironment.hh
           ${CMAKE_SOURCE_DIR}/live/UsageEnvironment/include)
-  set(LIVE555_INCLUDE_DIRS ${LIVE_MEDIA_INC} ${LIVE_GROUP_INC} ${LIVE_BASIC_INC} ${LIVE_USAGE_INC})
+  set(LIVE555_INCLUDE_DIRS ${LIVE_USAGE_INC} ${LIVE_GROUP_INC} ${LIVE_MEDIA_INC} ${LIVE_BASIC_INC} )
   
  IF (UNIX) 
  
@@ -29,16 +29,22 @@
   FIND_PATH(LIVE_MEDIA libliveMedia.a ${LIBRARY_OUTPUT_PATH}/${CMAKE_CFG_INTDIR})
   FIND_PATH(LIVE_GROUP libgroupsock.a ${LIBRARY_OUTPUT_PATH}/${CMAKE_CFG_INTDIR})
   FIND_PATH(LIVE_BASIC libBasicUsageEnvironment.a ${LIBRARY_OUTPUT_PATH}/${CMAKE_CFG_INTDIR})
-  #FIND_PATH(LIVE_USAGE libUsageEnvironment.a ${LIBRARY_OUTPUT_PATH}/${CMAKE_CFG_INTDIR})
+  FIND_PATH(LIVE_USAGE libUsageEnvironment.a ${LIBRARY_OUTPUT_PATH}/${CMAKE_CFG_INTDIR})
   
   set(LIVE_MEDIA_LIB ${LIVE_MEDIA}/libliveMedia.a)
   set(LIVE_GROUP_LIB ${LIVE_GROUP}/libgroupsock.a)
   set(LIVE_BASIC_LIB ${LIVE_BASIC}/libBasicUsageEnvironment.a)
-  #set(LIVE_USAGE_LIB ${LIVE_USAGE}/libUsageEnvironment.a)
+  set(LIVE_USAGE_LIB ${LIVE_USAGE}/libUsageEnvironment.a)
   
   message ("build dir:" ${LIBRARY_OUTPUT_PATH}/${CMAKE_CFG_INTDIR})
   
-  set(LIVE555_LIBRARIES ${LIVE_MEDIA_LIB} ${LIVE_GROUP_LIB} ${LIVE_BASIC_LIB})
+  set(LIVE555_LIBRARIES ${LIVE_MEDIA_LIB} ${LIVE_GROUP_LIB} ${LIVE_BASIC_LIB} ${LIVE_USAGE_LIB})
+  
+  message ("live555 libraries found on:")
+  message ("liveMedia:" ${LIVE_MEDIA_LIB})
+  message ("groupsock:" ${LIVE_GROUP_LIB})
+  message ("BasicUsageEnvironment:" ${LIVE_BASIC_LIB})
+  message ("UsageEnvironment:" ${LIVE_USAGE_LIB})
   
  
  ELSE (UNIX)  
@@ -50,13 +56,13 @@
     PATH ${LIBRARY_OUTPUT_PATH}/lib)
   find_library(LIVE_BASIC_LIB BasicUsageEnvironment 
     PATH ${LIBRARY_OUTPUT_PATH}/lib)
-  #find_library(LIVE_USAGE_LIB UsageEnvironment 
-  #  PATH ${LIBRARY_OUTPUT_PATH}/lib)
+  find_library(LIVE_USAGE_LIB UsageEnvironment 
+    PATH ${LIBRARY_OUTPUT_PATH}/lib)
   
   message ("build dir:" ${LIBRARY_OUTPUT_PATH}/${CMAKE_CFG_INTDIR})
   
   
-  set(LIVE555_LIBRARIES ${LIVE_MEDIA_LIB} ${LIVE_GROUP_LIB} ${LIVE_BASIC_LIB})# ${LIVE_USAGE_LIB})
+  set(LIVE555_LIBRARIES ${LIVE_MEDIA_LIB} ${LIVE_GROUP_LIB} ${LIVE_BASIC_LIB} ${LIVE_USAGE_LIB})
 
   
 ENDIF (UNIX)

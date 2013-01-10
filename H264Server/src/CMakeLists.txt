@@ -1,6 +1,7 @@
 # add definitions to avoid boost qt signals conflict
+# add also -D__STDC_CONSTANT_MACROS to CXX Flags for FFMPEG LIBRARIES
 add_definitions(-DQT_NO_KEYWORDS)
-# add also -D__STDC_CONSTANT_MACROS to CXX Flags
+set(EXTRA_OPTIONS "-D__STDC_CONSTANT_MACROS")
 
 # add include directories
 include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${FFMPEG_INCLUDE_DIRS} ${LIVE555_INCLUDE_DIRS}
@@ -17,6 +18,7 @@ endif(QT4_FOUND)
 
 # set source files
 set(H264Server_SRCS glwidget.cpp blueCherryCard.cpp H264Server.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
+set_source_files_properties(${H264Server_SRCS} PROPERTIES COMPILE_FLAGS "${EXTRA_OPTIONS}" )
 qt4_automoc(${H264Server_SRCS})
 add_executable(H264Server ${H264Server_SRCS})
 
@@ -24,7 +26,7 @@ add_executable(H264Server ${H264Server_SRCS})
 if(UNIX)
 	target_link_libraries(H264Server ${FFMPEG_avcodec_LIBRARY} 
 		${FFMPEG_avformat_LIBRARY} ${FFMPEG_avutil_LIBRARY} ${FFMPEG_swscale_LIBRARY} ${QT_QTOPENGL_LIBRARY} ${QT_QTGUI_LIBRARY} 
-		${QT_LIBRARIES}  ${LIVE555_LIBRARIES} ${H264BITSTREAM_LIBRARIES})
+		${QT_LIBRARIES} ${LIVE_MEDIA_LIB} ${LIVE_GROUP_LIB} ${LIVE_BASIC_LIB} ${LIVE_USAGE_LIB}  ${H264BITSTREAM_LIBRARIES})
 		message("Linking with: " ${FFMPEG_avcodec_LIBRARY})
 		
 endif(UNIX)
