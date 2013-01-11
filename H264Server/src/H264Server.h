@@ -63,6 +63,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	private:
 	int videoGeneralIndex;						// index to keep video inputs
 	int videoCounter;
+	int convertedCounter;
 	int lastPropertiesIndex;					// last and actual properties visited index
 	int actualPropertiesIndex;
 	typedef std::deque<AVFrame*> frameBuffer;   			/// FIFO buffer to save the compressed frames

@@ -23,6 +23,7 @@
 	// start variables 
 	videoGeneralIndex = 0;
 	videoCounter = 0;
+	convertedCounter = 0;
 	lastPropertiesIndex = -1;
 	// connect signals and slots
 	// add video sources
@@ -433,11 +434,11 @@
 			 
 			 frameBuffer tmpFrameBuffer;
 			 cameraBufferList.push_back(tmpFrameBuffer);
-			 cameraBufferList.clear();
+			 //cameraBufferList.clear();
 			 
 			 bool status = false;
 			 cameraStatusList.push_back(status);
-			 cameraStatusList.clear();
+			 //cameraStatusList.clear();
 	 
 		 }
 	 }catch(...){
@@ -527,7 +528,7 @@ void H264Server::updatePreview(void)
 	bool loaded = false;      
       
 	// get the decoded frame
-	decodedFrame = cameraBufferList.at(videoGeneralIndex).front();
+	decodedFrame = cameraBufferList.at(videoGeneralIndex).front();	 
 	
 	 // set image size and format
 	int width = decodedFrame->width;
@@ -535,7 +536,7 @@ void H264Server::updatePreview(void)
 	
 	// get the frames from the cameras and set default values
      
- 	QImage dataImage(width,height,QImage::Format_RGB32);
+ 	QImage dataImage(width,height,QImage::Format_ARGB32_Premultiplied);
 	QImage noVideo;
 	QImage noVideoScaled,VideoScaled;
 	
@@ -545,10 +546,10 @@ void H264Server::updatePreview(void)
 	    std::printf("cannot allocate frame\n");	    
 	    throw;
 	}
-	numBytes = avpicture_get_size(PIX_FMT_RGB24,width,height);
+	numBytes = avpicture_get_size(PIX_FMT_BGRA,width,height);
 	uint8_t* buffer = new uint8_t[numBytes];
 	
-	avpicture_fill((AVPicture*)pframeRGB,buffer,PIX_FMT_RGB24,width,height);
+	avpicture_fill((AVPicture*)pframeRGB,buffer,PIX_FMT_BGRA,width,height);
 			
 	loaded=noVideo.load("/home/users/henry.portilla/projects/H264Server/H264Server/src/images/SMPTE_ColorBars.jpeg");
 	
@@ -558,7 +559,7 @@ void H264Server::updatePreview(void)
 	// get the decoding and scaling context without filters
 	decCtx = cameraList.at(index)->get_DecodingContext();	
 	pSwSContext = sws_getContext(decCtx->width,decCtx->height,
-		decCtx->pix_fmt,decCtx->width,decCtx->height,PIX_FMT_RGB24,SWS_BICUBIC,NULL,NULL,NULL);
+		decCtx->pix_fmt,decCtx->width,decCtx->height,PIX_FMT_BGRA,SWS_BICUBIC,NULL,NULL,NULL);
 		
 	//avcodec_get_frame_defaults(pframeRGB);
 	
@@ -568,6 +569,8 @@ void H264Server::updatePreview(void)
 		  
 	// load data to image
 	src = AVFrame2QImage(pframeRGB,dataImage,width,height);
+	convertedCounter = convertedCounter + 1;
+	std::printf("converting frame %d\n",convertedCounter);
 	int dataSize= sizeof(pframeRGB->data);
 	dataImage.loadFromData(src,dataSize);
 	
@@ -613,6 +616,7 @@ void H264Server::getPreview(pictureFrame image)
 	
     }
     catch(...){
+	   std::printf("there was an error with the buffer cam %d index %d\n",videoGeneralIndex + 1,videoGeneralIndex);
 	
     }
 
