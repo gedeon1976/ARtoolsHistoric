@@ -54,6 +54,9 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 					      int width,int  height);
 		void updatePreview(void);
 		void getPreview(pictureFrame image);
+		void init_semaphore(int sem, int value);	
+		void set_semaphore(int sem);			
+		void wait_semaphore(int sem);			
 		void setupServer(void);
 		void startVideoServer(void);
 		void stopVideoServer(void);
@@ -81,6 +84,11 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	QList<QString> pButtonText;
 	QList<bool> closedWindow;
 	QTimer *timer;							// this timer controls the video
+	
+	// flow control
+	QSemaphore freeBytes;
+	QSemaphore usedBytes;
+	sem_t Sem1,Sem2;						// flow semaphore control
 									// capturing timing
         // live555 variables
         UsageEnvironment *env;						// main environment

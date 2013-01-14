@@ -39,6 +39,9 @@
 	// add stop video server
 	connect(buttStopServer,SIGNAL(clicked(bool)),
 	  this,SLOT(stopVideoServer()));
+	// start semaphore for preview control
+	init_semaphore(1,1);
+	init_semaphore(2,0);
  }
  
  H264Server::~H264Server()
@@ -527,6 +530,10 @@ void H264Server::updatePreview(void)
 	int index = 0;
 	bool loaded = false;      
       
+	// set semaphore
+	usedBytes.acquire();
+	//wait_semaphore(2);
+	
 	// get the decoded frame
 	decodedFrame = cameraBufferList.at(videoGeneralIndex).front();	 
 	
@@ -592,6 +599,8 @@ void H264Server::updatePreview(void)
       // free memory
       delete [] buffer;
       av_free(pframeRGB);
+      freeBytes.release();
+      //set_semaphore(1);
           
   }catch(...){
   }
@@ -606,14 +615,17 @@ void H264Server::getPreview(pictureFrame image)
 	videoGeneralIndex = camID - 1;
 	AVFrame *tmpFrame = image.frame;
 	
+	//wait_semaphore(1);
+	freeBytes.acquire();
+	
 	// save the frame to the corresponding camera buffer
 	cameraBufferList.at(videoGeneralIndex).push_back(tmpFrame);
 	if (cameraBufferList.at(videoGeneralIndex).size()> maxSize){
 	    cameraBufferList.at(videoGeneralIndex).pop_front();	// delete the first received frame
 	    std::printf("camera %d Frame Buffer size is %d\n",camID,cameraBufferList.at(videoGeneralIndex).size());
 	}
-	
-	
+	usedBytes.release();
+	//set_semaphore(2);
     }
     catch(...){
 	   std::printf("there was an error with the buffer cam %d index %d\n",videoGeneralIndex + 1,videoGeneralIndex);
@@ -621,6 +633,98 @@ void H264Server::getPreview(pictureFrame image)
     }
 
 }
+
+// init the semaphore
+void H264Server::init_semaphore(int sem, int value)
+{
+    try{	
+        switch(sem)
+        {
+        case 1:
+	    if (sem_init(&Sem1,0,value)==-1){   
+            // start semaphore to value
+            // 2d parameter = 0; only shared by threads in this process(class)
+               
+		printf("Failed to initialize the semaphore %d in camera %d",Sem1,videoGeneralIndex+1);
+            }     
+            break;
+        case 2:
+	    if (sem_init(&Sem2,0,value)==-1){   
+            // start semaphore to value
+            // 2d parameter = 0; only shared by threads in this process(class)
+               
+		printf("Failed to initialize the semaphore %d in camera %d",Sem2,videoGeneralIndex+1);
+            }
+            break;
+        }
+	
+    }catch(...){
+    }
+
+}
+
+// set the semaphore signal
+void H264Server::set_semaphore(int sem)
+{
+    try{
+	switch(sem)
+        {
+        case 1:
+	    if (sem_post(&Sem1)==-1){ 
+            //	increase semaphore
+		printf("Failed to unlock or increase the semaphore %d in camera %d",Sem1,videoGeneralIndex+1);
+            }else{
+		//printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+            }
+            break;
+        case 2:
+            if (sem_post(&Sem2)==-1){
+            //	increase semaphore
+		printf("Failed to unlock or increase the semaphore %d in camera %d",Sem2,videoGeneralIndex+1);
+            }else{
+                printf("camera: %d  Semaphore: %d\n",videoGeneralIndex+1,Sem2);
+                printf("No deberia entrar aqui\n");
+            }
+            break;
+        }
+	
+    }catch(...){
+    }
+
+}
+
+// wait and lock the semaphore
+void H264Server::wait_semaphore(int sem)
+{
+    try{
+        switch(sem)
+        {
+        case 1:
+	    if (sem_wait(&Sem1)==-1){        
+                // decrease semaphore value
+                printf("Failed to lock or decrease the semaphore %d in camera %d",Sem1,videoGeneralIndex+1);
+            }else{
+               // printf("camera: %d  Semaphore: %d\n",ID,Sem1);
+            }
+            break;
+        case 2:
+            if (sem_wait(&Sem2)==-1){        
+		// decrease semaphore value
+                printf("Failed to lock or decrease the semaphore %d in camera %d",Sem2,videoGeneralIndex+1);
+            }else{
+                printf("camera: %d  Semaphore: %d\n",videoGeneralIndex+1,Sem2);
+                printf("No deberia entrar aqui\n");
+            }
+            break;
+        }      
+        
+        	
+	
+    }catch(...){
+    }
+
+}
+
 // configure the video server
 void H264Server::setupServer(void )
 {
