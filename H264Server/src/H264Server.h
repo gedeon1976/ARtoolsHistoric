@@ -86,8 +86,6 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	QTimer *timer;							// this timer controls the video
 	
 	// flow control
-	QSemaphore freeBytes;
-	QSemaphore usedBytes;
 	sem_t Sem1,Sem2;						// flow semaphore control
 									// capturing timing
         // live555 variables

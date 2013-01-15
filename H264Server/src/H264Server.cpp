@@ -41,7 +41,7 @@
 	  this,SLOT(stopVideoServer()));
 	// start semaphore for preview control
 	init_semaphore(1,1);
-	init_semaphore(2,0);
+	
  }
  
  H264Server::~H264Server()
@@ -526,81 +526,89 @@ void H264Server::updatePreview(void)
 	int BytesUsed = 0;
 	int numBytes = 0;
 	
+	int currentTabIndex;
+	int currentInternalTabIndex;
 	int widthPreview,heighPreview;	
 	int index = 0;
-	bool loaded = false;      
-      
-	// set semaphore
-	usedBytes.acquire();
-	//wait_semaphore(2);
+	bool loaded = false; 
 	
-	// get the decoded frame
-	decodedFrame = cameraBufferList.at(videoGeneralIndex).front();	 
+	// check correct video index for correct display on 
+	// the corresponding tab
 	
-	 // set image size and format
-	int width = decodedFrame->width;
-	int height = decodedFrame->height;
+	currentTabIndex = tabVideoList->currentIndex();	
 	
-	// get the frames from the cameras and set default values
-     
- 	QImage dataImage(width,height,QImage::Format_ARGB32_Premultiplied);
-	QImage noVideo;
-	QImage noVideoScaled,VideoScaled;
+	if(currentTabIndex==videoGeneralIndex){
 	
-	// determine required buffer size for allocate buffer
-	pframeRGB = avcodec_alloc_frame();
-	if (pframeRGB==NULL){
-	    std::printf("cannot allocate frame\n");	    
-	    throw;
+	    // check the internal index to test correct video index
+	    // currentInternalTabIndex = VideoInputPropertiesList.at(videoGeneralIndex).index;
+	    // get the decoded frame
+	    decodedFrame = cameraBufferList.at(videoGeneralIndex).front();
+		    
+	    // set image size and format
+	    int width = decodedFrame->width;
+	    int height = decodedFrame->height;
+	    
+	    // get the frames from the cameras and set default values
+	
+	    QImage dataImage(width,height,QImage::Format_ARGB32_Premultiplied);
+	    QImage noVideo;
+	    QImage noVideoScaled,VideoScaled;
+	    
+	    // determine required buffer size for allocate buffer
+	    pframeRGB = avcodec_alloc_frame();
+	    if (pframeRGB==NULL){
+		std::printf("cannot allocate frame\n");	    
+		throw;
+	    }
+	    numBytes = avpicture_get_size(PIX_FMT_BGRA,width,height);
+	    uint8_t* buffer = new uint8_t[numBytes];
+	    
+	    avpicture_fill((AVPicture*)pframeRGB,buffer,PIX_FMT_BGRA,width,height);
+			    
+	    loaded=noVideo.load("/home/users/henry.portilla/projects/H264Server/H264Server/src/images/SMPTE_ColorBars.jpeg");
+	    
+	    widthPreview = 160;
+	    heighPreview = 120;	
+	    
+	    // get the decoding and scaling context without filters
+	    decCtx = cameraList.at(index)->get_DecodingContext();	
+	    pSwSContext = sws_getContext(decCtx->width,decCtx->height,
+		    decCtx->pix_fmt,decCtx->width,decCtx->height,PIX_FMT_BGRA,SWS_BICUBIC,NULL,NULL,NULL);
+		    
+	    //avcodec_get_frame_defaults(pframeRGB);
+	    
+	    // converts to RGB32
+	    sws_scale(pSwSContext,decodedFrame->data,decodedFrame->linesize,0,decCtx->height,
+		    pframeRGB->data,pframeRGB->linesize);
+		    
+	    // load data to image
+	    src = AVFrame2QImage(pframeRGB,dataImage,width,height);
+    // 	convertedCounter = convertedCounter + 1;
+    // 	std::printf("converting frame %d\n",convertedCounter);
+	    int dataSize= sizeof(pframeRGB->data);
+	    dataImage.loadFromData(src,dataSize);
+	    
+	    // get widgets for the current tab
+	    QList<QScrollArea*> drawSurface = tabVideoList->currentWidget()->findChildren<QScrollArea*>();
+	    
+	    QList<GLwidget*> renderArea = drawSurface.at(0)->findChildren<GLwidget*>();
+	    
+	    if(dataImage.isNull()){
+		noVideo.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+		noVideoScaled = noVideo.scaled(widthPreview,heighPreview);	  
+		renderArea.at(0)->setImage(noVideoScaled);
+		renderArea.at(0)->repaint();	  
+	    }else{
+		VideoScaled = dataImage.scaled(widthPreview,heighPreview);	
+		renderArea.at(0)->setImage(VideoScaled);
+		renderArea.at(0)->repaint();	  
+	    }
+	
+	// free memory
+	delete [] buffer;
+	av_free(pframeRGB);
 	}
-	numBytes = avpicture_get_size(PIX_FMT_BGRA,width,height);
-	uint8_t* buffer = new uint8_t[numBytes];
 	
-	avpicture_fill((AVPicture*)pframeRGB,buffer,PIX_FMT_BGRA,width,height);
-			
-	loaded=noVideo.load("/home/users/henry.portilla/projects/H264Server/H264Server/src/images/SMPTE_ColorBars.jpeg");
-	
-	widthPreview = 160;
-	heighPreview = 120;	
-	
-	// get the decoding and scaling context without filters
-	decCtx = cameraList.at(index)->get_DecodingContext();	
-	pSwSContext = sws_getContext(decCtx->width,decCtx->height,
-		decCtx->pix_fmt,decCtx->width,decCtx->height,PIX_FMT_BGRA,SWS_BICUBIC,NULL,NULL,NULL);
-		
-	//avcodec_get_frame_defaults(pframeRGB);
-	
-	// converts to RGB32
-	sws_scale(pSwSContext,decodedFrame->data,decodedFrame->linesize,0,decCtx->height,
-		  pframeRGB->data,pframeRGB->linesize);
-		  
-	// load data to image
-	src = AVFrame2QImage(pframeRGB,dataImage,width,height);
-	convertedCounter = convertedCounter + 1;
-	std::printf("converting frame %d\n",convertedCounter);
-	int dataSize= sizeof(pframeRGB->data);
-	dataImage.loadFromData(src,dataSize);
-	
-	// get widgets for the current tab
-	QList<QScrollArea*> drawSurface = tabVideoList->currentWidget()->findChildren<QScrollArea*>();
-	
-	QList<GLwidget*> renderArea = drawSurface.at(0)->findChildren<GLwidget*>();
-	
-	if(dataImage.isNull()){
-	  noVideoScaled = noVideo.scaled(widthPreview,heighPreview);	  
-	  renderArea.at(0)->setImage(noVideoScaled);
-	  renderArea.at(0)->repaint();	  
-	}else{
-	  VideoScaled = dataImage.scaled(widthPreview,heighPreview);	
-	  renderArea.at(0)->setImage(VideoScaled);
-	  renderArea.at(0)->repaint();	  
-	}
-    
-      // free memory
-      delete [] buffer;
-      av_free(pframeRGB);
-      freeBytes.release();
-      //set_semaphore(1);
           
   }catch(...){
   }
@@ -615,17 +623,14 @@ void H264Server::getPreview(pictureFrame image)
 	videoGeneralIndex = camID - 1;
 	AVFrame *tmpFrame = image.frame;
 	
-	//wait_semaphore(1);
-	freeBytes.acquire();
-	
+	wait_semaphore(1);		
 	// save the frame to the corresponding camera buffer
 	cameraBufferList.at(videoGeneralIndex).push_back(tmpFrame);
 	if (cameraBufferList.at(videoGeneralIndex).size()> maxSize){
 	    cameraBufferList.at(videoGeneralIndex).pop_front();	// delete the first received frame
 	    std::printf("camera %d Frame Buffer size is %d\n",camID,cameraBufferList.at(videoGeneralIndex).size());
 	}
-	usedBytes.release();
-	//set_semaphore(2);
+	set_semaphore(1);
     }
     catch(...){
 	   std::printf("there was an error with the buffer cam %d index %d\n",videoGeneralIndex + 1,videoGeneralIndex);
@@ -755,22 +760,22 @@ void H264Server::setupServer(void )
 void H264Server::startVideoServer(void)
 {
   try{
-      bool isStreamEnabled = false;
-      QCheckBox *streamCheckBox;
+    bool isStreamEnabled = false;
+      QList<QCheckBox*> streamCheckBox;
       
      for(int i=0;i<videoCounter;i++){
-	tabVideoList->setCurrentIndex(i+1);
+	tabVideoList->setCurrentIndex(i);
 	// check if input was enabled to be streamed
-	streamCheckBox = tabVideoList->currentWidget()->findChild<QCheckBox*>("enableInputStream");
-	isStreamEnabled = streamCheckBox->isChecked();
+	streamCheckBox = tabVideoList->currentWidget()->findChildren<QCheckBox*>();
+	isStreamEnabled = streamCheckBox.at(0)->isChecked();
 	if(isStreamEnabled==true){
 	  // 
 	  
 	  
-	}
-	
-      
+	}      
       }
+      // setup server
+      setupServer();
     
   }catch(...){
   }
