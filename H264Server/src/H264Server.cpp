@@ -19,7 +19,7 @@
  {
 	// initialize GUI
 	setupUi(this);
-
+	buttStopServer->setDisabled(true);
 	// start variables 
 	videoGeneralIndex = 0;
 	videoCounter = 0;
@@ -31,6 +31,7 @@
 			this,SLOT(addVideoInput()));
 	// add preview timer
 	timer = new QTimer(this);
+	timer->start(40);
 	connect(timer,SIGNAL(timeout()),
 	    this,SLOT(updatePreview()));
 	// add start video server 
@@ -437,11 +438,10 @@
 			 
 			 frameBuffer tmpFrameBuffer;
 			 cameraBufferList.push_back(tmpFrameBuffer);
-			 //cameraBufferList.clear();
-			 
+			 			 
 			 bool status = false;
 			 cameraStatusList.push_back(status);
-			 //cameraStatusList.clear();
+			 
 	 
 		 }
 	 }catch(...){
@@ -470,9 +470,9 @@ void H264Server::startCameraPreview(int tabIndex)
 	  // register the own structure type to be used in signal/slot mechanism
 	  qRegisterMetaType<pictureFrame>();
 	  // connect video preview signal and slot
-	   connect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
+	  connect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->start();		// start current camera		
-	  timer->start(40);
+	  
 	  // set flag of camera started
 	  currentStatus = true;
 	  cameraStatusList.at(currentIndex) = currentStatus;
@@ -481,7 +481,7 @@ void H264Server::startCameraPreview(int tabIndex)
 	  // disconnect video preview signal and slot
 	  disconnect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->stop();		// stop camera........
-	  timer->stop();
+	  
 	  // unset flag for cameras state
 	  currentStatus = false;
 	  cameraStatusList.at(currentIndex) = currentStatus;
@@ -533,11 +533,11 @@ void H264Server::updatePreview(void)
 	bool loaded = false; 
 	
 	// check correct video index for correct display on 
-	// the corresponding tab
+	// the corresponding tab and also ask if the camera is ON
 	
 	currentTabIndex = tabVideoList->currentIndex();	
 	
-	if(currentTabIndex==videoGeneralIndex){
+	if((currentTabIndex==videoGeneralIndex)&(cameraStatusList.at(videoGeneralIndex))){
 	
 	    // check the internal index to test correct video index
 	    // currentInternalTabIndex = VideoInputPropertiesList.at(videoGeneralIndex).index;
@@ -583,8 +583,8 @@ void H264Server::updatePreview(void)
 		    
 	    // load data to image
 	    src = AVFrame2QImage(pframeRGB,dataImage,width,height);
-    // 	convertedCounter = convertedCounter + 1;
-    // 	std::printf("converting frame %d\n",convertedCounter);
+	    // 	convertedCounter = convertedCounter + 1;
+	    // 	std::printf("converting frame %d\n",convertedCounter);
 	    int dataSize= sizeof(pframeRGB->data);
 	    dataImage.loadFromData(src,dataSize);
 	    
@@ -760,22 +760,59 @@ void H264Server::setupServer(void )
 void H264Server::startVideoServer(void)
 {
   try{
-    bool isStreamEnabled = false;
+      bool isStreamEnabled = false;
+      bool currentCameraStatus = false;
       QList<QCheckBox*> streamCheckBox;
+      QList<QPushButton*> propertiesButton;
       
-     for(int i=0;i<videoCounter;i++){
+      
+      for(int i=0;i<videoCounter;i++){
 	tabVideoList->setCurrentIndex(i);
 	// check if input was enabled to be streamed
 	streamCheckBox = tabVideoList->currentWidget()->findChildren<QCheckBox*>();
+	// get properties button
+	propertiesButton = tabVideoList->currentWidget()->findChildren<QPushButton*>();
 	isStreamEnabled = streamCheckBox.at(0)->isChecked();
+	
 	if(isStreamEnabled==true){
-	  // 
+	  
+	  // check if camera is ON or OFF (preview mode)
+	  currentCameraStatus = cameraStatusList.at(i);
+	  if(currentCameraStatus){
+	    // disconnect video preview signal and slot
+	    
+	    timer->stop();
+	    cameraStatusList.at(i) = true;
+	    streamCheckBox.at(1)->setDisabled(true);
+	    propertiesButton.at(0)->setDisabled(true);
+	  	  
+	  }else{
+	      
+	    // start cameras without preview	        
+	    cameraList.at(i)->start();	// start camera........
+	    cameraStatusList.at(i) = true;
+	    
+	    // disable preview
+	    streamCheckBox.at(1)->setDisabled(true);
+	    propertiesButton.at(0)->setDisabled(true);
+	    // stop main timer used for video preview
+	    timer->stop();
+	    
+	  }
 	  
 	  
 	}      
       }
+     
+      
       // setup server
       setupServer();
+      
+      // disable this button
+      butStartServer->setDisabled(true);
+      // enable stop server
+      buttStopServer->setEnabled(true);
+      
     
   }catch(...){
   }
@@ -786,10 +823,40 @@ void H264Server::stopVideoServer(void)
 {
   try{
       // stop the video server
+      bool currentCameraStatus = false;
+      QList<QCheckBox*> streamCheckBox;
+      QList<QPushButton*> propertiesButton;
+           
+      for(int i=0;i<videoCounter;i++){
+	
+	    tabVideoList->setCurrentIndex(i);
+	    // get preview checkbox to enable again
+	    streamCheckBox = tabVideoList->currentWidget()->findChildren<QCheckBox*>();
+	    // get properties button
+	    propertiesButton = tabVideoList->currentWidget()->findChildren<QPushButton*>();
+	    currentCameraStatus = cameraStatusList.at(i);
+	    if (currentCameraStatus){
+		cameraList.at(i)->stop();		
+		cameraStatusList.at(i) = false;
+	    }
+	    streamCheckBox.at(1)->setChecked(false);
+	    streamCheckBox.at(1)->setEnabled(true);
+	    propertiesButton.at(0)->setEnabled(true);	    
+ 	  
+	}      
+	// start main timer for video preview
+	timer->start(40);
+	
+	// enable start server button again
+	butStartServer->setEnabled(true);
+	// disable stop button
+	buttStopServer->setDisabled(true);
       
     
-  }catch(...){
-  }
+    } catch (...) {
+    // do something
+    std::printf("thread has been canceled\n");
+    }
 }
 
  
