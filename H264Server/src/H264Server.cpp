@@ -100,9 +100,18 @@
 			PropertiesWindow->setAttribute(Qt::WA_DeleteOnClose);
 			//PropertiesWindow->setWindowFlags(Qt::Tool);
 			QFormLayout *InputProperties = new QFormLayout;
-			QString videoIndex,strFps,strBufferSize,strVideoWidth,strVideoHeight,strRtspPort;
+			QString videoIndex,strFps,strBufferSize,strVideoWidth,strVideoHeight,
+			  strRtspPort;
 			VideoInputParameters OldParams;
 			int width,height;
+			unsigned maxHostNamelen = 100;
+			char HostNAME[maxHostNamelen+1];
+			
+			// get host name
+			gethostname((char*)HostNAME,maxHostNamelen);
+			HostNAME[maxHostNamelen]='\0';// just in case
+			
+			QString strRtspHost(HostNAME);
 
 			// layout items
 			QLabel *indexTab = new QLabel(tr("internal index"));
@@ -139,7 +148,7 @@
 			lnBufferSize->setText(strBufferSize);
 			lnVideoWidth->setText(strVideoWidth);
 			lnVideoHeight->setText(strVideoHeight);
-			lnRtspHost->setText(OldParams.rtspHost);
+			lnRtspHost->setText(strRtspHost);
 			lnRtspPort->setText(strRtspPort);
 			lnRtspName->setText(OldParams.rtspName);
 
@@ -169,7 +178,7 @@
 			PropertiesWindow->setMinimumSize(width,height);
 			PropertiesWindow->setMaximumSize(width,height);
 
-		    // save last index
+			// save last index
 		    
 			int tabcount = tabVideoList->count();
 			if (tabcount>1){
@@ -749,6 +758,37 @@ void H264Server::setupServer(void )
       Port rtpPort(rtpPortNum);
       Port rtcpPort(rtcpPortNum);
       
+      // sockets groupsock 
+      Groupsock rtpGroupsock(*env,destinationAddress,rtpPort,ttl);
+      rtpGroupsock.multicastSendOnly(); // we're a SSM source
+      Groupsock rtcpGroupsock(*env,destinationAddress,rtcpPort,ttl);
+      rtcpGroupsock.multicastSendOnly();// we're a SSM source
+      
+      // create a video RTP sink from the rtpGroupsock
+      OutPacketBuffer::maxSize = 100000;
+      videoSink = H264VideoRTPSink::createNew(*env,&rtpGroupsock,96);
+      
+      // create and start a RTCP instance  for this RTP sink
+      unsigned estimatedSessionBandwidth = 500;// in kbps; for RTCP b/w share
+      unsigned maxCNAMElen = 100;
+      unsigned char CNAME[maxCNAMElen+1];
+      gethostname((char*)CNAME,maxCNAMElen);
+      CNAME[maxCNAMElen]='\0';			// just in case
+      
+      RTCPInstance* rtcp = RTCPInstance::createNew(*env,&rtcpGroupsock,
+						   estimatedSessionBandwidth,
+						   CNAME,videoSink,NULL/*we're a server*/,
+						   True /* we're a SSM source */);
+      // Note: This starts RTCP running automatically
+      
+      // start RTSP server
+      
+      rtspServer = RTSPServer::createNew(*env,8554);
+      if (rtspServer == NULL) {
+	*env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
+	exit(1);
+      }
+      
       
   }
   catch(...){
@@ -765,22 +805,28 @@ void H264Server::startVideoServer(void)
       QList<QCheckBox*> streamCheckBox;
       QList<QPushButton*> propertiesButton;
       
+            
+      // setup server
+      setupServer();      
       
+      // start available cameras
       for(int i=0;i<videoCounter;i++){
-	tabVideoList->setCurrentIndex(i);
+	
 	// check if input was enabled to be streamed
+	tabVideoList->setCurrentIndex(i);	
 	streamCheckBox = tabVideoList->currentWidget()->findChildren<QCheckBox*>();
-	// get properties button
+	
+	// get properties button also
 	propertiesButton = tabVideoList->currentWidget()->findChildren<QPushButton*>();
 	isStreamEnabled = streamCheckBox.at(0)->isChecked();
 	
 	if(isStreamEnabled==true){
 	  
-	  // check if camera is ON or OFF (preview mode)
+	  // check if camera is ON or OFF (preview mode enabled)
 	  currentCameraStatus = cameraStatusList.at(i);
 	  if(currentCameraStatus){
-	    // disconnect video preview signal and slot
 	    
+	    // stop the preview timer
 	    timer->stop();
 	    cameraStatusList.at(i) = true;
 	    streamCheckBox.at(1)->setDisabled(true);
@@ -789,25 +835,20 @@ void H264Server::startVideoServer(void)
 	  }else{
 	      
 	    // start cameras without preview	        
-	    cameraList.at(i)->start();	// start camera........
+	    cameraList.at(i)->start();	
 	    cameraStatusList.at(i) = true;
 	    
 	    // disable preview
 	    streamCheckBox.at(1)->setDisabled(true);
 	    propertiesButton.at(0)->setDisabled(true);
+	    
 	    // stop main timer used for video preview
 	    timer->stop();
 	    
-	  }
-	  
-	  
+	  }	  
 	}      
       }
      
-      
-      // setup server
-      setupServer();
-      
       // disable this button
       butStartServer->setDisabled(true);
       // enable stop server
@@ -849,13 +890,14 @@ void H264Server::stopVideoServer(void)
 	
 	// enable start server button again
 	butStartServer->setEnabled(true);
+	
 	// disable stop button
 	buttStopServer->setDisabled(true);
       
     
     } catch (...) {
-    // do something
-    std::printf("thread has been canceled\n");
+      // do something
+      std::printf("thread has been canceled\n");
     }
 }
 

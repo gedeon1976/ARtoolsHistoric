@@ -97,6 +97,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	unsigned short rtpPortNum;
 	unsigned short rtcpPortNum;
 	unsigned char ttl;
+	RTSPServer *rtspServer;						// RTSP server
 	
 };
 
