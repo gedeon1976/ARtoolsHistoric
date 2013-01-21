@@ -10,6 +10,7 @@
 
 // bluecherry Class
 #include "blueCherryCard.h"
+#include "server.h"
 
 // std headers
 #include <iostream>
@@ -57,7 +58,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 		void init_semaphore(int sem, int value);	
 		void set_semaphore(int sem);			
 		void wait_semaphore(int sem);			
-		void setupServer(void);
+		
 		void startVideoServer(void);
 		void stopVideoServer(void);
 
@@ -88,16 +89,10 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	// flow control
 	sem_t Sem1,Sem2;						// flow semaphore control
 									// capturing timing
-        // live555 variables
-        UsageEnvironment *env;						// main environment
-        H264VideoStreamDiscreteFramer *videoSource;			// video source 
-        RTPSink *videoSink;						// RTP sink
-        TaskScheduler *scheduler;					// RTSP, RTP scheduler
-        struct in_addr destinationAddress;
-	unsigned short rtpPortNum;
-	unsigned short rtcpPortNum;
-	unsigned char ttl;
-	RTSPServer *rtspServer;						// RTSP server
+									
+	Server *rtsp_H264Server;					// H.264 server  
+	int rtspPort;
+       
 	
 };
 

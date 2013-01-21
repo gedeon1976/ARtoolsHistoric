@@ -29,7 +29,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <GroupsockHelper.hh>
 
 UsageEnvironment* env;
-char const* inputFileName = "test.264";
+char const* inputFileName = "slamtv60.264";
 H264VideoStreamFramer* videoSource;
 RTPSink* videoSink;
 

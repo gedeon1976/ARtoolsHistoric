@@ -239,14 +239,15 @@
 		height = currentVideoProperties.height;
 		name = currentVideoProperties.sourcePath;
 		bufferSize = currentVideoProperties.bufferSize;
+		rtspPort = currentVideoProperties.rtspPort;
 				
 		blueCherryCard *tmpCam;	
 		tmpCam = cameraList.at(currentVideoProperties.index-1);
 		tmpCam->setInputID(cameraID);
 		tmpCam->setVideoSource(name);
 		tmpCam->setVideoSize(width,height);
-		tmpCam->setBufferSize(bufferSize);		
-	
+		tmpCam->setBufferSize(bufferSize);	
+			
 		cameraList.replace(currentVideoProperties.index-1,tmpCam);
 		
 		// enable current tab
@@ -738,64 +739,6 @@ void H264Server::wait_semaphore(int sem)
     }
 
 }
-
-// configure the video server
-void H264Server::setupServer(void )
-{
-  try{
-      // Begin by setting up our usage environment:
-      scheduler = BasicTaskScheduler::createNew();
-      env = BasicUsageEnvironment::createNew(*scheduler);
-      
-      // create groupsocks for RTP and RTCP
-      destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*env);
-      // Note:: this is a multicast address
-      
-      // set ports and maximum jumps
-      rtpPortNum = 18888;
-      rtcpPortNum = rtpPortNum + 1;
-      ttl = 255;
-      Port rtpPort(rtpPortNum);
-      Port rtcpPort(rtcpPortNum);
-      
-      // sockets groupsock 
-      Groupsock rtpGroupsock(*env,destinationAddress,rtpPort,ttl);
-      rtpGroupsock.multicastSendOnly(); // we're a SSM source
-      Groupsock rtcpGroupsock(*env,destinationAddress,rtcpPort,ttl);
-      rtcpGroupsock.multicastSendOnly();// we're a SSM source
-      
-      // create a video RTP sink from the rtpGroupsock
-      OutPacketBuffer::maxSize = 100000;
-      videoSink = H264VideoRTPSink::createNew(*env,&rtpGroupsock,96);
-      
-      // create and start a RTCP instance  for this RTP sink
-      unsigned estimatedSessionBandwidth = 500;// in kbps; for RTCP b/w share
-      unsigned maxCNAMElen = 100;
-      unsigned char CNAME[maxCNAMElen+1];
-      gethostname((char*)CNAME,maxCNAMElen);
-      CNAME[maxCNAMElen]='\0';			// just in case
-      
-      RTCPInstance* rtcp = RTCPInstance::createNew(*env,&rtcpGroupsock,
-						   estimatedSessionBandwidth,
-						   CNAME,videoSink,NULL/*we're a server*/,
-						   True /* we're a SSM source */);
-      // Note: This starts RTCP running automatically
-      
-      // start RTSP server
-      
-      rtspServer = RTSPServer::createNew(*env,8554);
-      if (rtspServer == NULL) {
-	*env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
-	exit(1);
-      }
-      
-      
-  }
-  catch(...){
-  }
-
-}
-
 // start video server
 void H264Server::startVideoServer(void)
 {
@@ -807,7 +750,7 @@ void H264Server::startVideoServer(void)
       
             
       // setup server
-      setupServer();      
+      rtsp_H264Server->setupServer(rtspPort);
       
       // start available cameras
       for(int i=0;i<videoCounter;i++){
@@ -831,12 +774,23 @@ void H264Server::startVideoServer(void)
 	    cameraStatusList.at(i) = true;
 	    streamCheckBox.at(1)->setDisabled(true);
 	    propertiesButton.at(0)->setDisabled(true);
+	    
+	    // add the RTP session for this camera
+	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
+	    const char *name = streamName.toStdString().c_str(); 
+	    rtsp_H264Server->AddRTPSession(name);
 	  	  
 	  }else{
 	      
 	    // start cameras without preview	        
 	    cameraList.at(i)->start();	
 	    cameraStatusList.at(i) = true;
+	    
+	     // add the RTP session for this camera
+	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
+	    const char *name = streamName.toStdString().c_str(); 
+	    rtsp_H264Server->AddRTPSession(name);
+	    
 	    
 	    // disable preview
 	    streamCheckBox.at(1)->setDisabled(true);
@@ -849,6 +803,8 @@ void H264Server::startVideoServer(void)
 	}      
       }
      
+     
+      
       // disable this button
       butStartServer->setDisabled(true);
       // enable stop server
