@@ -10,7 +10,7 @@
 
 // bluecherry Class
 #include "blueCherryCard.h"
-#include "server.h"
+#include "videoserver.h"
 
 // std headers
 #include <iostream>
@@ -90,7 +90,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	sem_t Sem1,Sem2;						// flow semaphore control
 									// capturing timing
 									
-	Server *rtsp_H264Server;					// H.264 server  
+	videoServer *rtsp_H264Server;					// H.264 server  
 	int rtspPort;
        
 	
