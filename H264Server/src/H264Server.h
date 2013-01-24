@@ -58,7 +58,9 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 		void init_semaphore(int sem, int value);	
 		void set_semaphore(int sem);			
 		void wait_semaphore(int sem);			
-		
+		void setupServer(int rtspPort);
+		void AddRTPSession(const char *name);
+		ServerMediaSession* getRTPSession(int i);
 		void startVideoServer(void);
 		void stopVideoServer(void);
 
@@ -88,11 +90,17 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	
 	// flow control
 	sem_t Sem1,Sem2;						// flow semaphore control
-									// capturing timing
-									
-	videoServer *rtsp_H264Server;					// H.264 server  
+									// capturing timing								
+	
+	// live555 variables      
+	TaskScheduler *scheduler;					// RTSP, RTP scheduler
+	UsageEnvironment *env;						// main environment
+	H264VideoStreamDiscreteFramer *videoSource;			// video source       
+	struct in_addr destinationAddress;
+	unsigned short rtpPortNumBase;
+	unsigned char ttl;
+	RTSPServer *rtspServer;						// RTSP server
 	int rtspPort;
-       
 	
 };
 

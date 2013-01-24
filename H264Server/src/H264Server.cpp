@@ -739,6 +739,104 @@ void H264Server::wait_semaphore(int sem)
     }
 
 }
+// setup server
+void H264Server::setupServer(int rtspPort)
+{
+  try{
+      // set ports and maximum jumps
+      rtpPortNumBase = 18888;
+      ttl = 255; 
+      
+      // Begin by setting up our usage environment:
+      scheduler = BasicTaskScheduler::createNew();
+      env= BasicUsageEnvironment::createNew(*scheduler);
+      
+      // create groupsocks for RTP and RTCP
+      destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*env);
+      // Note:: this is a multicast address
+      
+      // create a RTSP server     
+      Port outPort(rtspPort);
+      RTSPServer *rtspServer = RTSPServer::createNew(*env,outPort);
+      if (rtspServer == NULL) {
+	*env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
+	exit(1);
+      }
+    
+  }catch(...){
+  }
+
+}
+// add a RTP session to manage each camera input
+void H264Server::AddRTPSession(const char* name)
+{
+  try{
+      int i = 0;
+      unsigned short rtpPortNum;
+      unsigned short rtcpPortNum;
+      RTPSink *videoSink;			// RTP sink         
+      
+      rtpPortNum = rtpPortNumBase + i;
+      rtcpPortNum = rtpPortNumBase + 1;
+      
+      Port rtpPort(rtpPortNum);
+      Port rtcpPort(rtcpPortNum);
+      
+      // sockets groupsock 
+      Groupsock rtpGroupsock(*env,destinationAddress,rtpPort,ttl);
+      rtpGroupsock.multicastSendOnly(); // we're a SSM source
+      Groupsock rtcpGroupsock(*env,destinationAddress,rtcpPort,ttl);
+      rtcpGroupsock.multicastSendOnly();// we're a SSM source
+      
+      // create a video RTP sink from the rtpGroupsock
+      OutPacketBuffer::maxSize = 100000;
+      videoSink = H264VideoRTPSink::createNew(*env,&rtpGroupsock,96);
+      
+      // create and start a RTCP instance  for this RTP sink
+      unsigned estimatedSessionBandwidth = 500;// in kbps; for RTCP b/w share
+      unsigned maxCNAMElen = 100;
+      unsigned char CNAME[maxCNAMElen+1];
+      gethostname((char*)CNAME,maxCNAMElen);
+      CNAME[maxCNAMElen]='\0';			// just in case
+      
+      RTCPInstance* rtcp = RTCPInstance::createNew(*env,&rtcpGroupsock,
+						   estimatedSessionBandwidth,
+						   CNAME,videoSink,NULL/*we're a server*/,
+						   True /* we're a SSM source */);
+      // Note: This starts RTCP running automatically
+      
+      ServerMediaSession *sms =
+      ServerMediaSession::createNew(*env,name,name,
+				    "Session streamed by \"H264VideoStreamer\"",
+				    True/*SSM*/);
+      sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink,rtcp));
+      
+      // add camera input to the rtsp Server
+      rtspServer->addServerMediaSession(sms);
+      
+      // show access address
+      *env<<"play this stream using the URl"<<rtspServer->rtspURL(sms)<<"\"\n";
+    
+    
+  }catch(...){
+    
+  }
+
+}
+// get a RTP session from RTSP server
+ServerMediaSession* H264Server::getRTPSession(int i)
+{
+  try{
+    
+    
+  }catch(...){
+    
+  }
+
+}
+
+
+
 // start video server
 void H264Server::startVideoServer(void)
 {
@@ -750,7 +848,7 @@ void H264Server::startVideoServer(void)
       
             
       // setup server
-      rtsp_H264Server->setupServer(rtspPort);
+      setupServer(rtspPort);
       
       // start available cameras
       for(int i=0;i<videoCounter;i++){
@@ -778,7 +876,7 @@ void H264Server::startVideoServer(void)
 	    // add the RTP session for this camera
 	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
 	    const char *name = streamName.toStdString().c_str(); 
-	    rtsp_H264Server->AddRTPSession(name);
+	    AddRTPSession(name);
 	  	  
 	  }else{
 	      
@@ -789,7 +887,7 @@ void H264Server::startVideoServer(void)
 	     // add the RTP session for this camera
 	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
 	    const char *name = streamName.toStdString().c_str(); 
-	    rtsp_H264Server->AddRTPSession(name);
+	    AddRTPSession(name);
 	    
 	    
 	    // disable preview
