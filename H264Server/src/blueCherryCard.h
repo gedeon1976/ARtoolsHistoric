@@ -84,10 +84,17 @@ struct dataFrame{
     AVFrame *frame;
 };
 
-// define the structures like a type to allow that the signal/slot mechanism
+struct H264encodedFrame{
+    int camera_ID;
+    AVPacket frame;
+};
+
+// define the structures like a type to allow to the signal/slot mechanism
 // understand the  variables correctly
 typedef dataFrame pictureFrame;
+typedef H264encodedFrame H264Frame; 
 Q_DECLARE_METATYPE(pictureFrame)
+Q_DECLARE_METATYPE(H264Frame)
 
 class blueCherryCard:public QObject{
   Q_OBJECT
@@ -128,6 +135,7 @@ class blueCherryCard:public QObject{
             
   Q_SIGNALS: 
     void sendVideoPreview(pictureFrame image);	/// signal used for preview
+    void sendEncodedVideo(H264Frame encodedFrame);/// signal that sends encoded frames
     
   private:
     v4l2_format vfmt;

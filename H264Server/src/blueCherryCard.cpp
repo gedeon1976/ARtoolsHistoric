@@ -360,6 +360,7 @@ void blueCherryCard::getData(void)
       AVPacket pkt;
       AVFrame *decodedFrame;
       pictureFrame currentFrame;
+      H264Frame encodedFrame;
       
       // get the frames from the cameras and set default values
       decodedFrame = avcodec_alloc_frame();
@@ -393,7 +394,11 @@ void blueCherryCard::getData(void)
 	    // emit signal for send video frameCounter
 	    currentFrame.cameraID = ID;
 	    currentFrame.frame = decodedFrame;
+	    encodedFrame.camera_ID = ID;
+	    encodedFrame.frame = pkt;
+	    
 	    Q_EMIT sendVideoPreview(currentFrame);
+	    Q_EMIT sendEncodedVideo(encodedFrame);
 	
 	    if(semaphores_global_flag == 0){
 	      set_semaphore(1);	     // set the semaphore 	      

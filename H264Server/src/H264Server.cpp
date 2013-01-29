@@ -65,7 +65,7 @@
 		params.fps = 25;
 		params.width = 704;
 		params.height = 576;
-		params.rtspPort = 7000;
+		params.rtspPort = 8554;
 		frameBuffer nullFrame;
 
 		if (lastPropertiesIndex==-1){// first time for properties index
@@ -220,6 +220,7 @@
 		int height=576;
 		int bufferSize=10;
 		int cameraID;
+		int portRtsp;
 		QString name;
 	 	// save parameters
 		VideoInputParameters currentVideoProperties,OldParams;
@@ -643,7 +644,7 @@ void H264Server::getPreview(pictureFrame image)
 	cameraBufferList.at(videoGeneralIndex).push_back(tmpFrame);
 	if (cameraBufferList.at(videoGeneralIndex).size()> maxSize){
 	    cameraBufferList.at(videoGeneralIndex).pop_front();	// delete the first received frame
-	    std::printf("camera %d Frame Buffer size is %d\n",camID,cameraBufferList.at(videoGeneralIndex).size());
+	    std::printf("camera %d display preview Buffer size is %d\n",camID,cameraBufferList.at(videoGeneralIndex).size());
 	}
 	set_semaphore(1);
     }
@@ -845,6 +846,8 @@ void H264Server::AddRTSPSession(const char* nombreVideo, int i)
       *env << "Beginning streaming...\n";
       
       play(i);
+      
+      //env->taskScheduler().doEventLoop();
     
     
   }catch(...){
@@ -928,6 +931,7 @@ void H264Server::startVideoServer(void)
 	}      
       }
      
+      // disable all RTP sessions
      
       
       // disable this button
@@ -1030,9 +1034,9 @@ void H264Server::testServer(void )
 
       // Start the streaming:
       *env << "Beginning streaming...\n";
-      play();
+      //play();
 
-      env->taskScheduler().doEventLoop(); // does not return
+      //env->taskScheduler().doEventLoop(); // does not return
 
     
   }catch(...){
@@ -1050,7 +1054,7 @@ void H264Server::afterPlaying(void*)
       // Note that this also closes the input file that this source read from.
 
       // Start playing once again:
-      play();
+      play(0);
     
   }catch(...){
 
@@ -1063,30 +1067,30 @@ void H264Server::play(int i)
 {
   try{
       // Open the device source in this case are encoded frames
-      DeviceParameters NALparameters;
-      DeviceSource* NAL_Source
-	= DeviceSource::createNew(*env, NALparameters);
-      if (NAL_Source == NULL) {
-	*env << "Unable to open file \"" << NALparameters
-	    << "\" as a byte-stream file source\n";
-	exit(1);
-      }
+//       DeviceParameters NALparameters;
+//       DeviceSource* NAL_Source
+// 	= DeviceSource::createNew(*env, NALparameters);
+//       if (NAL_Source == NULL) {
+// 	*env << "Unable to open NAL parameters \"" << NALparameters
+// 	    << "\" as a device source\n";
+// 	exit(1);
+//       }
       
       // copy the encoded frame to NAL_Source
-      AVPacket *currentFrame;
-      frameBuffer NAL_list;
-      
-      NAL_list = cameraBufferList.at(i);
-      currentFrame = NAL_list.front();
-      unsigned char *NAL_data;
-      int NAL_size = currentFrame->size;
-      memmove(currentFrame->data,NAL_data,NAL_size);
-      
-      
-      FramedSource* videoES = NAL_Source;
-
-      // Create a framer for the Video Elementary Stream:
-      videoSource2 = H264VideoStreamDiscreteFramer::createNew(*env, videoES);
+//       AVPacket *currentEncodedFrame;
+//       frameBuffer NAL_list;
+//       
+//       NAL_list = cameraBufferList.at(i);
+//       currentFrame = NAL_list.front();
+//       unsigned char *NAL_data;
+//       int NAL_size = currentFrame->size;
+//       memmove(currentFrame->data,NAL_data,NAL_size);
+//       
+//       
+//       FramedSource* videoES = NAL_Source;
+// 
+//       // Create a framer for the Video Elementary Stream:
+//       videoSource2 = H264VideoStreamDiscreteFramer::createNew(*env, videoES);
 
       // Finally, start playing:
       *env << "Beginning to read from camera...\n";
