@@ -25,6 +25,11 @@
 	videoCounter = 0;
 	convertedCounter = 0;
 	lastPropertiesIndex = -1;
+	inputFileNameTest = "slamtv60.264";
+	// set ports and maximum jumps for RTP protocols
+	isRTSPServerStarted = false;
+        rtpPortNumBase = 18888;
+        ttl = 255;
 	// connect signals and slots
 	// add video sources
 	connect(buttAddVideoSource,SIGNAL(clicked()),
@@ -768,16 +773,35 @@ void H264Server::setupServer(int rtspPort)
 
 }
 // add a RTP session to manage each camera input
-void H264Server::AddRTPSession(const char* name)
+void H264Server::AddRTSPSession(const char* nombreVideo, int i)
 {
-  try{
-      int i = 0;
+  try{     
+     
+      if (!isRTSPServerStarted){
+	// Begin by setting up our usage environment:
+	scheduler = BasicTaskScheduler::createNew();
+	env= BasicUsageEnvironment::createNew(*scheduler);
+      
+	// create groupsocks for RTP and RTCP
+	destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*env);
+	// Note:: this is a multicast address
+       
+	// create a RTSP server     
+	Port outPort(rtspPort);
+	rtspServer = RTSPServer::createNew(*env,outPort);
+	if (rtspServer == NULL) {
+	  *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
+	  exit(1);
+	}
+	isRTSPServerStarted = true;
+      }
+      
       unsigned short rtpPortNum;
       unsigned short rtcpPortNum;
       RTPSink *videoSink;			// RTP sink         
       
-      rtpPortNum = rtpPortNumBase + i;
-      rtcpPortNum = rtpPortNumBase + 1;
+      rtpPortNum = rtpPortNumBase + 2*i;
+      rtcpPortNum = rtpPortNum + 1;
       
       Port rtpPort(rtpPortNum);
       Port rtcpPort(rtcpPortNum);
@@ -804,9 +828,9 @@ void H264Server::AddRTPSession(const char* name)
 						   CNAME,videoSink,NULL/*we're a server*/,
 						   True /* we're a SSM source */);
       // Note: This starts RTCP running automatically
-      
-      ServerMediaSession *sms =
-      ServerMediaSession::createNew(*env,name,name,
+      inputFileName = "stream.264";// used for SDP
+      ServerMediaSession *sms 
+      = ServerMediaSession::createNew(*env,nombreVideo,inputFileName,
 				    "Session streamed by \"H264VideoStreamer\"",
 				    True/*SSM*/);
       sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink,rtcp));
@@ -815,7 +839,12 @@ void H264Server::AddRTPSession(const char* name)
       rtspServer->addServerMediaSession(sms);
       
       // show access address
-      *env<<"play this stream using the URl"<<rtspServer->rtspURL(sms)<<"\"\n";
+      *env<<"play this stream using the URl: "<<rtspServer->rtspURL(sms)<<"\"\n";
+      
+      // Start the streaming:
+      *env << "Beginning streaming...\n";
+      
+      play(i);
     
     
   }catch(...){
@@ -847,9 +876,7 @@ void H264Server::startVideoServer(void)
       QList<QPushButton*> propertiesButton;
       
             
-      // setup server
-      setupServer(rtspPort);
-      
+                
       // start available cameras
       for(int i=0;i<videoCounter;i++){
 	
@@ -876,19 +903,19 @@ void H264Server::startVideoServer(void)
 	    // add the RTP session for this camera
 	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
 	    const char *name = streamName.toStdString().c_str(); 
-	    AddRTPSession(name);
+	    AddRTSPSession(name,i);
+	    
 	  	  
 	  }else{
 	      
 	    // start cameras without preview	        
-	    cameraList.at(i)->start();	
+	    //cameraList.at(i)->start();	
 	    cameraStatusList.at(i) = true;
 	    
 	     // add the RTP session for this camera
 	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
 	    const char *name = streamName.toStdString().c_str(); 
-	    AddRTPSession(name);
-	    
+	    AddRTSPSession(name,i);	    
 	    
 	    // disable preview
 	    streamCheckBox.at(1)->setDisabled(true);
@@ -954,6 +981,124 @@ void H264Server::stopVideoServer(void)
       std::printf("thread has been canceled\n");
     }
 }
+// test live555 classes Server 
+void H264Server::testServer(void )
+{
+  try{
+    // Begin by setting up our usage environment:
+      
+      const unsigned short rtpPortNum = 18888;
+      const unsigned short rtcpPortNum = rtpPortNum+1;
+      const unsigned char ttl = 255;
+
+      const Port rtpPort(rtpPortNum);
+      const Port rtcpPort(rtcpPortNum);
+
+      Groupsock rtpGroupsock(*env, destinationAddress, rtpPort, ttl);
+      rtpGroupsock.multicastSendOnly(); // we're a SSM source
+      Groupsock rtcpGroupsock(*env, destinationAddress, rtcpPort, ttl);
+      rtcpGroupsock.multicastSendOnly(); // we're a SSM source
+
+      // Create a 'H264 Video RTP' sink from the RTP 'groupsock':
+      OutPacketBuffer::maxSize = 100000;
+      videoSink2 = H264VideoRTPSink::createNew(*env, &rtpGroupsock, 96);
+
+      // Create (and start) a 'RTCP instance' for this RTP sink:
+      const unsigned estimatedSessionBandwidth = 500; // in kbps; for RTCP b/w share
+      const unsigned maxCNAMElen = 100;
+      unsigned char CNAME[maxCNAMElen+1];
+      gethostname((char*)CNAME, maxCNAMElen);
+      CNAME[maxCNAMElen] = '\0'; // just in case
+      RTCPInstance* rtcp
+      = RTCPInstance::createNew(*env, &rtcpGroupsock,
+				estimatedSessionBandwidth, CNAME,
+				videoSink2, NULL /* we're a server */,
+				True /* we're a SSM source */);
+      // Note: This starts RTCP running automatically
+
+  
+      ServerMediaSession* sms
+	= ServerMediaSession::createNew(*env, "testStream", inputFileNameTest,
+		      "Session streamed by \"testH264VideoStreamer\"",
+					      True /*SSM*/);
+      sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink2, rtcp));
+      rtspServer->addServerMediaSession(sms);
+
+      char* url = rtspServer->rtspURL(sms);
+      *env << "Play this stream using the URL \"" << url << "\"\n";
+      delete[] url;
+
+      // Start the streaming:
+      *env << "Beginning streaming...\n";
+      play();
+
+      env->taskScheduler().doEventLoop(); // does not return
+
+    
+  }catch(...){
+    
+  }
+
+}
+// test afterPlaying
+void H264Server::afterPlaying(void*)
+{
+  try{
+      *env << "...done reading from file\n";
+      videoSink2->stopPlaying();
+      Medium::close(videoSource2);
+      // Note that this also closes the input file that this source read from.
+
+      // Start playing once again:
+      play();
+    
+  }catch(...){
+
+  }
+
+}
+
+// test play
+void H264Server::play(int i)
+{
+  try{
+      // Open the device source in this case are encoded frames
+      DeviceParameters NALparameters;
+      DeviceSource* NAL_Source
+	= DeviceSource::createNew(*env, NALparameters);
+      if (NAL_Source == NULL) {
+	*env << "Unable to open file \"" << NALparameters
+	    << "\" as a byte-stream file source\n";
+	exit(1);
+      }
+      
+      // copy the encoded frame to NAL_Source
+      AVPacket *currentFrame;
+      frameBuffer NAL_list;
+      
+      NAL_list = cameraBufferList.at(i);
+      currentFrame = NAL_list.front();
+      unsigned char *NAL_data;
+      int NAL_size = currentFrame->size;
+      memmove(currentFrame->data,NAL_data,NAL_size);
+      
+      
+      FramedSource* videoES = NAL_Source;
+
+      // Create a framer for the Video Elementary Stream:
+      videoSource2 = H264VideoStreamDiscreteFramer::createNew(*env, videoES);
+
+      // Finally, start playing:
+      *env << "Beginning to read from camera...\n";
+      
+     //videoSink2->startPlaying(*videoSource2, afterPlaying, videoSink2);
+    
+  }catch(...){
+    
+  }
+
+}
+
 
  
  // include extra qt moc files

@@ -10,7 +10,6 @@
 
 // bluecherry Class
 #include "blueCherryCard.h"
-#include "videoserver.h"
 
 // std headers
 #include <iostream>
@@ -59,10 +58,16 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 		void set_semaphore(int sem);			
 		void wait_semaphore(int sem);			
 		void setupServer(int rtspPort);
-		void AddRTPSession(const char *name);
+		
+		void AddRTSPSession(const char *videoName, int i);
 		ServerMediaSession* getRTPSession(int i);
+		
 		void startVideoServer(void);
 		void stopVideoServer(void);
+		
+		void testServer(void);
+		void play(int i);
+		void afterPlaying(void*);
 
 	Q_SIGNALS:
 		void saveProperties(VideoProperties properties);
@@ -95,12 +100,18 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	// live555 variables      
 	TaskScheduler *scheduler;					// RTSP, RTP scheduler
 	UsageEnvironment *env;						// main environment
-	H264VideoStreamDiscreteFramer *videoSource;			// video source       
+	H264VideoStreamDiscreteFramer *videoSource;			// video source      
+	H264VideoStreamFramer* videoSource2;
 	struct in_addr destinationAddress;
 	unsigned short rtpPortNumBase;
 	unsigned char ttl;
+	bool isRTSPServerStarted;
 	RTSPServer *rtspServer;						// RTSP server
 	int rtspPort;
+	RTPSink* videoSink2;
+	const char* newStreamName;
+	const char* inputFileName;
+	char const* inputFileNameTest;
 	
 };
 
