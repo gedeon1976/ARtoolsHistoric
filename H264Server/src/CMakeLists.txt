@@ -17,7 +17,7 @@ endif(QT4_FOUND)
 
 
 # set source files
-set(H264Server_SRCS glwidget.cpp  blueCherryCard.cpp  H264Server.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
+set(H264Server_SRCS glwidget.cpp  blueCherryCard.cpp  H264_rtspServer.cpp H264Server.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
 set_source_files_properties(${H264Server_SRCS} PROPERTIES COMPILE_FLAGS "${EXTRA_OPTIONS}" )
 qt4_automoc(${H264Server_SRCS})
 add_executable(H264Server ${H264Server_SRCS})

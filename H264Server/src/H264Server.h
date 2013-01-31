@@ -10,6 +10,7 @@
 
 // bluecherry Class
 #include "blueCherryCard.h"
+#include "H264_rtspServer.h"
 
 // std headers
 #include <iostream>
@@ -106,6 +107,7 @@ class H264Server: public QMainWindow,private Ui::MainWindow
 	unsigned short rtpPortNumBase;
 	unsigned char ttl;
 	bool isRTSPServerStarted;
+	H264_rtspServer *rtspServerNew;
 	RTSPServer *rtspServer;						// RTSP server
 	int rtspPort;
 	RTPSink* videoSink2;
