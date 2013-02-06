@@ -15,6 +15,9 @@
 // bluecherry Class
 #include "blueCherryCard.h"
 
+// typedefs
+typedef void (afterPlay)(void* clientData);
+
 // class declaration
 class H264_rtspServer:public QObject{
       Q_OBJECT
@@ -26,7 +29,7 @@ class H264_rtspServer:public QObject{
 	    void getEncodedFrames(H264Frame encodedFrame);
 	    void AddRTSPSession(const char *videoName, int i);
 	    void play(int i);
-	    void afterPlaying(void*);
+	    static void afterPlaying(void* dataClient);
       private:
 	    void init_semaphore(int sem, int value);	
 	    void set_semaphore(int sem);			

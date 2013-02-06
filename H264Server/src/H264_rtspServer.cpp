@@ -13,6 +13,20 @@
 // include rtsp class header
 #include "H264_rtspServer.h"
 
+// auxiliar functions
+
+// this function is called as a callback in the startPlaying
+// function from a RTP sink
+void afterFunction(void* clientData)
+{
+  try{
+    H264_rtspServer *rtspLocal = (H264_rtspServer*)clientData;
+    rtspLocal->play(0);
+    
+  }catch(...){
+  }  
+}
+
 // constructor
 H264_rtspServer::H264_rtspServer()
 {
@@ -157,36 +171,42 @@ void H264_rtspServer::play(int i)
       //copy the encoded frame to NAL_Source
       AVPacket currentEncodedFrame;
       codedFrameBuffer NAL_list;
-      unsigned char *NAL_data;
+      int maxSize = 100000;
       
       // get the current compressed frame
-      if (cameraCodedBufferList.empty()){
-	exit(1);
+      if (!cameraCodedBufferList.empty()){
+	
+      
+	NAL_list = cameraCodedBufferList.at(i);
+	currentEncodedFrame = NAL_list.front();
+      
+	int NAL_size = currentEncodedFrame.size;
+	unsigned char NAL_data[NAL_size];
+	//memmove(NAL_data,currentEncodedFrame.data,NAL_size);
+	if ((currentEncodedFrame.size>0)&(currentEncodedFrame.size<maxSize)){
+	  memcpy(NAL_data,currentEncodedFrame.data,NAL_size);
+	  printf("frame size is: %d\n",NAL_size);
+	  
+	
+      
+	    // Open the device source in this case are encoded frames     
+	    ByteStreamMemoryBufferSource* NAL_Source
+	    = ByteStreamMemoryBufferSource::createNew(*env, NAL_data,NAL_size);
+	    if (NAL_Source == NULL) {
+		*env << "Unable to open NAL buffer \"" << "\" as a device source\n";
+		exit(1);
+	    }     
+      
+	    FramedSource* videoES = NAL_Source;
+
+	    // Create a framer for the Video Elementary Stream:
+	    videoSource = H264VideoStreamDiscreteFramer::createNew(*env, videoES);
+
+	    // Finally, start playing:
+	    *env << "Beginning to read from camera...\n";
+	}
       }
-      
-      NAL_list = cameraCodedBufferList.at(i);
-      currentEncodedFrame = NAL_list.front();
-      
-      int NAL_size = currentEncodedFrame.size;
-      memmove(NAL_data,currentEncodedFrame.data,NAL_size);
-      
-      // Open the device source in this case are encoded frames     
-      ByteStreamMemoryBufferSource* NAL_Source
-	= ByteStreamMemoryBufferSource::createNew(*env, NAL_data,NAL_size);
-      if (NAL_Source == NULL) {
-	*env << "Unable to open NAL buffer \"" << "\" as a device source\n";
-	exit(1);
-      }     
-      
-      FramedSource* videoES = NAL_Source;
-
-      // Create a framer for the Video Elementary Stream:
-      videoSource = H264VideoStreamDiscreteFramer::createNew(*env, videoES);
-
-      // Finally, start playing:
-      *env << "Beginning to read from camera...\n";
-      
-      //videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
+	//videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
     
   }catch(...){
     
@@ -196,9 +216,11 @@ void H264_rtspServer::play(int i)
 }
 
 // after play function
-void H264_rtspServer::afterPlaying(void* )
+void H264_rtspServer::afterPlaying(void* dataClient)
 {
-
+    H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
+    int cam = 0;
+  //rtsp->play(cam);
 }
 
 // init the semaphore

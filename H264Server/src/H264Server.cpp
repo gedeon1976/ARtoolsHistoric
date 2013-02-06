@@ -30,6 +30,9 @@
 	isRTSPServerStarted = false;
         rtpPortNumBase = 18888;
         ttl = 255;
+	// register the own structure types to be used in signal/slot mechanism
+	qRegisterMetaType<pictureFrame>();
+	qRegisterMetaType<H264Frame>();
 	// connect signals and slots
 	// add video sources
 	connect(buttAddVideoSource,SIGNAL(clicked()),
@@ -483,8 +486,6 @@ void H264Server::startCameraPreview(int tabIndex)
       // check if preview is enabled
       isValid = checkPreview.at(1)->isChecked();
       if(isValid){
-	  // register the own structure type to be used in signal/slot mechanism
-	  qRegisterMetaType<pictureFrame>();
 	  // connect video preview signal and slot
 	  connect(cameraList.at(currentIndex),SIGNAL(sendVideoPreview(pictureFrame)),this,SLOT(getPreview(pictureFrame)));
 	  cameraList.at(currentIndex)->start();		// start current camera		
@@ -651,6 +652,28 @@ void H264Server::getPreview(pictureFrame image)
     catch(...){
 	   std::printf("there was an error with the buffer cam %d index %d\n",videoGeneralIndex + 1,videoGeneralIndex);
 	
+    }
+
+}
+// get the encoded frames from different cameras
+void H264Server::getEncodedFrames(H264Frame encodedImage)
+{
+    try{
+	int maxSize = 10;
+	int camID = encodedImage.camera_ID;
+	videoEncodedGeneralIndex = camID - 1;
+	AVPacket tmpPkt = encodedImage.frame;
+	
+	wait_semaphore(2);
+	// save the frame to the corresponding camera buffer
+	cameraCodedBufferList.at(videoEncodedGeneralIndex).push_back(tmpPkt);
+	if (cameraCodedBufferList.at(videoEncodedGeneralIndex).size()> maxSize){
+	    cameraCodedBufferList.at(videoEncodedGeneralIndex).pop_front();	// delete the first received frame
+	    std::printf("camera %d Coded frame Buffer size is %d\n",camID,cameraCodedBufferList.at(videoEncodedGeneralIndex).size());
+	}	
+	set_semaphore(2);	
+	
+    }catch(...){
     }
 
 }
@@ -894,6 +917,10 @@ void H264Server::startVideoServer(void)
 	propertiesButton = tabVideoList->currentWidget()->findChildren<QPushButton*>();
 	isStreamEnabled = streamCheckBox.at(0)->isChecked();
 	
+	// connect the camera input to the stream source
+	connect(cameraList.at(i),SIGNAL(sendEncodedVideo(H264Frame)),
+	  rtspServerNew,SLOT(getEncodedFrames(H264Frame)));
+	
 	if(isStreamEnabled==true){
 	  
 	  // check if camera is ON or OFF (preview mode enabled)
@@ -915,7 +942,7 @@ void H264Server::startVideoServer(void)
 	  }else{
 	      
 	    // start cameras without preview	        
-	    //cameraList.at(i)->start();	
+	    cameraList.at(i)->start();	
 	    cameraStatusList.at(i) = true;
 	    
 	     // add the RTP session for this camera
@@ -964,6 +991,11 @@ void H264Server::stopVideoServer(void)
 	    // get properties button
 	    propertiesButton = tabVideoList->currentWidget()->findChildren<QPushButton*>();
 	    currentCameraStatus = cameraStatusList.at(i);
+	    
+	    // disconnect the camera input to the stream source
+	    disconnect(cameraList.at(i),SIGNAL(sendEncodedVideo(H264Frame)),
+	      rtspServerNew,SLOT(getEncodedFrames(H264Frame)));
+	      
 	    if (currentCameraStatus){
 		cameraList.at(i)->stop();		
 		cameraStatusList.at(i) = false;
