@@ -35,6 +35,7 @@ H264_rtspServer::H264_rtspServer()
     rtpPortNumBase = 18888;
     ttl = 255;
     rtspPort = 8554;   
+    functionCallcounter = 0;
     // init semaphore
     init_semaphore(1,1);
 }
@@ -173,6 +174,7 @@ void H264_rtspServer::play(int i)
       codedFrameBuffer NAL_list;
       int maxSize = 100000;
       
+     
       // get the current compressed frame
       if (!cameraCodedBufferList.empty()){
 	
@@ -204,23 +206,40 @@ void H264_rtspServer::play(int i)
 
 	    // Finally, start playing:
 	    *env << "Beginning to read from camera...\n";
+	    videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
 	}
       }
-	//videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
+	
     
   }catch(...){
     
   }
+}
 
+// wrapper to call the play function
+void H264_rtspServer::wrapperToCallPlay(void* pt2object, int i)
+{
+    try{
+	
+	H264_rtspServer *myself = (H264_rtspServer*)pt2object;
+	myself->play(i);
+
+    }catch(...){
+    }
 
 }
 
 // after play function
 void H264_rtspServer::afterPlaying(void* dataClient)
 {
-    H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
-    int cam = 0;
-  //rtsp->play(cam);
+    try{
+	H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
+	
+	int i=0;
+	wrapperToCallPlay((void*)&rtsp,i);	
+	
+    }catch(...){
+    }  
 }
 
 // init the semaphore

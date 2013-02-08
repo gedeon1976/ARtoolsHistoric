@@ -18,7 +18,44 @@
 // typedefs
 typedef void (afterPlay)(void* clientData);
 
-// class declaration
+// auxiliar classes for live555 access
+
+///////////////////////////////////////////////////////////////////////
+//      callback functions in C++
+class TFunctorPlay   		//      abstract class
+{
+public:
+    // method to call but with void* as return
+    virtual void call(int i)=0;
+};
+
+//   derived class
+template<class TStream>
+class playFunctor:public TFunctorPlay 
+{
+private:
+    TStream* pt2object; 	// pointer to object    
+    void (TStream::*fpt)(int i);// pointer to member function
+        
+public:
+
+    //	constructor
+    playFunctor(TStream *_pt2object, void (TStream::*_fpt)(int i))
+    {
+	pt2object = _pt2object;
+	fpt = _fpt;       
+    }
+       
+    // 	methods
+    // override function call
+    void call(int i)
+    {
+	(*pt2object->*fpt)(i);	// execute member function
+    }
+
+};
+
+// H264 class declaration
 class H264_rtspServer:public QObject{
       Q_OBJECT
       public:
@@ -30,6 +67,7 @@ class H264_rtspServer:public QObject{
 	    void AddRTSPSession(const char *videoName, int i);
 	    void play(int i);
 	    static void afterPlaying(void* dataClient);
+	    static void wrapperToCallPlay(void *pt2object, int i);
       private:
 	    void init_semaphore(int sem, int value);	
 	    void set_semaphore(int sem);			
@@ -55,5 +93,6 @@ class H264_rtspServer:public QObject{
 	const char* newStreamName;
 	const char* inputFileName;
 	char const* inputFileNameTest;
+	int functionCallcounter;
 };
 #endif
