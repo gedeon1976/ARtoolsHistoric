@@ -67,6 +67,12 @@ void H264_rtspServer::setPort(int Port)
     rtspPort = Port;
 }
 
+// get the frames from camera inputs
+void H264_rtspServer::getFrames()
+{
+    
+}
+
 // get the encoded frames from external threads or sources
 void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
 {
@@ -189,6 +195,8 @@ void H264_rtspServer::play(int i)
       codedFrameBuffer NAL_list;
       int maxSize = 100000;
       
+      // get the frames
+      getFrames();      
      
       // get the current compressed frame
       if (!cameraCodedBufferList.empty()){

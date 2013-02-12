@@ -938,7 +938,7 @@ void H264Server::startVideoServer(void)
 	    const char *name = streamName.toStdString().c_str(); 
 	    rtspServerNew->setName(name);
 	    rtspServerNew->setID(i);
-	    rtspServerNew->AddRTSPSession();
+	    rtspServerNew->create_Thread();
 	    
 	  	  
 	  }else{
@@ -953,7 +953,7 @@ void H264Server::startVideoServer(void)
 	    
 	    rtspServerNew->setName(name);
 	    rtspServerNew->setID(i);
-	    rtspServerNew->AddRTSPSession();	    
+	    rtspServerNew->create_Thread();
 	    
 	    // disable preview
 	    streamCheckBox.at(1)->setDisabled(true);

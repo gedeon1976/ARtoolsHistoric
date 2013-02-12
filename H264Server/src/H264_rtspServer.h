@@ -65,14 +65,15 @@ class H264_rtspServer:public QObject{
 	    void setName(const char *name);
 	    void setPort(int Port);
 	    void setID(int StreamID);
+	    void getFrames();
 	    void getEncodedFrames(H264Frame encodedFrame);
 	    void AddRTSPSession(void);
 	    void play(int i);
 	    static void afterPlaying(void* dataClient);
 	    static void wrapperToCallPlay(void *pt2object, int i);
-      private:
-	    // threads code
 	    int create_Thread(void);
+      private:
+	    // threads code	    
 	    int cancel_Thread(void);
 	    static void* Entry_Point(void *pthis);
 	    int get_ThreadPriority(void);
