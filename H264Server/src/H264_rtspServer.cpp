@@ -45,12 +45,27 @@ H264_rtspServer::~H264_rtspServer()
 {
 
 }
+
+// set Name for this stream
+void H264_rtspServer::setName(const char* name)
+{
+    // set the name for this stream
+    StreamName = name;
+}
+
+// set ID for this stream
+void H264_rtspServer::setID(int StreamID)
+{
+    // set the stream ID
+    ID = StreamID;
+}
+
 // set port for rtsp server
 void H264_rtspServer::setPort(int Port)
 {
-  rtspPort = Port;
+    // set the corresponding port
+    rtspPort = Port;
 }
-
 
 // get the encoded frames from external threads or sources
 void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
@@ -80,7 +95,7 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
 }
 
 // add a RTP session to manage each camera input
-void H264_rtspServer::AddRTSPSession(const char* videoName, int i)
+void H264_rtspServer::AddRTSPSession(void)
 {
     try{     
      
@@ -111,7 +126,7 @@ void H264_rtspServer::AddRTSPSession(const char* videoName, int i)
       unsigned short rtcpPortNum;
       RTPSink *videoSink;			// RTP sink         
       
-      rtpPortNum = rtpPortNumBase + 2*i;
+      rtpPortNum = rtpPortNumBase + 2*ID;
       rtcpPortNum = rtpPortNum + 1;
       
       Port rtpPort(rtpPortNum);
@@ -141,7 +156,7 @@ void H264_rtspServer::AddRTSPSession(const char* videoName, int i)
       // Note: This starts RTCP running automatically
       inputFileName = "stream.264";// used for SDP
       ServerMediaSession *sms 
-      = ServerMediaSession::createNew(*env,videoName,inputFileName,
+      = ServerMediaSession::createNew(*env,StreamName,inputFileName,
 				    "Session streamed by \"H264VideoStreamer\"",
 				    True/*SSM*/);
       sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink,rtcp));
@@ -155,9 +170,9 @@ void H264_rtspServer::AddRTSPSession(const char* videoName, int i)
       // Start the streaming:
       *env << "Beginning streaming...\n";
       
-      play(i);
+      play(ID);
       
-      //env->taskScheduler().doEventLoop();
+      env->taskScheduler().doEventLoop();
     
     
   }catch(...){
@@ -211,6 +226,7 @@ void H264_rtspServer::play(int i)
       }
 	
     
+    
   }catch(...){
     
   }
@@ -240,6 +256,127 @@ void H264_rtspServer::afterPlaying(void* dataClient)
 	
     }catch(...){
     }  
+}
+
+// create a thread to manage a RTSP session
+// that controls a stream flow
+int H264_rtspServer::create_Thread(void )
+{
+  try{
+    
+      int cod, error;
+      int ID = 1;
+      
+      pthread_attr_t attr;            //      attribute object
+      struct sched_param param;       //      struct for set the priority
+    
+
+      if (pthread_attr_init(&attr)==0){	
+	
+	pthread_attr_setscope(&attr,PTHREAD_SCOPE_SYSTEM);
+
+	// in linux the threads are created with the maximum priority, equal to the kernel
+      }else{
+	    printf("error: %d \n", errno);
+      }      
+    
+      error=pthread_attr_setschedparam(&attr,&param);
+
+      if (error!=0)
+      {
+	    printf("error: %d \n", errno);
+      }
+		    
+      //      create thread
+      cod = pthread_create(&StreamOut,&attr,H264_rtspServer::Entry_Point,this);
+      if (cod!=0)
+      {
+	    printf("error creating thread \n");
+	    return cod;
+      }else{
+	    printf("creating thread %d with a priority of %d \n",ID,get_ThreadPriority());
+	    //printf("creating thread\n");
+	    return cod;
+      }
+    
+  }
+    // catch to get the thread cancel exception
+    catch (abi::__forced_unwind&) {
+	throw;
+    } catch (...) {
+    // do something
+	printf("thread creation error\n");
+    }
+
+}
+
+// cancel the thread
+int H264_rtspServer::cancel_Thread(void )
+{
+    try{
+        //      cancel the camera associated thread
+        int cod;
+	
+        cod = pthread_cancel(StreamOut);
+        if (cod!=0)
+        {
+                printf("thread cannot be canceled\n");
+                return cod;
+        }else{
+                printf("canceling thread %d with a priority of %d \n",ID,get_ThreadPriority());
+                //printf("creating thread\n");
+                return cod;
+        }
+    }
+    // catch to get the thread cancel exception
+    catch (abi::__forced_unwind&) {
+	throw;
+    } catch (...) {
+	// do something
+	printf("thread has been canceled\n");
+    }
+
+}
+
+//      Entry point function for the thread in C++
+//      static function
+void* H264_rtspServer::Entry_Point(void* pthis)
+{
+  try{
+	H264_rtspServer *pS = (H264_rtspServer*)pthis; 
+	//  convert to class H264_rtspServer to allow correct thread work
+        pS->AddRTSPSession();
+	//cameraID = pS->getInputID();
+		
+         return 0; // TODO: Revisar el puntero de retorno
+       }
+       // catch to get the thread cancel exception
+       catch (abi::__forced_unwind&) {
+	    throw;
+       } catch (...) {
+       // do something
+	  printf("thread has been canceled\n");
+	}
+}
+
+// get thread priority
+int H264_rtspServer::get_ThreadPriority(void )
+{
+      try{
+        pthread_attr_t attr;            //      attributes
+        int cod, priority;
+        struct sched_param param;       //      contain the priority of the thread
+
+        if (!(cod=pthread_attr_init(&attr)) &&
+        !(cod=pthread_attr_getschedparam(&attr,&param)))
+
+                priority = param.sched_priority;
+       
+        return priority;
+    }
+    catch(...){
+    }
+
 }
 
 // init the semaphore

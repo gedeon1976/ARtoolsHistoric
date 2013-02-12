@@ -904,7 +904,7 @@ void H264Server::startVideoServer(void)
       
        // set port to rtsp Server
       int port = 8554;
-      rtspServerNew->setPort(port);
+      rtspServerNew->setPort(port);      
                 
       // start available cameras
       for(int i=0;i<videoCounter;i++){
@@ -936,7 +936,9 @@ void H264Server::startVideoServer(void)
 	    // add the RTP session for this camera
 	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
 	    const char *name = streamName.toStdString().c_str(); 
-	    rtspServerNew->AddRTSPSession(name,i);
+	    rtspServerNew->setName(name);
+	    rtspServerNew->setID(i);
+	    rtspServerNew->AddRTSPSession();
 	    
 	  	  
 	  }else{
@@ -948,7 +950,10 @@ void H264Server::startVideoServer(void)
 	     // add the RTP session for this camera
 	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
 	    const char *name = streamName.toStdString().c_str(); 
-	    rtspServerNew->AddRTSPSession(name,i);	    
+	    
+	    rtspServerNew->setName(name);
+	    rtspServerNew->setID(i);
+	    rtspServerNew->AddRTSPSession();	    
 	    
 	    // disable preview
 	    streamCheckBox.at(1)->setDisabled(true);

@@ -62,13 +62,20 @@ class H264_rtspServer:public QObject{
 	    H264_rtspServer();
 	    virtual ~H264_rtspServer();
       public Q_SLOTS:
+	    void setName(const char *name);
 	    void setPort(int Port);
+	    void setID(int StreamID);
 	    void getEncodedFrames(H264Frame encodedFrame);
-	    void AddRTSPSession(const char *videoName, int i);
+	    void AddRTSPSession(void);
 	    void play(int i);
 	    static void afterPlaying(void* dataClient);
 	    static void wrapperToCallPlay(void *pt2object, int i);
       private:
+	    // threads code
+	    int create_Thread(void);
+	    int cancel_Thread(void);
+	    static void* Entry_Point(void *pthis);
+	    int get_ThreadPriority(void);
 	    void init_semaphore(int sem, int value);	
 	    void set_semaphore(int sem);			
 	    void wait_semaphore(int sem);	
@@ -76,7 +83,7 @@ class H264_rtspServer:public QObject{
       private:
 	// flow control
 	int videoGeneralIndex;
-	sem_t Sem1,Sem2;						// flow semaphore control
+	
 	typedef std::deque<AVPacket> codedFrameBuffer;
 	std::deque<codedFrameBuffer> cameraCodedBufferList;
 	// live555 variables      
@@ -94,5 +101,10 @@ class H264_rtspServer:public QObject{
 	const char* inputFileName;
 	char const* inputFileNameTest;
 	int functionCallcounter;
+	// threads code
+	int ID;								// video input ID
+	const char *StreamName;
+	pthread_t StreamOut;						// Threads code
+	sem_t Sem1,Sem2;						// flow semaphore control
 };
 #endif
