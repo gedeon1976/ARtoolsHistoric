@@ -868,9 +868,10 @@ void H264Server::AddRTSPSession(const char* nombreVideo, int i)
       // Start the streaming:
       *env << "Beginning streaming...\n";
       
-      play(i);
+      // create transmission thread
       
-      //env->taskScheduler().doEventLoop();
+      play(i);      
+      env->taskScheduler().doEventLoop();
     
     
   }catch(...){
@@ -938,13 +939,13 @@ void H264Server::startVideoServer(void)
 	    const char *name = streamName.toStdString().c_str(); 
 	    rtspServerNew->setName(name);
 	    rtspServerNew->setID(i);
-	    rtspServerNew->create_Thread();
+	    rtspServerNew->AddRTSPSession();;
 	    
 	  	  
 	  }else{
 	      
 	    // start cameras without preview	        
-	    cameraList.at(i)->start();	
+	    //cameraList.at(i)->start();	
 	    cameraStatusList.at(i) = true;
 	    
 	     // add the RTP session for this camera
@@ -953,7 +954,7 @@ void H264Server::startVideoServer(void)
 	    
 	    rtspServerNew->setName(name);
 	    rtspServerNew->setID(i);
-	    rtspServerNew->create_Thread();
+	    rtspServerNew->AddRTSPSession();;
 	    
 	    // disable preview
 	    streamCheckBox.at(1)->setDisabled(true);

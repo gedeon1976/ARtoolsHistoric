@@ -36,8 +36,10 @@ H264_rtspServer::H264_rtspServer()
     ttl = 255;
     rtspPort = 8554;   
     functionCallcounter = 0;
+    frameCounter = 0;
     // init semaphore
     init_semaphore(1,1);
+    semaphores_global_flag = -1;
 }
 
 // destructor
@@ -70,6 +72,33 @@ void H264_rtspServer::setPort(int Port)
 // get the frames from camera inputs
 void H264_rtspServer::getFrames()
 {
+  try{
+      AVPacket currentFrame;
+      // keeps the thread alive
+      while(1){
+	// check global class semaphore
+	if(semaphores_global_flag==0){
+	  // set semaphore
+	  wait_semaphore(1);
+	  
+	  // get the data
+	  play(ID);	  
+	  readOKFlag = 0;
+	  // free the semaphore
+	  set_semaphore(1);
+	}
+	  
+      }
+    
+  
+  }
+  // catch to get the thread cancel exception
+  catch (abi::__forced_unwind&) {
+	throw;
+  } catch (...) {
+    // do something
+    printf("RTSP thread error\n");
+    }
     
 }
 
@@ -82,16 +111,22 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
       int camID = encodedFrame.camera_ID;
       videoGeneralIndex = camID - 1;
       
-      wait_semaphore(1);
-      
-      // save the frame to the corresponding camera buffer
+      if (semaphores_global_flag==-1){      
+	  semaphores_global_flag=0;
+      }
+      if (semaphores_global_flag==0){
+	
+	wait_semaphore(1);
+	// save the frame to the corresponding camera buffer
 	cameraCodedBufferList.at(videoGeneralIndex).push_back(pktFrame);
 	if (cameraCodedBufferList.at(videoGeneralIndex).size()> maxSize){
 	    cameraCodedBufferList.at(videoGeneralIndex).pop_front();	// delete the first received frame
 	    printf("camera %d H264 coded Buffer size is %d\n",camID,cameraCodedBufferList.at(videoGeneralIndex).size());
 	}
-      
-      set_semaphore(1);
+      }
+      if(semaphores_global_flag==0){
+	set_semaphore(1);
+      }
       
     
   }catch(...){
@@ -176,9 +211,12 @@ void H264_rtspServer::AddRTSPSession(void)
       // Start the streaming:
       *env << "Beginning streaming...\n";
       
-      play(ID);
+      // create thread stream
       
-      env->taskScheduler().doEventLoop();
+      create_Thread();
+      
+      readOKFlag = 0;
+      //env->taskScheduler().doEventLoop(&readOKFlag);
     
     
   }catch(...){
@@ -195,9 +233,6 @@ void H264_rtspServer::play(int i)
       codedFrameBuffer NAL_list;
       int maxSize = 100000;
       
-      // get the frames
-      getFrames();      
-     
       // get the current compressed frame
       if (!cameraCodedBufferList.empty()){
 	
@@ -210,9 +245,7 @@ void H264_rtspServer::play(int i)
 	//memmove(NAL_data,currentEncodedFrame.data,NAL_size);
 	if ((currentEncodedFrame.size>0)&(currentEncodedFrame.size<maxSize)){
 	  memcpy(NAL_data,currentEncodedFrame.data,NAL_size);
-	  printf("frame size is: %d\n",NAL_size);
-	  
-	
+	  printf("frame size is: %d\n",NAL_size);	
       
 	    // Open the device source in this case are encoded frames     
 	    ByteStreamMemoryBufferSource* NAL_Source
@@ -240,6 +273,19 @@ void H264_rtspServer::play(int i)
   }
 }
 
+// stop the stream playing
+void H264_rtspServer::stopPlay()
+{
+  try{
+      videoSink->stopPlaying();
+      Medium::close(videoSource);
+  }
+  catch(...){
+ 
+  }
+}
+
+
 // wrapper to call the play function
 void H264_rtspServer::wrapperToCallPlay(void* pt2object, int i)
 {
@@ -259,8 +305,9 @@ void H264_rtspServer::afterPlaying(void* dataClient)
     try{
 	H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
 	
-	int i=0;
-	wrapperToCallPlay((void*)&rtsp,i);	
+	rtsp->stopPlay();
+	//int i=0;
+	//wrapperToCallPlay((void*)&rtsp,i);	
 	
     }catch(...){
     }  
@@ -353,9 +400,8 @@ void* H264_rtspServer::Entry_Point(void* pthis)
   try{
 	H264_rtspServer *pS = (H264_rtspServer*)pthis; 
 	//  convert to class H264_rtspServer to allow correct thread work
-        pS->AddRTSPSession();
-	//cameraID = pS->getInputID();
-		
+        pS->getFrames();
+			
          return 0; // TODO: Revisar el puntero de retorno
        }
        // catch to get the thread cancel exception

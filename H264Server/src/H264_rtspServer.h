@@ -69,6 +69,7 @@ class H264_rtspServer:public QObject{
 	    void getEncodedFrames(H264Frame encodedFrame);
 	    void AddRTSPSession(void);
 	    void play(int i);
+	    void stopPlay();
 	    static void afterPlaying(void* dataClient);
 	    static void wrapperToCallPlay(void *pt2object, int i);
 	    int create_Thread(void);
@@ -84,18 +85,19 @@ class H264_rtspServer:public QObject{
       private:
 	// flow control
 	int videoGeneralIndex;
-	
+	int frameCounter;
+	char readOKFlag;
 	typedef std::deque<AVPacket> codedFrameBuffer;
 	std::deque<codedFrameBuffer> cameraCodedBufferList;
 	// live555 variables      
-	TaskScheduler *scheduler;					// RTSP, RTP scheduler
-	UsageEnvironment *env;						// main environment
-	H264VideoStreamDiscreteFramer *videoSource;			// video source      
+	TaskScheduler *scheduler;			/// RTSP, RTP scheduler
+	UsageEnvironment *env;				/// main environment
+	H264VideoStreamDiscreteFramer *videoSource;	/// video source      
 	struct in_addr destinationAddress;
 	unsigned short rtpPortNumBase;
 	unsigned char ttl;
 	bool isRTSPServerStarted;
-	RTSPServer *rtspServer;						// RTSP server
+	RTSPServer *rtspServer;				/// RTSP server
 	int rtspPort;
 	RTPSink* videoSink;
 	const char* newStreamName;
@@ -103,9 +105,10 @@ class H264_rtspServer:public QObject{
 	char const* inputFileNameTest;
 	int functionCallcounter;
 	// threads code
-	int ID;								// video input ID
+	int ID;						/// video input ID
 	const char *StreamName;
-	pthread_t StreamOut;						// Threads code
-	sem_t Sem1,Sem2;						// flow semaphore control
+	pthread_t StreamOut;				/// Threads code
+	sem_t Sem1,Sem2;				/// flow semaphore control
+	int semaphores_global_flag;			/// flag to control semaphores start
 };
 #endif
