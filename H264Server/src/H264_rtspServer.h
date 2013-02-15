@@ -16,7 +16,7 @@
 #include "blueCherryCard.h"
 
 // typedefs
-typedef void (afterPlay)(void* clientData);
+//typedef void (afterPlay)(void* clientData);
 
 // auxiliar classes for live555 access
 
@@ -58,6 +58,8 @@ public:
 // H264 class declaration
 class H264_rtspServer:public QObject{
       Q_OBJECT
+    
+	    
       public:
 	    H264_rtspServer();
 	    virtual ~H264_rtspServer();
@@ -84,6 +86,9 @@ class H264_rtspServer:public QObject{
 	    
       private:
 	// flow control
+	bool sessionStarted;
+	bool nextStreamNAL;
+	char playOKFlag;
 	int videoGeneralIndex;
 	int frameCounter;
 	char readOKFlag;
@@ -110,5 +115,6 @@ class H264_rtspServer:public QObject{
 	pthread_t StreamOut;				/// Threads code
 	sem_t Sem1,Sem2;				/// flow semaphore control
 	int semaphores_global_flag;			/// flag to control semaphores start
+	
 };
 #endif

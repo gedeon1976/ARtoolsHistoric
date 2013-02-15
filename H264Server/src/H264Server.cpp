@@ -20,6 +20,7 @@
 	setupUi(this);
 	buttStopServer->setDisabled(true);
 	// start variables 
+	
 	videoGeneralIndex = 0;
 	videoCounter = 0;
 	convertedCounter = 0;
@@ -919,8 +920,7 @@ void H264Server::startVideoServer(void)
 	isStreamEnabled = streamCheckBox.at(0)->isChecked();
 	
 	// connect the camera input to the stream source
-	connect(cameraList.at(i),SIGNAL(sendEncodedVideo(H264Frame)),
-	  rtspServerNew,SLOT(getEncodedFrames(H264Frame)));
+	connect(cameraList.at(i),SIGNAL(sendEncodedVideo(H264Frame)),	  rtspServerNew,SLOT(getEncodedFrames(H264Frame)),Qt::QueuedConnection);
 	
 	if(isStreamEnabled==true){
 	  
@@ -939,13 +939,13 @@ void H264Server::startVideoServer(void)
 	    const char *name = streamName.toStdString().c_str(); 
 	    rtspServerNew->setName(name);
 	    rtspServerNew->setID(i);
-	    rtspServerNew->AddRTSPSession();;
+	    rtspServerNew->create_Thread();
 	    
 	  	  
 	  }else{
 	      
 	    // start cameras without preview	        
-	    //cameraList.at(i)->start();	
+	    cameraList.at(i)->start();	
 	    cameraStatusList.at(i) = true;
 	    
 	     // add the RTP session for this camera
@@ -954,7 +954,7 @@ void H264Server::startVideoServer(void)
 	    
 	    rtspServerNew->setName(name);
 	    rtspServerNew->setID(i);
-	    rtspServerNew->AddRTSPSession();;
+	    rtspServerNew->create_Thread();
 	    
 	    // disable preview
 	    streamCheckBox.at(1)->setDisabled(true);

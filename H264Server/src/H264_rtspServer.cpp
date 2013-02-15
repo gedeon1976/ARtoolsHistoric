@@ -37,6 +37,7 @@ H264_rtspServer::H264_rtspServer()
     rtspPort = 8554;   
     functionCallcounter = 0;
     frameCounter = 0;
+    nextStreamNAL = false;
     // init semaphore
     init_semaphore(1,1);
     semaphores_global_flag = -1;
@@ -80,13 +81,20 @@ void H264_rtspServer::getFrames()
 	if(semaphores_global_flag==0){
 	  // set semaphore
 	  wait_semaphore(1);
-	  
+	}  
 	  // get the data
-	  play(ID);	  
-	  readOKFlag = 0;
+	  AddRTSPSession();
+	  if (nextStreamNAL){
+	    play(ID);	  
+	    readOKFlag = 0;
+	    nextStreamNAL = false;
+	  }
+	  
+	if(semaphores_global_flag==0){
 	  // free the semaphore
 	  set_semaphore(1);
 	}
+	
 	  
       }
     
@@ -113,6 +121,7 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
       
       if (semaphores_global_flag==-1){      
 	  semaphores_global_flag=0;
+	  printf("setting semaphores global flag to 0\n");
       }
       if (semaphores_global_flag==0){
 	
@@ -123,8 +132,7 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
 	    cameraCodedBufferList.at(videoGeneralIndex).pop_front();	// delete the first received frame
 	    printf("camera %d H264 coded Buffer size is %d\n",camID,cameraCodedBufferList.at(videoGeneralIndex).size());
 	}
-      }
-      if(semaphores_global_flag==0){
+	nextStreamNAL = true;
 	set_semaphore(1);
       }
       
@@ -142,6 +150,8 @@ void H264_rtspServer::AddRTSPSession(void)
      
       if (!isRTSPServerStarted){
 	// Begin by setting up our usage environment:
+	isRTSPServerStarted = true;
+	
 	scheduler = BasicTaskScheduler::createNew();
 	env= BasicUsageEnvironment::createNew(*scheduler);
       
@@ -156,8 +166,8 @@ void H264_rtspServer::AddRTSPSession(void)
 	  *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
 	  exit(1);
 	}
-	isRTSPServerStarted = true;
-      }
+	
+      
       
       // add camera to the buffer
       codedFrameBuffer tmpFrame;
@@ -211,11 +221,12 @@ void H264_rtspServer::AddRTSPSession(void)
       // Start the streaming:
       *env << "Beginning streaming...\n";
       
+      }
       // create thread stream
       
-      create_Thread();
+      //create_Thread();
       
-      readOKFlag = 0;
+      //readOKFlag = 0;
       //env->taskScheduler().doEventLoop(&readOKFlag);
     
     
@@ -232,10 +243,12 @@ void H264_rtspServer::play(int i)
       AVPacket currentEncodedFrame;
       codedFrameBuffer NAL_list;
       int maxSize = 100000;
+      frameCounter = frameCounter + 1;
+      printf("play counter: %d\n",frameCounter);
       
       // get the current compressed frame
-      if (!cameraCodedBufferList.empty()){
-	
+      //wait_semaphore(1);
+      if (!cameraCodedBufferList.empty()){	
       
 	NAL_list = cameraCodedBufferList.at(i);
 	currentEncodedFrame = NAL_list.front();
@@ -262,9 +275,11 @@ void H264_rtspServer::play(int i)
 
 	    // Finally, start playing:
 	    *env << "Beginning to read from camera...\n";
-	    videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
+	    videoSink->startPlaying(*videoSource, afterPlaying,videoSink);
 	}
       }
+      playOKFlag = 0;
+     // set_semaphore(1);
 	
     
     
@@ -293,6 +308,7 @@ void H264_rtspServer::wrapperToCallPlay(void* pt2object, int i)
 	
 	H264_rtspServer *myself = (H264_rtspServer*)pt2object;
 	myself->play(i);
+	printf("entering wrappertoCallPlay\n");
 
     }catch(...){
     }
@@ -305,7 +321,7 @@ void H264_rtspServer::afterPlaying(void* dataClient)
     try{
 	H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
 	
-	rtsp->stopPlay();
+	//rtsp->stopPlay();
 	//int i=0;
 	//wrapperToCallPlay((void*)&rtsp,i);	
 	
@@ -349,7 +365,7 @@ int H264_rtspServer::create_Thread(void )
 	    printf("error creating thread \n");
 	    return cod;
       }else{
-	    printf("creating thread %d with a priority of %d \n",ID,get_ThreadPriority());
+	    printf("creating Stream thread %d with a priority of %d \n",ID,get_ThreadPriority());
 	    //printf("creating thread\n");
 	    return cod;
       }
@@ -409,7 +425,7 @@ void* H264_rtspServer::Entry_Point(void* pthis)
 	    throw;
        } catch (...) {
        // do something
-	  printf("thread has been canceled\n");
+	  printf("stream thread has been canceled\n");
 	}
 }
 

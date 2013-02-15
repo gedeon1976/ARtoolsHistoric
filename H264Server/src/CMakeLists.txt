@@ -9,7 +9,7 @@ include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${FFMPEG_INCLUDE_
 
 # generate UI's files *.h and *.cpp
 message("CMAKE_SOURCE_DIR:" ${CMAKE_SOURCE_DIR})
-file(GLOB Forms_UIS RELATIVE ${CMAKE_SOURCE_DIR}/src *.ui)
+file(GLOB Forms_UIS  RELATIVE ${CMAKE_SOURCE_DIR}/src *.ui)
 if(QT4_FOUND)
   qt4_wrap_ui(Forms_UIS_H ${Forms_UIS})
   qt4_wrap_cpp(SOURCES_MOC ${Forms_UIS_H})
@@ -17,7 +17,7 @@ endif(QT4_FOUND)
 
 
 # set source files
-set(H264Server_SRCS glwidget.cpp  blueCherryCard.cpp  H264_rtspServer.cpp H264Server.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
+set(H264Server_SRCS glwidget.cpp  blueCherryCard.cpp blueCherrySource.cpp H264_rtspServer.cpp H264Server.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
 set_source_files_properties(${H264Server_SRCS} PROPERTIES COMPILE_FLAGS "${EXTRA_OPTIONS}" )
 qt4_automoc(${H264Server_SRCS})
 add_executable(H264Server ${H264Server_SRCS})
