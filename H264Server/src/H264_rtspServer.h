@@ -14,6 +14,7 @@
 
 // bluecherry Class
 #include "blueCherryCard.h"
+#include "blueCherrySource.h"
 
 // typedefs
 //typedef void (afterPlay)(void* clientData);
@@ -75,6 +76,8 @@ class H264_rtspServer:public QObject{
 	    static void afterPlaying(void* dataClient);
 	    static void wrapperToCallPlay(void *pt2object, int i);
 	    int create_Thread(void);
+       Q_SIGNALS:
+	    void sendToRTSP(H264Frame NAL_data);
       private:
 	    // threads code	    
 	    int cancel_Thread(void);
@@ -97,7 +100,9 @@ class H264_rtspServer:public QObject{
 	// live555 variables      
 	TaskScheduler *scheduler;			/// RTSP, RTP scheduler
 	UsageEnvironment *env;				/// main environment
-	H264VideoStreamDiscreteFramer *videoSource;	/// video source      
+	H264VideoStreamDiscreteFramer *videoSource;	/// video source  
+	BlueCherrySource *cameraSource;			
+	dataForRTSP *dataforStream;
 	struct in_addr destinationAddress;
 	unsigned short rtpPortNumBase;
 	unsigned char ttl;

@@ -19,26 +19,34 @@
 
 #ifndef _FRAMED_SOURCE_HH
 #include "FramedSource.hh"
+#include "blueCherryCard.h"
+#include <QObject>
 #endif
 
 // The following class can be used to define specific encoder parameters
-class DeviceParameters {
+class CamParameters {
   //%%% TO BE WRITTEN %%%
 };
 
-class BlueCherrySource: public FramedSource {
+
+
+class BlueCherrySource: public FramedSource{
+  
 public:
   static BlueCherrySource* createNew(UsageEnvironment& env,
-				 DeviceParameters params);
+				 CamParameters params);
 
 public:
-  static EventTriggerId eventTriggerId;
+  EventTriggerId eventTriggerId;
+  EventTriggerId getEventTriggerID(void);
+  void setData(H264Frame newData);
+  static void signalNewDataFrame(void* clientData);
   // Note that this is defined here to be a static class variable, because this code is intended to illustrate how to
   // encapsulate a *single* device - not a set of devices.
   // You can, however, redefine this to be a non-static member variable.
 
 protected:
-  BlueCherrySource(UsageEnvironment& env, DeviceParameters params);
+  BlueCherrySource(UsageEnvironment& env, CamParameters params);
   // called only by createNew(), or by subclass constructors
   virtual ~BlueCherrySource();
 
@@ -48,13 +56,32 @@ private:
   //virtual void doStopGettingFrames(); // optional
 
 private:
+  
   static void deliverFrame0(void* clientData);
   void deliverFrame();
+  
 
 private:
+  
   static unsigned referenceCount; // used to count how many instances of this class currently exist
-  DeviceParameters fParams;
+  CamParameters fParams;
+  TaskScheduler *ourScheduler;
+  H264Frame NAL_data;
 };
 
+// Auxiliary class to transport data and source object
+class dataForRTSP{
+  public:
+      dataForRTSP(){};
+      ~dataForRTSP(){};
+      // methods
+      void setSource(BlueCherrySource *sourceObject){source = sourceObject;};
+      void setData(H264Frame data){NAL_data = data;};
+      BlueCherrySource* getSource(void){BlueCherrySource *tmpSource = source;return tmpSource;};
+      H264Frame getNALdata(void){H264Frame data = NAL_data; return data;};
+  private:
+      BlueCherrySource *source;
+      H264Frame NAL_data;
+};
 
 #endif // BLUECHERRYSOURCE_H

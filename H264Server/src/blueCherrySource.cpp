@@ -16,27 +16,31 @@
 #include "blueCherrySource.h"
 #include <GroupsockHelper.hh> // for "gettimeofday()"
 
+
 BlueCherrySource*
 BlueCherrySource::createNew(UsageEnvironment& env,
-			DeviceParameters params) {
-  return new BlueCherrySource(env, params);
+			CamParameters params) {
+  return new BlueCherrySource(env,params);
 }
 
-EventTriggerId BlueCherrySource::eventTriggerId = 0;
+
 
 unsigned BlueCherrySource::referenceCount = 0;
 
 BlueCherrySource::BlueCherrySource(UsageEnvironment& env,
-			   DeviceParameters params)
+			   CamParameters params)
   : FramedSource(env), fParams(params) {
   if (referenceCount == 0) {
     // Any global initialization of the device would be done here:
     //%%% TO BE WRITTEN %%%
+    ourScheduler = BasicTaskScheduler::createNew();
+    
   }
   ++referenceCount;
 
   // Any instance-specific initialization of the device would be done here:
   //%%% TO BE WRITTEN %%%
+  eventTriggerId = 0;
 
   // We arrange here for our "deliverFrame" member function to be called
   // whenever the next frame of data becomes available from the device.
@@ -114,8 +118,8 @@ void BlueCherrySource::deliverFrame() {
 
   if (!isCurrentlyAwaitingData()) return; // we're not ready for the data yet
 
-  u_int8_t* newFrameDataStart = (u_int8_t*)0xDEADBEEF; //%%% TO BE WRITTEN %%%
-  unsigned newFrameSize = 0; //%%% TO BE WRITTEN %%%
+  u_int8_t* newFrameDataStart = NAL_data.frame.data; 
+  unsigned newFrameSize = (unsigned)NAL_data.frame.size; 
 
   // Deliver the data here:
   if (newFrameSize > fMaxSize) {
@@ -132,18 +136,36 @@ void BlueCherrySource::deliverFrame() {
   FramedSource::afterGetting(this);
 }
 
+EventTriggerId BlueCherrySource::getEventTriggerID()
+{
+  EventTriggerId eventTrigger;
+  eventTrigger = eventTriggerId;
+  return eventTrigger;
+}
+// add a metdos to write the data to the class
+void BlueCherrySource::setData(H264Frame newData)
+{
+    NAL_data = newData;
+}
+
 
 // The following code would be called to signal that a new frame of data has become available.
 // This (unlike other "LIVE555 Streaming Media" library code) may be called from a separate thread.
 // (Note, however, that "triggerEvent()" cannot be called with the same 'event trigger id' from different threads.
 // Also, if you want to have multiple device threads, each one using a different 'event trigger id', then you will need
 // to make "eventTriggerId" a non-static member variable of "DeviceSource".)
-void signalNewFrameData() {
-  TaskScheduler* ourScheduler = NULL; //%%% TO BE WRITTEN %%%
-  BlueCherrySource* ourDevice  = NULL; //%%% TO BE WRITTEN %%%
+void BlueCherrySource::signalNewDataFrame(void* clientData){
 
-  if (ourScheduler != NULL) { // sanity check
-    ourScheduler->triggerEvent(BlueCherrySource::eventTriggerId, ourDevice);
+  dataForRTSP *myData = (dataForRTSP*)clientData;
+  
+  // get the data
+  BlueCherrySource *source = myData->getSource();
+  H264Frame NAL_frames = myData->getNALdata();
+  source->setData(NAL_frames);
+ 
+  // set the trigger for warn about new data
+  if ( source->ourScheduler != NULL) { // sanity check;
+    source->ourScheduler->triggerEvent(source->getEventTriggerID(), source);
   }
 }
 
