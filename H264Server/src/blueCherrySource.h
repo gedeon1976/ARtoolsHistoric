@@ -41,6 +41,7 @@ public:
   EventTriggerId getEventTriggerID(void);
   void setData(H264Frame newData);
   static void signalNewDataFrame(void* clientData);
+  
   // Note that this is defined here to be a static class variable, because this code is intended to illustrate how to
   // encapsulate a *single* device - not a set of devices.
   // You can, however, redefine this to be a non-static member variable.
@@ -72,9 +73,11 @@ private:
 // Auxiliary class to transport data and source object
 class dataForRTSP{
   public:
-      dataForRTSP(){};
-      ~dataForRTSP(){};
+      dataForRTSP(){ };
+      dataForRTSP(BlueCherrySource *toCopy){};
+      ~dataForRTSP(){ };
       // methods
+      void operator=(BlueCherrySource *copySource){source=copySource;};
       void setSource(BlueCherrySource *sourceObject){source = sourceObject;};
       void setData(H264Frame data){NAL_data = data;};
       BlueCherrySource* getSource(void){BlueCherrySource *tmpSource = source;return tmpSource;};

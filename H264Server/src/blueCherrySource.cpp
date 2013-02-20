@@ -156,16 +156,20 @@ void BlueCherrySource::setData(H264Frame newData)
 // to make "eventTriggerId" a non-static member variable of "DeviceSource".)
 void BlueCherrySource::signalNewDataFrame(void* clientData){
 
+  
+  TaskScheduler *ourScheduler = BasicTaskScheduler::createNew();
   dataForRTSP *myData = (dataForRTSP*)clientData;
   
   // get the data
-  BlueCherrySource *source = myData->getSource();
+  BlueCherrySource *source(myData->getSource());
   H264Frame NAL_frames = myData->getNALdata();
   source->setData(NAL_frames);
  
   // set the trigger for warn about new data
-  if ( source->ourScheduler != NULL) { // sanity check;
-    source->ourScheduler->triggerEvent(source->getEventTriggerID(), source);
+  if ( ourScheduler != NULL) { // sanity check;
+    ourScheduler->triggerEvent(source->getEventTriggerID(), source);
   }
 }
+
+
 
