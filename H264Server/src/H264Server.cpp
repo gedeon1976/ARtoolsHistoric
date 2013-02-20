@@ -945,7 +945,7 @@ void H264Server::startVideoServer(void)
 	  }else{
 	      
 	    // start cameras without preview	        
-	    //cameraList.at(i)->start();	
+	    cameraList.at(i)->start();	
 	    cameraStatusList.at(i) = true;
 	    
 	     // add the RTP session for this camera

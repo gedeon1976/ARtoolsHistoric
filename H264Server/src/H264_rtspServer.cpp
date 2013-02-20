@@ -37,7 +37,8 @@ H264_rtspServer::H264_rtspServer()
     rtspPort = 8554;   
     functionCallcounter = 0;
     frameCounter = 0;
-    nextStreamNAL = true;//false
+    nextStreamNAL = false;
+    isEventLoop = false;
     // init semaphore
     init_semaphore(1,1);
     semaphores_global_flag = -1;
@@ -224,13 +225,16 @@ void H264_rtspServer::AddRTSPSession(void)
       // Start the streaming:
       *env << "Beginning streaming...\n";
       
-      }
+      
       // create thread stream
       
-      //create_Thread();
+      play(ID);
       
-      //readOKFlag = 0;
-      //env->taskScheduler().doEventLoop(&readOKFlag);
+      //if(!isEventLoop){      
+	readOKFlag = 0;
+	env->taskScheduler().doEventLoop();
+	isEventLoop = true;
+      }
     
     
   }catch(...){
@@ -253,8 +257,15 @@ void H264_rtspServer::play(int i)
       if(cameraCodedBufferList.size()>i){
 	
 	  currentEncodedFrame = cameraCodedBufferList.at(i).front();
+	
 	  currentData.frame = currentEncodedFrame;
 	  currentData.camera_ID = i;
+	  
+	  if((currentData.frame.size <= 0)|(currentData.frame.size > maxSize)){
+	      return;
+	  }else{	  
+	    printf("NAL data size: %d \n",currentData.frame.size);
+	  }
       
 	  // Open the device source in this case are encoded frames     
 	  CamParameters params;

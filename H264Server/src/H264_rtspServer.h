@@ -91,6 +91,7 @@ class H264_rtspServer:public QObject{
 	// flow control
 	bool sessionStarted;
 	bool nextStreamNAL;
+	bool isEventLoop;
 	char playOKFlag;
 	int videoGeneralIndex;
 	int frameCounter;

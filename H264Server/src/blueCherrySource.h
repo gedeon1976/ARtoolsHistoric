@@ -81,7 +81,7 @@ class dataForRTSP{
       void setSource(BlueCherrySource *sourceObject){source = sourceObject;};
       void setData(H264Frame data){NAL_data = data;};
       BlueCherrySource* getSource(void){BlueCherrySource *tmpSource = source;return tmpSource;};
-      H264Frame getNALdata(void){H264Frame data = NAL_data; return data;};
+      H264Frame getNALdata(void){H264Frame data;data = NAL_data; return data;};
   private:
       BlueCherrySource *source;
       H264Frame NAL_data;

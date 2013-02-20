@@ -120,7 +120,7 @@ void BlueCherrySource::deliverFrame() {
 
   u_int8_t* newFrameDataStart = NAL_data.frame.data; 
   unsigned newFrameSize = (unsigned)NAL_data.frame.size; 
-
+    printf("new RTSP data is available\n");
   // Deliver the data here:
   if (newFrameSize > fMaxSize) {
     fFrameSize = fMaxSize;
@@ -142,7 +142,7 @@ EventTriggerId BlueCherrySource::getEventTriggerID()
   eventTrigger = eventTriggerId;
   return eventTrigger;
 }
-// add a metdos to write the data to the class
+// add a method to write the data to the class
 void BlueCherrySource::setData(H264Frame newData)
 {
     NAL_data = newData;
@@ -156,14 +156,16 @@ void BlueCherrySource::setData(H264Frame newData)
 // to make "eventTriggerId" a non-static member variable of "DeviceSource".)
 void BlueCherrySource::signalNewDataFrame(void* clientData){
 
-  
+  int maxSize = 100000;
   TaskScheduler *ourScheduler = BasicTaskScheduler::createNew();
   dataForRTSP *myData = (dataForRTSP*)clientData;
   
   // get the data
   BlueCherrySource *source(myData->getSource());
   H264Frame NAL_frames = myData->getNALdata();
-  source->setData(NAL_frames);
+  if((NAL_frames.frame.size>0)&(NAL_frames.frame.size<maxSize)){
+    source->setData(NAL_frames);
+  }
  
   // set the trigger for warn about new data
   if ( ourScheduler != NULL) { // sanity check;
