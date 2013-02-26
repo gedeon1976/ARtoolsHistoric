@@ -37,7 +37,7 @@ H264_rtspServer::H264_rtspServer()
     rtspPort = 8554;   
     functionCallcounter = 0;
     frameCounter = 0;
-    nextStreamNAL = false;
+    nextStreamNAL = true;
     isEventLoop = false;
     // init semaphore
     init_semaphore(1,1);
@@ -92,6 +92,7 @@ void H264_rtspServer::getFrames()
 	    play(ID);	  
 	    readOKFlag = 0;
 	    nextStreamNAL = false;
+	    printf("thread RTSP loop\n");
 	  }
 	  
 	if(semaphores_global_flag==0){
@@ -254,7 +255,7 @@ void H264_rtspServer::play(int i)
       frameCounter = frameCounter + 1;
       printf("play counter: %d\n",frameCounter);      
       
-      if(cameraCodedBufferList.size()>i){
+      if(cameraCodedBufferList.size()>0){
 	
 	  currentEncodedFrame = cameraCodedBufferList.at(i).front();
 	
@@ -281,8 +282,7 @@ void H264_rtspServer::play(int i)
 	  dataForRTSP newRTSPdata(NAL_Source);
 	  newRTSPdata.setData(currentData);
 	  
-	  BlueCherrySource::signalNewDataFrame((void*)&newRTSPdata);
-	  
+	  BlueCherrySource::signalNewDataFrame((void*)&newRTSPdata);	  
 	 
 	  FramedSource* videoES = cameraSource;
 

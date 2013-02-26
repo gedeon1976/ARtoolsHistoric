@@ -164,7 +164,8 @@ void BlueCherrySource::signalNewDataFrame(void* clientData){
   BlueCherrySource *source(myData->getSource());
   H264Frame NAL_frames = myData->getNALdata();
   if((NAL_frames.frame.size>0)&(NAL_frames.frame.size<maxSize)){
-    source->setData(NAL_frames);
+	printf("sending frame to RTSP server\n");
+	source->setData(NAL_frames);
   }
  
   // set the trigger for warn about new data
