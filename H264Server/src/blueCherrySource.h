@@ -20,7 +20,6 @@
 #ifndef _FRAMED_SOURCE_HH
 #include "FramedSource.hh"
 #include "blueCherryCard.h"
-#include <QObject>
 #endif
 
 // The following class can be used to define specific encoder parameters

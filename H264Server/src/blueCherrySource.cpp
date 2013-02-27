@@ -13,9 +13,9 @@
 		from live555 libraries and is released
  *		under the same Lesser General Public License.
  */
-#include "blueCherrySource.h"
-#include <GroupsockHelper.hh> // for "gettimeofday()"
 
+#include <GroupsockHelper.hh> // for "gettimeofday()"
+#include "blueCherrySource.h"
 
 BlueCherrySource*
 BlueCherrySource::createNew(UsageEnvironment& env,

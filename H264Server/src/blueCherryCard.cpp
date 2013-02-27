@@ -375,9 +375,14 @@ void blueCherryCard::getData(void)
 	  
 	    videoFrame = getNextFrame();
 	    pkt = get_CompressedFrame(&videoFrame);
+	    
+	    // get NAL info	    
+	    //show_NAL_info(pkt);
+	    	    
 	    frameCounter = frameCounter + 1;
 	    printf("Camera %d received frames: %d\n",ID,frameCounter);
-	    
+	        
+	    	    
 	    // decode frameCounter
 	    get_decodedFrame(&pkt,decodedFrame);
 	    
@@ -414,8 +419,47 @@ void blueCherryCard::getData(void)
     }
 }
 
+// show the NALs info of the current packet
+void blueCherryCard::show_NAL_info(AVPacket pkt)
+{
+ try{
+     int nal_start, nal_end;
+     uint8_t* buf = video_st->codec->extradata;
+     int len = video_st->codec->extradata_size;
+     
+     int nal_type;
+     
+     // read some H264 data into buf
+     h264_stream_t* h = h264_new();
+     find_nal_unit(buf, len, &nal_start, &nal_end);
+     read_nal_unit(h, &buf[nal_start], nal_end - nal_start);
+     
+     // show right data
+     nal_type = h->nal->nal_unit_type;
+     switch(nal_type){
+	 case 7://  SPS sequence parameters set
+	        debug_nal(h,h->nal);
+		debug_sps(h->sps);
+	     break;
+	 case 8://  PPS picture parameters set
+		debug_nal(h,h->nal);
+		debug_pps(h->pps);
+	     break;
+	 default:
+		//debug_nal(h,h->nal);
+		debug_bytes(buf,video_st->codec->extradata_size);
+		//debug_slice_header(h->sh);
+	     break;
+     }
+    
+	
+    }
+    catch(...){
+    }    
 
-// get the SPS Nal units
+}
+
+// get the SPS Nal unit
 void blueCherryCard::getSPS_NAL(AVPacket pkt)
 {
  try{
@@ -428,11 +472,16 @@ void blueCherryCard::getSPS_NAL(AVPacket pkt)
      find_nal_unit(buf, len, &nal_start, &nal_end);
      read_nal_unit(h, &buf[nal_start], nal_end - nal_start);
      debug_nal(h,h->nal);
+     debug_sps(h->sps);
 	
     }
     catch(...){
     }
-    
+}
+
+// get the PPS data
+void blueCherryCard::getPPS_NAL(AVPacket pkt)
+{
 
 }
 

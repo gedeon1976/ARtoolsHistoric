@@ -111,6 +111,8 @@ class H264_rtspServer:public QObject{
 	RTSPServer *rtspServer;				/// RTSP server
 	int rtspPort;
 	RTPSink* videoSink;
+	CamParameters NALparams;
+	BlueCherrySource *NAL_Source;
 	const char* newStreamName;
 	const char* inputFileName;
 	char const* inputFileNameTest;

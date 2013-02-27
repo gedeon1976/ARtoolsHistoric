@@ -37,7 +37,7 @@ H264_rtspServer::H264_rtspServer()
     rtspPort = 8554;   
     functionCallcounter = 0;
     frameCounter = 0;
-    nextStreamNAL = true;
+    nextStreamNAL = false;
     isEventLoop = false;
     // init semaphore
     init_semaphore(1,1);
@@ -45,6 +45,7 @@ H264_rtspServer::H264_rtspServer()
     // register the own structure types to be used in signal/slot mechanism
     qRegisterMetaType<pictureFrame>();
     qRegisterMetaType<H264Frame>();
+    
 }
 
 // destructor
@@ -87,23 +88,22 @@ void H264_rtspServer::getFrames()
 	  wait_semaphore(1);
 	}  
 	  // get the data
-	  AddRTSPSession();
-	  if (nextStreamNAL){
+	  
+	  //if (nextStreamNAL){
+	    printf("start thread RTSP loop\n");
+	    AddRTSPSession();
 	    play(ID);	  
 	    readOKFlag = 0;
-	    nextStreamNAL = false;
-	    printf("thread RTSP loop\n");
-	  }
+	    //nextStreamNAL = false;
+	    printf("end thread RTSP loop\n");
+	  //}
 	  
 	if(semaphores_global_flag==0){
 	  // free the semaphore
 	  set_semaphore(1);
-	}
-	
-	  
+	}	  
       }
-    
-  
+     
   }
   // catch to get the thread cancel exception
   catch (abi::__forced_unwind&) {
@@ -137,7 +137,12 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
 	    cameraCodedBufferList.at(videoGeneralIndex).pop_front();	// delete the first received frame
 	    printf("camera %d H264 coded Buffer size is %d\n",camID,cameraCodedBufferList.at(videoGeneralIndex).size());
 	}
-	nextStreamNAL = true;	
+	// set signal for new data from camera
+	dataForRTSP newRTSPdata(NAL_Source);
+	newRTSPdata.setData(encodedFrame);
+	  
+	BlueCherrySource::signalNewDataFrame((void*)&newRTSPdata);
+	//nextStreamNAL = true;	
 	set_semaphore(1);
       }
       
@@ -171,67 +176,77 @@ void H264_rtspServer::AddRTSPSession(void)
 	  *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
 	  exit(1);
 	}
-	
+	            
+	// add camera to the buffer
+	codedFrameBuffer tmpFrame;
+	cameraCodedBufferList.push_back(tmpFrame);
       
+	unsigned short rtpPortNum;
+	unsigned short rtcpPortNum;
+	RTPSink *videoSink;			// RTP sink         
       
-      // add camera to the buffer
-      codedFrameBuffer tmpFrame;
-      cameraCodedBufferList.push_back(tmpFrame);
+	rtpPortNum = rtpPortNumBase + 2*ID;
+	rtcpPortNum = rtpPortNum + 1;
       
-      unsigned short rtpPortNum;
-      unsigned short rtcpPortNum;
-      RTPSink *videoSink;			// RTP sink         
+	Port rtpPort(rtpPortNum);
+	Port rtcpPort(rtcpPortNum);
       
-      rtpPortNum = rtpPortNumBase + 2*ID;
-      rtcpPortNum = rtpPortNum + 1;
+	// sockets groupsock 
+	Groupsock rtpGroupsock(*env,destinationAddress,rtpPort,ttl);
+	rtpGroupsock.multicastSendOnly(); // we're a SSM source
+	Groupsock rtcpGroupsock(*env,destinationAddress,rtcpPort,ttl);
+	rtcpGroupsock.multicastSendOnly();// we're a SSM source
       
-      Port rtpPort(rtpPortNum);
-      Port rtcpPort(rtcpPortNum);
+	// create a video RTP sink from the rtpGroupsock
       
-      // sockets groupsock 
-      Groupsock rtpGroupsock(*env,destinationAddress,rtpPort,ttl);
-      rtpGroupsock.multicastSendOnly(); // we're a SSM source
-      Groupsock rtcpGroupsock(*env,destinationAddress,rtcpPort,ttl);
-      rtcpGroupsock.multicastSendOnly();// we're a SSM source
+	// Add SPS and PPS NAl units information to proper RTSP stream setup
       
-      // create a video RTP sink from the rtpGroupsock
-      OutPacketBuffer::maxSize = 100000;
-      videoSink = H264VideoRTPSink::createNew(*env,&rtpGroupsock,96);
+	// define SPS NAL obtained through debug_bytes(h264bitstream library) of codec->extradata
+	const u_int8_t sps[] = {0x67,0x4D,0x40,0x1E,0xDA,0x02,0xC0,0x49,0xA1,0x00,0x00,0x03,0x00,0x01,0x00,0x00,0x03,0x00,0x32,0x0F,0x16,0x2E,0xA0};
+	unsigned spsSize = sizeof(sps);
       
-      // create and start a RTCP instance  for this RTP sink
-      unsigned estimatedSessionBandwidth = 500;// in kbps; for RTCP b/w share
-      unsigned maxCNAMElen = 100;
-      unsigned char CNAME[maxCNAMElen+1];
-      gethostname((char*)CNAME,maxCNAMElen);
-      CNAME[maxCNAMElen]='\0';			// just in case
+	// define PPS NAL
+	const u_int8_t pps[] ={0x68,0xCF,0x06,0xCB,0x20};
+	unsigned ppsSize = sizeof(pps);
       
-      RTCPInstance* rtcp = RTCPInstance::createNew(*env,&rtcpGroupsock,
+	OutPacketBuffer::maxSize = 100000;      
+	videoSink = H264VideoRTPSink::createNew(*env,&rtpGroupsock,96,sps,spsSize,
+					      pps,ppsSize);
+      
+	// create and start a RTCP instance  for this RTP sink
+	unsigned estimatedSessionBandwidth = 500;// in kbps; for RTCP b/w share
+	unsigned maxCNAMElen = 100;
+	unsigned char CNAME[maxCNAMElen+1];
+	gethostname((char*)CNAME,maxCNAMElen);
+	CNAME[maxCNAMElen]='\0';			// just in case
+      
+	RTCPInstance* rtcp = RTCPInstance::createNew(*env,&rtcpGroupsock,
 						   estimatedSessionBandwidth,
 						   CNAME,videoSink,NULL/*we're a server*/,
 						   True /* we're a SSM source */);
-      // Note: This starts RTCP running automatically
-      inputFileName = "stream.264";// used for SDP
-      ServerMediaSession *sms 
-      = ServerMediaSession::createNew(*env,StreamName,inputFileName,
+	// Note: This starts RTCP running automatically
+	inputFileName = "stream.264";// used for SDP
+	ServerMediaSession *sms 
+	= ServerMediaSession::createNew(*env,StreamName,inputFileName,
 				    "Session streamed by \"H264VideoStreamer\"",
 				    True/*SSM*/);
-      sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink,rtcp));
+	sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink,rtcp));
       
-      // add camera input to the rtsp Server
-      rtspServer->addServerMediaSession(sms);
+	// add camera input to the rtsp Server
+	rtspServer->addServerMediaSession(sms);
       
-      // show access address
-      *env<<"play this stream using the URl: "<<rtspServer->rtspURL(sms)<<"\"\n";
+	// show access address
+	*env<<"play this stream using the URl: "<<rtspServer->rtspURL(sms)<<"\"\n";
       
-      // Start the streaming:
-      *env << "Beginning streaming...\n";
+	// Start the streaming:
+	*env << "Beginning streaming...\n";
       
       
-      // create thread stream
+	// create thread stream
       
-      play(ID);
+	play(ID);
       
-      //if(!isEventLoop){      
+	//if(!isEventLoop){      
 	readOKFlag = 0;
 	env->taskScheduler().doEventLoop();
 	isEventLoop = true;
@@ -243,7 +258,7 @@ void H264_rtspServer::AddRTSPSession(void)
   }
 }
 
-// play the streaam
+// play the stream
 void H264_rtspServer::play(int i)
 {
   try{
@@ -267,11 +282,10 @@ void H264_rtspServer::play(int i)
 	  }else{	  
 	    printf("NAL data size: %d \n",currentData.frame.size);
 	  }
-      
-	  // Open the device source in this case are encoded frames     
-	  CamParameters params;
-	  BlueCherrySource* NAL_Source
-	  = BlueCherrySource::createNew(*env, params);
+	  
+	  
+	  NAL_Source = BlueCherrySource(*env,NALparams);
+	  // Open the device source in this case are encoded frames 
 	  if (NAL_Source == NULL) {
 	      *env << "Unable to open input camera \"" << "\" as a device source\n";
 	      exit(1);
@@ -279,10 +293,7 @@ void H264_rtspServer::play(int i)
 	  cameraSource = NAL_Source;
 	  
 	  // send frame to RTSP server
-	  dataForRTSP newRTSPdata(NAL_Source);
-	  newRTSPdata.setData(currentData);
-	  
-	  BlueCherrySource::signalNewDataFrame((void*)&newRTSPdata);	  
+	  //dataForRTSP newRTSPdata(NAL_Source);		  
 	 
 	  FramedSource* videoES = cameraSource;
 

@@ -117,7 +117,9 @@ class blueCherryCard:public QObject{
     v4l2_buffer getNextFrame(void);
     AVPacket get_CompressedFrame(v4l2_buffer *vb);    
     void getData(void);
+    void show_NAL_info(AVPacket pkt);
     void getSPS_NAL(AVPacket pkt);
+    void getPPS_NAL(AVPacket pkt);
     AVCodecContext* get_DecodingContext(void);
     int get_decodedFrame(AVPacket *pkt, AVFrame *frame);
     void getImage();
