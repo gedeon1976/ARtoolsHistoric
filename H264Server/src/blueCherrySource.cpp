@@ -52,7 +52,9 @@ BlueCherrySource::BlueCherrySource(UsageEnvironment& env,
   // If, however, the device *cannot* be accessed as a readable socket, then instead we can implement it using 'event triggers':
   // Create an 'event trigger' for this device (if it hasn't already been done):
   if (eventTriggerId == 0) {
+    
     eventTriggerId = envir().taskScheduler().createEventTrigger(deliverFrame0);
+    printf("creating event trigger %d\n",eventTriggerId);
   }
 }
 
@@ -66,6 +68,7 @@ BlueCherrySource::~BlueCherrySource() {
     //%%% TO BE WRITTEN %%%
 
     // Reclaim our 'event trigger'
+    printf("delete event trigger\n");
     envir().taskScheduler().deleteEventTrigger(eventTriggerId);
     eventTriggerId = 0;
   }
@@ -90,7 +93,7 @@ void BlueCherrySource::doGetNextFrame() {
 }
 
 void BlueCherrySource::deliverFrame0(void* clientData) {
-  ((BlueCherrySource*)clientData)->deliverFrame();
+      ((BlueCherrySource*)clientData)->deliverFrame();
 }
 
 void BlueCherrySource::deliverFrame() {
@@ -115,12 +118,12 @@ void BlueCherrySource::deliverFrame() {
   //         If, however, the device is a 'live source' (e.g., encoded from a camera or microphone), then we probably don't need
   //         to set this variable, because - in this case - data will never arrive 'early'.
   // Note the code below.
-
+  
   if (!isCurrentlyAwaitingData()) return; // we're not ready for the data yet
 
   u_int8_t* newFrameDataStart = NAL_data.frame.data; 
   unsigned newFrameSize = (unsigned)NAL_data.frame.size; 
-    printf("new RTSP data is available\n");
+    printf("new H.264 RTSP data is available\n");
   // Deliver the data here:
   if (newFrameSize > fMaxSize) {
     fFrameSize = fMaxSize;
@@ -140,12 +143,14 @@ EventTriggerId BlueCherrySource::getEventTriggerID()
 {
   EventTriggerId eventTrigger;
   eventTrigger = eventTriggerId;
+  printf("calling event trigger %d\n",eventTrigger);
   return eventTrigger;
 }
 // add a method to write the data to the class
 void BlueCherrySource::setData(H264Frame newData)
 {
     NAL_data = newData;
+    printf("H264 NAL size: %d\n",NAL_data.frame.size);
 }
 
 
@@ -157,7 +162,7 @@ void BlueCherrySource::setData(H264Frame newData)
 void BlueCherrySource::signalNewDataFrame(void* clientData){
 
   int maxSize = 100000;
-  TaskScheduler *ourScheduler = BasicTaskScheduler::createNew();
+  TaskScheduler *ourScheduler = NULL;
   dataForRTSP *myData = (dataForRTSP*)clientData;
   
   // get the data
@@ -169,10 +174,23 @@ void BlueCherrySource::signalNewDataFrame(void* clientData){
   }
  
   // set the trigger for warn about new data
+  ourScheduler = &(source->envir().taskScheduler());
   if ( ourScheduler != NULL) { // sanity check;
-    ourScheduler->triggerEvent(source->getEventTriggerID(), source);
+    ourScheduler->triggerEvent(source->eventTriggerId, source);
   }
 }
 
+// add another statis function but only takes the DeviceSource object
+void BlueCherrySource::signalNewDataSource(BlueCherrySource* clientSource)
+{
+    TaskScheduler *ourScheduler = NULL;
+    ourScheduler = &(clientSource->envir().taskScheduler());
+    
+    // set the trigger for warn about new data
+    
+    if ( ourScheduler != NULL) { // sanity check;
+    ourScheduler->triggerEvent(clientSource->eventTriggerId, clientSource);
+  }
+}
 
 

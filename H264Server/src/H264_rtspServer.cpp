@@ -85,22 +85,22 @@ void H264_rtspServer::getFrames()
 	// check global class semaphore
 	if(semaphores_global_flag==0){
 	  // set semaphore
-	  wait_semaphore(1);
+	 // wait_semaphore(1);
 	}  
 	  // get the data
 	  
 	  //if (nextStreamNAL){
 	    printf("start thread RTSP loop\n");
 	    AddRTSPSession();
-	    play(ID);	  
-	    readOKFlag = 0;
+	   // play(ID);	  
+	   // readOKFlag = 0;
 	    //nextStreamNAL = false;
 	    printf("end thread RTSP loop\n");
 	  //}
 	  
 	if(semaphores_global_flag==0){
 	  // free the semaphore
-	  set_semaphore(1);
+	  //set_semaphore(1);
 	}	  
       }
      
@@ -138,10 +138,14 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
 	    printf("camera %d H264 coded Buffer size is %d\n",camID,cameraCodedBufferList.at(videoGeneralIndex).size());
 	}
 	// set signal for new data from camera
-	dataForRTSP newRTSPdata(NAL_Source);
-	newRTSPdata.setData(encodedFrame);
-	  
-	BlueCherrySource::signalNewDataFrame((void*)&newRTSPdata);
+	if ((NAL_Source!= NULL)&(isEventLoop==true)){
+	    
+	    //dataForRTSP newRTSPdata(NAL_Source);
+	    //newRTSPdata.setData(encodedFrame);
+	    NAL_Source->setData(encodedFrame);
+	    //BlueCherrySource::signalNewDataFrame((void*)&newRTSPdata);
+	    BlueCherrySource::signalNewDataSource(NAL_Source);
+	}
 	//nextStreamNAL = true;	
 	set_semaphore(1);
       }
@@ -176,6 +180,9 @@ void H264_rtspServer::AddRTSPSession(void)
 	  *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
 	  exit(1);
 	}
+	
+	// create data source
+	NAL_Source = BlueCherrySource::createNew(*env,NALparams);
 	            
 	// add camera to the buffer
 	codedFrameBuffer tmpFrame;
@@ -248,8 +255,8 @@ void H264_rtspServer::AddRTSPSession(void)
       
 	//if(!isEventLoop){      
 	readOKFlag = 0;
-	env->taskScheduler().doEventLoop();
 	isEventLoop = true;
+	env->taskScheduler().doEventLoop();	
       }
     
     
@@ -282,20 +289,22 @@ void H264_rtspServer::play(int i)
 	  }else{	  
 	    printf("NAL data size: %d \n",currentData.frame.size);
 	  }
+	  	  
+	  // create dataSource
+	  //BlueCherrySource *tmpSource = //BlueCherrySource::createNew(*env,NALparams);
+	  //dataForRTSP dataStream(tmpSource);
 	  
 	  
-	  NAL_Source = BlueCherrySource(*env,NALparams);
 	  // Open the device source in this case are encoded frames 
 	  if (NAL_Source == NULL) {
 	      *env << "Unable to open input camera \"" << "\" as a device source\n";
 	      exit(1);
 	  }  
-	  cameraSource = NAL_Source;
-	  
+	  		  
 	  // send frame to RTSP server
 	  //dataForRTSP newRTSPdata(NAL_Source);		  
 	 
-	  FramedSource* videoES = cameraSource;
+	  FramedSource* videoES = NAL_Source;
 
 	  // Create a framer for the Video Elementary Stream:
 	  videoSource = H264VideoStreamDiscreteFramer::createNew(*env, videoES);
@@ -349,8 +358,8 @@ void H264_rtspServer::afterPlaying(void* dataClient)
 	H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
 	
 	rtsp->stopPlay();
-	//int i=0;
-	//wrapperToCallPlay((void*)&rtsp,i);	
+	int i=0;
+	wrapperToCallPlay((void*)&rtsp,i);	
 	
     }catch(...){
     }  
