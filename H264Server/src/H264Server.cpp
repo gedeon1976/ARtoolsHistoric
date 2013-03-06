@@ -936,7 +936,7 @@ void H264Server::startVideoServer(void)
 	    
 	    // add the RTP session for this camera
 	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
-	    const char *name = streamName.toStdString().c_str(); 
+	    std::string name = streamName.toStdString().c_str(); 
 	    rtspServerNew->setName(name);
 	    rtspServerNew->setID(i);
 	    rtspServerNew->create_Thread();
@@ -950,7 +950,7 @@ void H264Server::startVideoServer(void)
 	    
 	     // add the RTP session for this camera
 	    QString streamName(VideoInputPropertiesList.at(i).rtspName);
-	    const char *name = streamName.toStdString().c_str(); 
+	    std::string name = streamName.toStdString(); 
 	    
 	    rtspServerNew->setName(name);
 	    rtspServerNew->setID(i);

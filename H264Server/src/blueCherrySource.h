@@ -40,7 +40,7 @@ public:
   EventTriggerId getEventTriggerID(void);
   void setData(H264Frame newData);
   static void signalNewDataFrame(void* clientData);
-  static void signalNewDataSource(BlueCherrySource* clientSource);
+  static void signalNewDataSource(BlueCherrySource* clientSource, H264Frame clientData);
   
   // Note that this is defined here to be a static class variable, because this code is intended to illustrate how to
   // encapsulate a *single* device - not a set of devices.
@@ -68,6 +68,7 @@ private:
   CamParameters fParams;
   TaskScheduler *ourScheduler;
   H264Frame NAL_data;
+  bool isDataAvailable;
 };
 
 // Auxiliary class to transport data and source object
@@ -85,6 +86,7 @@ class dataForRTSP{
   private:
       BlueCherrySource *source;
       H264Frame NAL_data;
+      
 };
 
 #endif // BLUECHERRYSOURCE_H

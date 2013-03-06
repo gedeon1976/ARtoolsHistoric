@@ -65,7 +65,7 @@ class H264_rtspServer:public QObject{
 	    H264_rtspServer();
 	    virtual ~H264_rtspServer();
       public Q_SLOTS:
-	    void setName(const char *name);
+	    void setName(std::string name);
 	    void setPort(int Port);
 	    void setID(int StreamID);
 	    void getFrames();
@@ -119,7 +119,7 @@ class H264_rtspServer:public QObject{
 	int functionCallcounter;
 	// threads code
 	int ID;						/// video input ID
-	const char *StreamName;
+	std::string StreamName;
 	pthread_t StreamOut;				/// Threads code
 	sem_t Sem1,Sem2;				/// flow semaphore control
 	int semaphores_global_flag;			/// flag to control semaphores start

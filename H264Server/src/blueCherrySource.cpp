@@ -34,6 +34,7 @@ BlueCherrySource::BlueCherrySource(UsageEnvironment& env,
     // Any global initialization of the device would be done here:
     //%%% TO BE WRITTEN %%%
     ourScheduler = BasicTaskScheduler::createNew();
+    isDataAvailable = false;
     
   }
   ++referenceCount;
@@ -76,15 +77,16 @@ BlueCherrySource::~BlueCherrySource() {
 
 void BlueCherrySource::doGetNextFrame() {
   // This function is called (by our 'downstream' object) when it asks for new data.
-
+   printf("calling doGetNexFrame\n");
   // Note: If, for some reason, the source device stops being readable (e.g., it gets closed), then you do the following:
-  if (0 /* the source stops being readable */ /*%%% TO BE WRITTEN %%%*/) {
+  if (!isDataAvailable /* the source stops being readable */ /*%%% TO BE WRITTEN %%%*/) {
     handleClosure(this);
+    isDataAvailable = false;
     return;
   }
 
   // If a new frame of data is immediately available to be delivered, then do this now:
-  if (0 /* a new frame of data is immediately available to be delivered*/ /*%%% TO BE WRITTEN %%%*/) {
+  if (isDataAvailable /* a new frame of data is immediately available to be delivered*/ ) {
     deliverFrame();
   }
 
@@ -123,7 +125,7 @@ void BlueCherrySource::deliverFrame() {
 
   u_int8_t* newFrameDataStart = NAL_data.frame.data; 
   unsigned newFrameSize = (unsigned)NAL_data.frame.size; 
-    printf("new H.264 RTSP data is available\n");
+    printf("new H.264 RTSP %d data is available\n",newFrameSize);
   // Deliver the data here:
   if (newFrameSize > fMaxSize) {
     fFrameSize = fMaxSize;
@@ -133,7 +135,10 @@ void BlueCherrySource::deliverFrame() {
   }
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
   // If the device is *not* a 'live source' (e.g., it comes instead from a file or buffer), then set "fDurationInMicroseconds" here.
-  memmove(fTo, newFrameDataStart, fFrameSize);
+  if (newFrameDataStart!=NULL){
+    memmove(fTo, newFrameDataStart, fFrameSize);
+    isDataAvailable = false;
+  }
 
   // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);
@@ -151,6 +156,9 @@ void BlueCherrySource::setData(H264Frame newData)
 {
     NAL_data = newData;
     printf("H264 NAL size: %d\n",NAL_data.frame.size);
+    if(NAL_data.frame.size>0){
+	isDataAvailable = true;
+    }
 }
 
 
@@ -181,7 +189,7 @@ void BlueCherrySource::signalNewDataFrame(void* clientData){
 }
 
 // add another statis function but only takes the DeviceSource object
-void BlueCherrySource::signalNewDataSource(BlueCherrySource* clientSource)
+void BlueCherrySource::signalNewDataSource(BlueCherrySource* clientSource, H264Frame clientData)
 {
     TaskScheduler *ourScheduler = NULL;
     ourScheduler = &(clientSource->envir().taskScheduler());
@@ -190,6 +198,8 @@ void BlueCherrySource::signalNewDataSource(BlueCherrySource* clientSource)
     
     if ( ourScheduler != NULL) { // sanity check;
     ourScheduler->triggerEvent(clientSource->eventTriggerId, clientSource);
+    clientSource->setData(clientData);
+    
   }
 }
 

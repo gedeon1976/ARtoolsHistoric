@@ -55,7 +55,7 @@ H264_rtspServer::~H264_rtspServer()
 }
 
 // set Name for this stream
-void H264_rtspServer::setName(const char* name)
+void H264_rtspServer::setName(std::string name)
 {
     // set the name for this stream
     StreamName = name;
@@ -142,9 +142,10 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
 	    
 	    //dataForRTSP newRTSPdata(NAL_Source);
 	    //newRTSPdata.setData(encodedFrame);
-	    NAL_Source->setData(encodedFrame);
+	    //NAL_Source->setData(encodedFrame);
 	    //BlueCherrySource::signalNewDataFrame((void*)&newRTSPdata);
-	    BlueCherrySource::signalNewDataSource(NAL_Source);
+	    BlueCherrySource::signalNewDataSource(NAL_Source,encodedFrame);
+	    readOKFlag = 0;
 	}
 	//nextStreamNAL = true;	
 	set_semaphore(1);
@@ -210,11 +211,11 @@ void H264_rtspServer::AddRTSPSession(void)
       
 	// define SPS NAL obtained through debug_bytes(h264bitstream library) of codec->extradata
 	const u_int8_t sps[] = {0x67,0x4D,0x40,0x1E,0xDA,0x02,0xC0,0x49,0xA1,0x00,0x00,0x03,0x00,0x01,0x00,0x00,0x03,0x00,0x32,0x0F,0x16,0x2E,0xA0};
-	unsigned spsSize = sizeof(sps);
+	unsigned spsSize = 23;//izeof(sps);
       
 	// define PPS NAL
 	const u_int8_t pps[] ={0x68,0xCF,0x06,0xCB,0x20};
-	unsigned ppsSize = sizeof(pps);
+	unsigned ppsSize = 5;//sizeof(pps);
       
 	OutPacketBuffer::maxSize = 100000;      
 	videoSink = H264VideoRTPSink::createNew(*env,&rtpGroupsock,96,sps,spsSize,
@@ -232,15 +233,19 @@ void H264_rtspServer::AddRTSPSession(void)
 						   CNAME,videoSink,NULL/*we're a server*/,
 						   True /* we're a SSM source */);
 	// Note: This starts RTCP running automatically
-	inputFileName = "stream.264";// used for SDP
+	std::string inputSource("Bluecherry BC-H16480A 16 port H.264 video and audio encoder / decoder");
 	ServerMediaSession *sms 
-	= ServerMediaSession::createNew(*env,StreamName,inputFileName,
-				    "Session streamed by \"H264VideoStreamer\"",
-				    True/*SSM*/);
+	= ServerMediaSession::createNew(*env,StreamName.c_str(),
+					inputSource.c_str(),
+					"Session streamed by \"H264VideoStreamer\"",
+					True/*SSM*/);
 	sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink,rtcp));
       
+	// show the stream Name
+	*env<<"Stream name"<<sms->streamName()<<"\"\n";
 	// add camera input to the rtsp Server
 	rtspServer->addServerMediaSession(sms);
+	
       
 	// show access address
 	*env<<"play this stream using the URl: "<<rtspServer->rtspURL(sms)<<"\"\n";
@@ -252,10 +257,7 @@ void H264_rtspServer::AddRTSPSession(void)
 	// create thread stream
       
 	play(ID);
-      
-	//if(!isEventLoop){      
-	readOKFlag = 0;
-	isEventLoop = true;
+        isEventLoop = true;
 	env->taskScheduler().doEventLoop();	
       }
     
@@ -328,8 +330,8 @@ void H264_rtspServer::play(int i)
 void H264_rtspServer::stopPlay()
 {
   try{
-      videoSink->stopPlaying();
-      Medium::close(videoSource);
+      //videoSink->stopPlaying();
+      //Medium::close(videoSource);
   }
   catch(...){
  
