@@ -15,7 +15,7 @@
 // bluecherry Class
 #include "blueCherryCard.h"
 #include "blueCherrySource.h"
-
+#include <UsageEnvironment.hh>
 // typedefs
 //typedef void (afterPlay)(void* clientData);
 
@@ -64,14 +64,17 @@ class H264_rtspServer:public QObject{
       public:
 	    H264_rtspServer();
 	    virtual ~H264_rtspServer();
+	    
       public Q_SLOTS:
 	    void setName(std::string name);
 	    void setPort(int Port);
 	    void setID(int StreamID);
-	    void getFrames();
+	    int getID(void);
+	    void getFrames();	    
 	    void getEncodedFrames(H264Frame encodedFrame);
+	    cameraCodedBufferList getH264camerasBuffer(void);
 	    void AddRTSPSession(void);
-	    void play(int i);
+	    //void play(void* clientData);
 	    void stopPlay();
 	    static void afterPlaying(void* dataClient);
 	    static void wrapperToCallPlay(void *pt2object, int i);
@@ -96,8 +99,7 @@ class H264_rtspServer:public QObject{
 	int videoGeneralIndex;
 	int frameCounter;
 	char readOKFlag;
-	typedef std::deque<AVPacket> codedFrameBuffer;
-	std::deque<codedFrameBuffer> cameraCodedBufferList;
+	cameraCodedBufferList H264CamerasBufferList;
 	// live555 variables      
 	TaskScheduler *scheduler;			/// RTSP, RTP scheduler
 	UsageEnvironment *env;				/// main environment
@@ -110,7 +112,7 @@ class H264_rtspServer:public QObject{
 	bool isRTSPServerStarted;
 	RTSPServer *rtspServer;				/// RTSP server
 	int rtspPort;
-	RTPSink* videoSink;
+	H264VideoRTPSink* videoSink;
 	CamParameters NALparams;
 	BlueCherrySource *NAL_Source;
 	const char* newStreamName;

@@ -53,6 +53,7 @@ BlueCherrySource::BlueCherrySource(UsageEnvironment& env,
   // If, however, the device *cannot* be accessed as a readable socket, then instead we can implement it using 'event triggers':
   // Create an 'event trigger' for this device (if it hasn't already been done):
   if (eventTriggerId == 0) {
+      
     
     eventTriggerId = envir().taskScheduler().createEventTrigger(deliverFrame0);
     printf("creating event trigger %d\n",eventTriggerId);
@@ -69,7 +70,7 @@ BlueCherrySource::~BlueCherrySource() {
     //%%% TO BE WRITTEN %%%
 
     // Reclaim our 'event trigger'
-    printf("delete event trigger\n");
+    printf("deleting event trigger %d\n",eventTriggerId);
     envir().taskScheduler().deleteEventTrigger(eventTriggerId);
     eventTriggerId = 0;
   }
@@ -81,13 +82,14 @@ void BlueCherrySource::doGetNextFrame() {
   // Note: If, for some reason, the source device stops being readable (e.g., it gets closed), then you do the following:
   if (!isDataAvailable /* the source stops being readable */ /*%%% TO BE WRITTEN %%%*/) {
     handleClosure(this);
-    isDataAvailable = false;
     return;
   }
 
   // If a new frame of data is immediately available to be delivered, then do this now:
   if (isDataAvailable /* a new frame of data is immediately available to be delivered*/ ) {
+      
     deliverFrame();
+    isDataAvailable = false;
   }
 
   // No new data is immediately available to be delivered.  We don't do anything more here.
@@ -121,7 +123,10 @@ void BlueCherrySource::deliverFrame() {
   //         to set this variable, because - in this case - data will never arrive 'early'.
   // Note the code below.
   
-  if (!isCurrentlyAwaitingData()) return; // we're not ready for the data yet
+  if (!isCurrentlyAwaitingData()){ 
+      printf("We are not ready for next data for delivery\n");
+      return; // we're not ready for the data yet
+  }
 
   u_int8_t* newFrameDataStart = NAL_data.frame.data; 
   unsigned newFrameSize = (unsigned)NAL_data.frame.size; 
@@ -158,6 +163,7 @@ void BlueCherrySource::setData(H264Frame newData)
     printf("H264 NAL size: %d\n",NAL_data.frame.size);
     if(NAL_data.frame.size>0){
 	isDataAvailable = true;
+	
     }
 }
 
@@ -200,7 +206,15 @@ void BlueCherrySource::signalNewDataSource(BlueCherrySource* clientSource, H264F
     ourScheduler->triggerEvent(clientSource->eventTriggerId, clientSource);
     clientSource->setData(clientData);
     
+    
   }
 }
+
+// set the boolean flag that wait data to true
+void BlueCherrySource::setCurrentlyAwaitingData(bool value)
+{
+    
+}
+
 
 

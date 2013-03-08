@@ -95,6 +95,8 @@ typedef dataFrame pictureFrame;
 typedef H264encodedFrame H264Frame; 
 Q_DECLARE_METATYPE(pictureFrame)
 Q_DECLARE_METATYPE(H264Frame)
+typedef std::deque<AVPacket> codedFrameBuffer;
+typedef std::deque<codedFrameBuffer> cameraCodedBufferList;
 
 class blueCherryCard:public QObject{
   Q_OBJECT
