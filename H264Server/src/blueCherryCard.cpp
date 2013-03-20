@@ -237,7 +237,7 @@ void blueCherryCard::av_prepare(void){
 
       if (strstr((char *)vcap.card, "Softlogic 6010")) {
 	video_st->codec->codec_id = CODEC_ID_MPEG4;
-      } else if (strstr((char *)vcap.card, "Softlogic 6110")) {
+      } else if (strstr((char *)vcap.card, "Softlogic 6x10")) {
 	video_st->codec->codec_id = CODEC_ID_H264 ;
 	video_st->codec->crf = 20;
 	video_st->codec->me_range = 16;
@@ -317,8 +317,6 @@ void blueCherryCard::decode_prepare(void )
     
 }
 
-
-
 // get the current compressed frame from the card
 AVPacket blueCherryCard::get_CompressedFrame(v4l2_buffer *vb){
   try{
@@ -377,7 +375,7 @@ void blueCherryCard::getData(void)
 	    pkt = get_CompressedFrame(&videoFrame);
 	    
 	    // get NAL info	    
-	    //show_NAL_info(pkt);
+	   // show_NAL_info(pkt);
 	    	    
 	    frameCounter = frameCounter + 1;
 	    printf("Camera %d received frames: %d\n",ID,frameCounter);

@@ -16,6 +16,7 @@
 #include "blueCherryCard.h"
 #include "blueCherrySource.h"
 #include <UsageEnvironment.hh>
+#include <MediaSink.hh>
 // typedefs
 //typedef void (afterPlay)(void* clientData);
 
@@ -74,9 +75,9 @@ class H264_rtspServer:public QObject{
 	    void getEncodedFrames(H264Frame encodedFrame);
 	    cameraCodedBufferList getH264camerasBuffer(void);
 	    void AddRTSPSession(void);
-	    //void play(void* clientData);
+	    void play(int ID);
 	    void stopPlay();
-	    static void afterPlaying(void* dataClient);
+	    //static void afterPlaying(void* dataClient);
 	    static void wrapperToCallPlay(void *pt2object, int i);
 	    int create_Thread(void);
        Q_SIGNALS:
@@ -100,7 +101,8 @@ class H264_rtspServer:public QObject{
 	int frameCounter;
 	char readOKFlag;
 	cameraCodedBufferList H264CamerasBufferList;
-	// live555 variables      
+	// live555 variables  
+	MediaSink::afterPlayingFunc  *playFunction;
 	TaskScheduler *scheduler;			/// RTSP, RTP scheduler
 	UsageEnvironment *env;				/// main environment
 	H264VideoStreamDiscreteFramer *videoSource;	/// video source  
@@ -112,7 +114,8 @@ class H264_rtspServer:public QObject{
 	bool isRTSPServerStarted;
 	RTSPServer *rtspServer;				/// RTSP server
 	int rtspPort;
-	H264VideoRTPSink* videoSink;
+	VideoRTPSink* videoSink;
+	H264VideoStreamDiscreteFramer *H264FramesSource;
 	CamParameters NALparams;
 	BlueCherrySource *NAL_Source;
 	const char* newStreamName;

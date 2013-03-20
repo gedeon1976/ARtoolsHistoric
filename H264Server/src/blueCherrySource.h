@@ -20,6 +20,8 @@
 #ifndef _FRAMED_SOURCE_HH
 #include "FramedSource.hh"
 #include "blueCherryCard.h"
+// h264bitstream class
+#include "h264_stream.h"
 #endif
 
 // The following class can be used to define specific encoder parameters
@@ -70,6 +72,9 @@ private:
   TaskScheduler *ourScheduler;
   H264Frame NAL_data;
   bool isDataAvailable;
+  uint8_t *buffer;
+  std::list<uint8_t*> bufferH264;
+  //u_int8_t  *newFrameDataStart;
 };
 
 // Auxiliary class to transport data and source object
@@ -85,8 +90,10 @@ class dataForRTSP{
       BlueCherrySource* getSource(void){BlueCherrySource *tmpSource = source;return tmpSource;};
       H264Frame getNALdata(void){H264Frame data;data = NAL_data; return data;};
   private:
+      
       BlueCherrySource *source;
       H264Frame NAL_data;
+      
       
 };
 

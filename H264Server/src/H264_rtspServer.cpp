@@ -21,12 +21,28 @@ void afterFunction(void* clientData)
 {
   try{
     H264_rtspServer *rtspLocal = (H264_rtspServer*)clientData;
+    printf("calling after function\n");
     //rtspLocal->play(0);
     
   }catch(...){
   }  
 }
 
+// after play function
+void afterPlaying(void* dataClient)
+{
+ try{
+	H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
+	printf("calling after playing \n");
+	rtsp->stopPlay();
+	rtsp->play(0);
+
+	int i=0;
+	//wrapperToCallPlay((void*)&rtsp,i);	
+	
+    }catch(...){
+    }  
+}
 
 // play forward definition
 void play(void* clientData);
@@ -150,11 +166,18 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
 	// set signal for new data from camera
 	if ((NAL_Source!= NULL)&(isEventLoop==true)){
 	    
-	    //dataForRTSP newRTSPdata(NAL_Source);
-	    //newRTSPdata.setData(encodedFrame);
-	    //NAL_Source->setData(encodedFrame);
-	    //BlueCherrySource::signalNewDataFrame((void*)&newRTSPdata);
-	//    BlueCherrySource::signalNewDataSource(NAL_Source,encodedFrame);
+	    int nal_start,nal_end;
+	    int  NAL_length;
+	    uint8_t* NAL_buffer;
+	    h264_stream_t* h = h264_new(); 
+	    int bufSize = encodedFrame.frame.size;
+	      find_nal_unit(encodedFrame.frame.data,bufSize,&nal_start,&nal_end);
+	    NAL_length= read_nal_unit(h,&encodedFrame.frame.data[nal_start],nal_end-nal_start);
+	    printf("NAL unit size = %d  end-start: %d\n",NAL_length,nal_end-nal_start );
+	    
+	    // read dataClient
+	    //debug_bytes(encodedFrame.frame.data,50);
+	    BlueCherrySource::signalNewDataSource(NAL_Source,encodedFrame);
 	    readOKFlag = 0;
 	}
 	//nextStreamNAL = true;	
@@ -211,8 +234,7 @@ void H264_rtspServer::AddRTSPSession(void)
 	  exit(1);
 	}
 	
-	// create data source
-	NAL_Source = BlueCherrySource::createNew(*env,NALparams);
+	
 	            
 	// add camera to the buffer
 	codedFrameBuffer tmpFrame;
@@ -280,11 +302,44 @@ void H264_rtspServer::AddRTSPSession(void)
       
 	// Start the streaming:
 	*env << "Beginning streaming...\n";     
-      
+	
+	 // send frame to RTSP server
+	  
+	 //dataForRTSP newRTSPdata(NAL_Source);
+	
+	// create data source
+	NAL_Source = BlueCherrySource::createNew(*env,NALparams);
+	
+	 // Open the device source in this case are encoded frames 
+	  if (NAL_Source == NULL) {
+	      *env << "Unable to open input camera \"" << "\" as a device source\n";
+	      exit(1);
+	  }  
+	  		  
+	  // send frame to RTSP server
+	  //dataForRTSP newRTSPdata(NAL_Source);		  
+	 
+	  FramedSource* videoES = NAL_Source;
+
+	  // Create a framer for the Video Elementary Stream:
+	  videoSource = H264VideoStreamDiscreteFramer::createNew(*env, videoES);//videoES
+
+	  // Finally, start playing:
+	  playFunction = afterPlaying;
+	  //*env << "Beginning to read from camera...\n";
+	  videoSink->startPlaying(*videoSource,playFunction,videoSink);
+	
+	  // Finally, start playing:
+	  
+	  
+	  //*env << "Beginning to read from camera...\n";
+	 //videoSink->startPlaying(*videoSource,playFunction,videoSink);
+	  
 	// create periodic task to check data from input device
 	// each 40 ms
-	int usecToDelay = 40000;isEventLoop = true;
-	env->taskScheduler().scheduleDelayedTask(usecToDelay,(TaskFunc*)play,this);    	
+	//int usecToDelay = 40000;isEventLoop = true;
+	//env->taskScheduler().scheduleDelayedTask(usecToDelay,(TaskFunc*)play,this); 
+	isEventLoop = true;
 	env->taskScheduler().doEventLoop();	
       }
     
@@ -295,58 +350,53 @@ void H264_rtspServer::AddRTSPSession(void)
 }
 
 // play the stream
-void play(void* clientData)
+void H264_rtspServer::play(int ID)
 {
   try{
       //copy the encoded frame to NAL_Source
-      H264_rtspServer *thisServer = (H264_rtspServer*)clientData;
-      H264Frame currentData;
-      AVPacket currentEncodedFrame;
-      codedFrameBuffer NAL_list;
-      int maxSize = 100000;
-      int camID;
-      cameraCodedBufferList currentH264CamerasData;
-      
-      camID = thisServer->getID();
-      currentH264CamerasData = thisServer->getH264camerasBuffer();
-      
-      printf("play buffer size %d\n",currentH264CamerasData.size());
-      if(currentH264CamerasData.size()>0){
-	
-	  currentEncodedFrame = currentH264CamerasData.at(camID).front();
-	
-	  currentData.frame = currentEncodedFrame;
-	  currentData.camera_ID = camID;
-	  
-	  if((currentData.frame.size <= 0)|(currentData.frame.size > maxSize)){
-	      return;
-	  }else{	  
-	    printf("RTSP play NAL data size: %d \n",currentData.frame.size);
-	  }
+      //H264_rtspServer *thisServer = (H264_rtspServer*)clientData;
+//       H264Frame currentData;
+//       AVPacket currentEncodedFrame;
+//       codedFrameBuffer NAL_list;
+//       int maxSize = 100000;
+//       int camID;
+//       cameraCodedBufferList currentH264CamerasData;
+//       
+//       camID = getID();
+//       currentH264CamerasData = getH264camerasBuffer();
+//       
+//       printf("play buffer size %d\n",currentH264CamerasData.size());
+//       if(currentH264CamerasData.size()>0){
+// 	
+// 	  currentEncodedFrame = currentH264CamerasData.at(camID).front();
+// 	
+// 	  currentData.frame = currentEncodedFrame;
+// 	  currentData.camera_ID = camID;
+// 	  
+// 	  if((currentData.frame.size <= 0)|(currentData.frame.size > maxSize)){
+// 	      return;
+// 	  }else{	  
+// 	    printf("RTSP play NAL data size: %d \n",currentData.frame.size);
+// 	  }
 	  	  
-	  // create dataSource
-	  //BlueCherrySource *tmpSource = //BlueCherrySource::createNew(*env,NALparams);
-	  //dataForRTSP dataStream(tmpSource);
-	  
-	  
-// 	  // Open the device source in this case are encoded frames 
-// 	  if (NAL_Source == NULL) {
-// 	      *env << "Unable to open input camera \"" << "\" as a device source\n";
-// 	      exit(1);
-// 	  }  
-// 	  		  
-// 	  // send frame to RTSP server
-// 	  //dataForRTSP newRTSPdata(NAL_Source);		  
-// 	 
-// 	  FramedSource* videoES = NAL_Source;
-// 
-// 	  // Create a framer for the Video Elementary Stream:
-// 	  videoSource = H264VideoStreamDiscreteFramer::createNew(*env, videoES);//videoES
-// 
-// 	  // Finally, start playing:
-// 	  *env << "Beginning to read from camera...\n";
-// 	  videoSink->startPlaying(*videoSource, afterPlaying,videoSink);
-      }
+	  // Open the device source in this case are encoded frames 
+	  if (NAL_Source == NULL) {
+	      *env << "Unable to open input camera \"" << "\" as a device source\n";
+	      exit(1);
+	  }  
+	  		  
+	  // send frame to RTSP server
+	  //dataForRTSP newRTSPdata(NAL_Source);		  
+	 
+	  FramedSource* videoES = NAL_Source;
+
+	  // Create a framer for the Video Elementary Stream:
+	 // videoSource = H264VideoStreamDiscreteFramer::createNew(*env, videoES);//videoES
+
+	  // Finally, start playing:
+	  //*env << "Beginning to read from camera...\n";
+	  //videoSink->startPlaying(*videoSource,playFunction,videoSink);
+      //}
       
      	
     
@@ -360,8 +410,10 @@ void play(void* clientData)
 void H264_rtspServer::stopPlay()
 {
   try{
-      //videoSink->stopPlaying();
-      //Medium::close(videoSource);
+	//*env << "...done reading from file\n";
+	//videoSink->stopPlaying();
+	//Medium::close(videoSource);
+      
   }
   catch(...){
  
@@ -383,19 +435,7 @@ void H264_rtspServer::wrapperToCallPlay(void* pt2object, int i)
 
 }
 
-// after play function
-void H264_rtspServer::afterPlaying(void* dataClient)
-{
-    try{
-	H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
-	printf("calling after playing \n");
-	rtsp->stopPlay();
-	int i=0;
-	wrapperToCallPlay((void*)&rtsp,i);	
-	
-    }catch(...){
-    }  
-}
+
 
 // create a thread to manage a RTSP session
 // that controls a stream flow
