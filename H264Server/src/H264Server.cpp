@@ -920,7 +920,7 @@ void H264Server::startVideoServer(void)
 	isStreamEnabled = streamCheckBox.at(0)->isChecked();
 	
 	// connect the camera input to the stream source
-	connect(cameraList.at(i),SIGNAL(sendEncodedVideo(H264Frame)),	  rtspServerNew,SLOT(getEncodedFrames(H264Frame)),Qt::QueuedConnection);
+	connect(cameraList.at(i),SIGNAL(sendEncodedVideo(H264Frame)),rtspServerNew,SLOT(getEncodedFrames(H264Frame)),Qt::QueuedConnection);
 	
 	if(isStreamEnabled==true){
 	  
@@ -1001,6 +1001,7 @@ void H264Server::stopVideoServer(void)
 	    // disconnect the camera input to the stream source
 	    disconnect(cameraList.at(i),SIGNAL(sendEncodedVideo(H264Frame)),
 	      rtspServerNew,SLOT(getEncodedFrames(H264Frame)));
+	      rtspServerNew->closeServer();
 	      
 	    if (currentCameraStatus){
 		cameraList.at(i)->stop();		

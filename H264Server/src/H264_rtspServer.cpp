@@ -35,11 +35,9 @@ void afterPlaying(void* dataClient)
 	H264_rtspServer *rtsp = (H264_rtspServer*)dataClient;
 	printf("calling after playing \n");
 	rtsp->stopPlay();
-	rtsp->play(0);
-
-	int i=0;
-	//wrapperToCallPlay((void*)&rtsp,i);	
-	
+	int i = 0;
+	rtsp->play(i);	
+		
     }catch(...){
     }  
 }
@@ -113,16 +111,11 @@ void H264_rtspServer::getFrames()
 	  // set semaphore
 	 // wait_semaphore(1);
 	}  
-	  // get the data
+	  // get the data	  
 	  
-	  //if (nextStreamNAL){
-	    printf("start thread RTSP loop\n");
-	    AddRTSPSession();
-	   // play(ID);	  
-	   // readOKFlag = 0;
-	    //nextStreamNAL = false;
-	    printf("end thread RTSP loop\n");
-	  //}
+	  printf("start thread RTSP server\n");
+	  AddRTSPSession();
+	  printf("end thread RTSP server\n");	  
 	  
 	if(semaphores_global_flag==0){
 	  // free the semaphore
@@ -177,10 +170,12 @@ void H264_rtspServer::getEncodedFrames(H264Frame encodedFrame)
 	    
 	    // read dataClient
 	    //debug_bytes(encodedFrame.frame.data,50);
+	    
+	    // send data to the RTP videoSource
 	    BlueCherrySource::signalNewDataSource(NAL_Source,encodedFrame);
+	    nextStreamNAL = true;	
 	    readOKFlag = 0;
 	}
-	//nextStreamNAL = true;	
 	set_semaphore(1);
       }
       
@@ -207,9 +202,7 @@ cameraCodedBufferList H264_rtspServer::getH264camerasBuffer(void)
     catch(...){
     }
 }
-
-
-
+                                                                      
 // add a RTP session to manage each camera input
 void H264_rtspServer::AddRTSPSession(void)
 {
@@ -233,8 +226,6 @@ void H264_rtspServer::AddRTSPSession(void)
 	  *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
 	  exit(1);
 	}
-	
-	
 	            
 	// add camera to the buffer
 	codedFrameBuffer tmpFrame;
@@ -303,41 +294,30 @@ void H264_rtspServer::AddRTSPSession(void)
 	// Start the streaming:
 	*env << "Beginning streaming...\n";     
 	
-	 // send frame to RTSP server
+	// send frame to RTSP server
 	  
-	 //dataForRTSP newRTSPdata(NAL_Source);
-	
 	// create data source
 	NAL_Source = BlueCherrySource::createNew(*env,NALparams);
 	
-	 // Open the device source in this case are encoded frames 
-	  if (NAL_Source == NULL) {
+	// Open the device source in this case are encoded frames 
+	if (NAL_Source == NULL) {
 	      *env << "Unable to open input camera \"" << "\" as a device source\n";
 	      exit(1);
-	  }  
+	}  
 	  		  
-	  // send frame to RTSP server
-	  //dataForRTSP newRTSPdata(NAL_Source);		  
-	 
-	  FramedSource* videoES = NAL_Source;
+	// send frame to RTSP server
+	// Create a framer for the Video Elementary Stream:
+	videoSource = H264VideoStreamDiscreteFramer::createNew(*env, NAL_Source);
 
-	  // Create a framer for the Video Elementary Stream:
-	  videoSource = H264VideoStreamDiscreteFramer::createNew(*env, videoES);//videoES
-
-	  // Finally, start playing:
-	  playFunction = afterPlaying;
-	  //*env << "Beginning to read from camera...\n";
-	  videoSink->startPlaying(*videoSource,playFunction,videoSink);
-	
-	  // Finally, start playing:
-	  
-	  
-	  //*env << "Beginning to read from camera...\n";
-	 //videoSink->startPlaying(*videoSource,playFunction,videoSink);
-	  
+	// Finally, start playing:
+	playFunction = afterPlaying;
+	bool testStartplaying;
+	testStartplaying = videoSink->startPlaying(*videoSource,playFunction,videoSink);
+	*env<<testStartplaying<<"\n";
+		  
 	// create periodic task to check data from input device
 	// each 40 ms
-	//int usecToDelay = 40000;isEventLoop = true;
+	//int usecToDelay = 40000;
 	//env->taskScheduler().scheduleDelayedTask(usecToDelay,(TaskFunc*)play,this); 
 	isEventLoop = true;
 	env->taskScheduler().doEventLoop();	
@@ -353,53 +333,13 @@ void H264_rtspServer::AddRTSPSession(void)
 void H264_rtspServer::play(int ID)
 {
   try{
-      //copy the encoded frame to NAL_Source
-      //H264_rtspServer *thisServer = (H264_rtspServer*)clientData;
-//       H264Frame currentData;
-//       AVPacket currentEncodedFrame;
-//       codedFrameBuffer NAL_list;
-//       int maxSize = 100000;
-//       int camID;
-//       cameraCodedBufferList currentH264CamerasData;
-//       
-//       camID = getID();
-//       currentH264CamerasData = getH264camerasBuffer();
-//       
-//       printf("play buffer size %d\n",currentH264CamerasData.size());
-//       if(currentH264CamerasData.size()>0){
-// 	
-// 	  currentEncodedFrame = currentH264CamerasData.at(camID).front();
-// 	
-// 	  currentData.frame = currentEncodedFrame;
-// 	  currentData.camera_ID = camID;
-// 	  
-// 	  if((currentData.frame.size <= 0)|(currentData.frame.size > maxSize)){
-// 	      return;
-// 	  }else{	  
-// 	    printf("RTSP play NAL data size: %d \n",currentData.frame.size);
-// 	  }
-	  	  
-	  // Open the device source in this case are encoded frames 
-	  if (NAL_Source == NULL) {
-	      *env << "Unable to open input camera \"" << "\" as a device source\n";
-	      exit(1);
-	  }  
-	  		  
-	  // send frame to RTSP server
-	  //dataForRTSP newRTSPdata(NAL_Source);		  
-	 
-	  FramedSource* videoES = NAL_Source;
-
-	  // Create a framer for the Video Elementary Stream:
-	 // videoSource = H264VideoStreamDiscreteFramer::createNew(*env, videoES);//videoES
-
-	  // Finally, start playing:
-	  //*env << "Beginning to read from camera...\n";
-	  //videoSink->startPlaying(*videoSource,playFunction,videoSink);
-      //}
-      
-     	
-    
+      // Open the device source in this case is encoded frames 
+      if (NAL_Source == NULL) {
+	  *env << "Unable to open input camera \"" << "\" as a device source\n";
+	  exit(1);
+      }  
+      // Finally, start playing next NAL unit:
+      videoSink->startPlaying(*videoSource,playFunction,videoSink);
     
   }catch(...){
     
@@ -420,6 +360,21 @@ void H264_rtspServer::stopPlay()
   }
 }
 
+// stop the RTSP server
+void H264_rtspServer::closeServer()
+{
+  try{
+      // close the server
+      const char* name = (const char*)rtspServer->name();
+      rtspServer->close(*env,name);     
+    
+  }
+  catch(...){
+  
+  }
+
+}
+
 
 // wrapper to call the play function
 void H264_rtspServer::wrapperToCallPlay(void* pt2object, int i)
@@ -427,15 +382,13 @@ void H264_rtspServer::wrapperToCallPlay(void* pt2object, int i)
     try{
 	
 	H264_rtspServer *myself = (H264_rtspServer*)pt2object;
-	//myself->play(i);
+	myself->play(i);
 	printf("entering wrappertoCallPlay\n");
 
     }catch(...){
     }
 
 }
-
-
 
 // create a thread to manage a RTSP session
 // that controls a stream flow

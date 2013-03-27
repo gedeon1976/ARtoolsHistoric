@@ -77,6 +77,7 @@ class H264_rtspServer:public QObject{
 	    void AddRTSPSession(void);
 	    void play(int ID);
 	    void stopPlay();
+	    void closeServer();
 	    //static void afterPlaying(void* dataClient);
 	    static void wrapperToCallPlay(void *pt2object, int i);
 	    int create_Thread(void);
@@ -114,7 +115,7 @@ class H264_rtspServer:public QObject{
 	bool isRTSPServerStarted;
 	RTSPServer *rtspServer;				/// RTSP server
 	int rtspPort;
-	VideoRTPSink* videoSink;
+	RTPSink* videoSink;
 	H264VideoStreamDiscreteFramer *H264FramesSource;
 	CamParameters NALparams;
 	BlueCherrySource *NAL_Source;
