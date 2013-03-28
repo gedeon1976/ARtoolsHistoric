@@ -43,8 +43,7 @@ public:
   void setData(H264Frame newData);
   static void signalNewDataFrame(void* clientData);
   static void signalNewDataSource(BlueCherrySource* clientSource, H264Frame clientData);
-  void setCurrentlyAwaitingData(bool value);
-  
+
   // Note that this is defined here to be a static class variable, because this code is intended to illustrate how to
   // encapsulate a *single* device - not a set of devices.
   // You can, however, redefine this to be a non-static member variable.
@@ -74,10 +73,10 @@ private:
   bool isDataAvailable;
   uint8_t *buffer;
   std::list<uint8_t*> bufferH264;
-  //u_int8_t  *newFrameDataStart;
+
 };
 
-// Auxiliary class to transport data and source object
+// Auxiliary class to data and source object transport
 class dataForRTSP{
   public:
       dataForRTSP(){ };

@@ -90,7 +90,7 @@ void BlueCherrySource::doGetNextFrame() {
   if (isDataAvailable /* a new frame of data is immediately available to be delivered*/ ) {
       
     deliverFrame();
-    isDataAvailable = false;
+    isDataAvailable  = false;
   }
 
   // No new data is immediately available to be delivered.  We don't do anything more here.
@@ -148,8 +148,7 @@ void BlueCherrySource::deliverFrame() {
   if (newFrameSize <= fMaxSize){
      memmove(fTo, newFrameDataStart+4, newFrameSize -4);
      debug_bytes(fTo,50);
-    //isDataAvailable = false;
-  }
+   }
 
   // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);
@@ -168,15 +167,15 @@ void BlueCherrySource::setData(H264Frame newH264data)
     int maxSize = 100000;
     // copy the data
     NAL_data = newH264data;
+
    // uint8_t *newdata = (new uint8_t[NAL_data.frame.size - 4]); 
     if((NAL_data.frame.size>0)&(NAL_data.frame.size<maxSize)){
-	//memcpy(newdata,newH264data.frame.data+4,newH264data.frame.size);
-	//bufferH264.push_back(newdata);
-	printf("H264 NAL size: %d\n",NAL_data.frame.size);
-	//debug_bytes(newH264data.frame.data,50);
-	envir().taskScheduler().triggerEvent(eventTriggerId,this);
-	isDataAvailable = true;
-	
+        isDataAvailable = true;
+        //memcpy(newdata,newH264data.frame.data+4,newH264data.frame.size);
+        //bufferH264.push_back(newdata);
+        printf("H264 NAL size: %d\n",NAL_data.frame.size);
+        //debug_bytes(newH264data.frame.data,50);
+        envir().taskScheduler().triggerEvent(eventTriggerId,this);
     }
     //delete [] newdata;
     //newdata = NULL;
@@ -218,16 +217,9 @@ void BlueCherrySource::signalNewDataSource(BlueCherrySource* clientSource, H264F
     // set the trigger for warn about new data
     
     if ( ourScheduler != NULL) { // sanity check;
-    //ourScheduler->triggerEvent(clientSource->eventTriggerId, clientSource);
-    clientSource->setData(clientData);  
+    clientSource->setData(clientData);
     
   }
-}
-
-// set the boolean flag that wait data to true
-void BlueCherrySource::setCurrentlyAwaitingData(bool value)
-{
-    
 }
 
 
