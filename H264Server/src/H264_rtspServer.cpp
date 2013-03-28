@@ -366,6 +366,17 @@ void H264_rtspServer::stopPlay()
   }
 }
 
+// stop the server
+void H264_rtspServer::closeServer(){
+    try{
+        // close the server
+        const char* name = (const char*)rtspServer->name();
+        rtspServer->close(*env,name);
+    }
+    catch(...){
+    }
+}
+
 
 // wrapper to call the play function
 void H264_rtspServer::wrapperToCallPlay(void* pt2object, int i)
