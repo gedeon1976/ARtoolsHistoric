@@ -126,7 +126,7 @@ int STREAM::initCodecs(int width, int heigh)
                 }
 //      allocate memory for AVodecCtx
 
-        pCodecCtx = avcodec_alloc_context();
+        pCodecCtx = avcodec_alloc_context3(pCodec);
 //      initialize width and height by now
         pCodecCtx->width=width;
         pCodecCtx->height=heigh;
@@ -144,7 +144,7 @@ int STREAM::initCodecs(int width, int heigh)
 //      }
         
 //      open the codec
-        if(avcodec_open(pCodecCtx,pCodec)<0)
+        if(avcodec_open2(pCodecCtx,pCodec,NULL)<0)
                 {
                 printf("%s\n","cannot open the codec");
                 return -1;      //      cannot open the codec

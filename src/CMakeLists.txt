@@ -1,4 +1,7 @@
-
+# add definitions to avoid boost qt signals conflict
+# add also -D__STDC_CONSTANT_MACROS to CXX Flags for FFMPEG LIBRARIES
+#add_definitions(-DQT_NO_KEYWORDS)
+set(EXTRA_OPTIONS "-D__STDC_CONSTANT_MACROS")
 # enable modules
 
 # qt includes
@@ -93,7 +96,9 @@ else (UNIX)
 
 endif (UNIX)
 
-set(ARtools_SRCS ${CMAKE_SOURCE_DIR}/haptic/haptic.cpp ${CMAKE_SOURCE_DIR}/imageProcess/pointer_3D.cpp ARtools.cpp client.cpp stereovideo.cpp hapticConnection.cpp LICFs.cpp  EDlines.cpp SoStereoTexture.cpp  main.cpp ${SOURCES_MOC} ${Forms_UIS})
+set(ARtools_SRCS ${CMAKE_SOURCE_DIR}/haptic/haptic.cpp ${CMAKE_SOURCE_DIR}/imageProcess/pointer_3D.cpp 
+ARtools.cpp client.cpp stereovideo.cpp hapticConnection.cpp LICFs.cpp  EDlines.cpp SoStereoTexture.cpp  
+mainWidget.cpp ARScene.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
 qt4_automoc(${ARtools_SRCS})
 add_executable(ARtools ${ARtools_SRCS})
 
