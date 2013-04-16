@@ -57,6 +57,8 @@ signals:
   void SetVisibility3Dpointer(Visibility_Status);
   
 private slots:
+	void SetupRemoteCameras();
+	void ShowRemoteCamerasStart();
 	void AboutAct();
 	void ShowStereoVideo();
 	void ShowLeftVideo();
@@ -73,10 +75,19 @@ private slots:
 private:
    QAction *aboutApp;
    QAction *showleftCamera;
+   QAction *configureRemoteCameras;
+   QAction *calibratePTZCameras;
+   QAction *startRemoteCameras;
+   QAction *connectToHaptic;
+   QAction *show3DPointer;
+   QAction *showLICFs;
+   QToolBar *mainToolbar;
+
    // methods
    float getTimeDiff();
    void createActions();
    void createMenus();   
+   void createToolBars();
 
 #ifdef UNIX
    timeval elapsedTimeFirst;	// timing structures

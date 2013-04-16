@@ -244,6 +244,7 @@ int pointer_3D::MatchPointsSURF(void){
 	matL = cv::cvarrToMat(imgL,true);
 	matR = cv::cvarrToMat(imgR,true);
 	// detecting L and R keypoints
+	
 	cv::SurfFeatureDetector detector(500);	
 	detector.detect(matL,KeyPointsL);
 	detector.detect(matR,KeyPointsR);

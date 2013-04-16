@@ -12,8 +12,11 @@ ARtools::ARtools()
 		 QMainWindow::AnimatedDocks |
 		 QMainWindow::AllowTabbedDocks
 		 );
+  // create elements
   createActions();
   createMenus();
+  createToolBars();
+
 	#if (UNIX)
 		gettimeofday(&elapsedTimeFirst,&timeZone) ;
 	#endif
@@ -1171,25 +1174,55 @@ void ARtools::GetLICF_EpipolarErrorConstraintValue(float ActualValue)
 	}
 }
 
+// setup the remote cameras
+void ARtools::SetupRemoteCameras(){
+	QDockWidget *setupCameras = new QDockWidget(tr("Remote Camera Setup"),this);
+	setupCameras->setAllowedAreas(Qt::LeftDockWidgetArea);
+	QGridLayout *Layout = new QGridLayout(setupCameras);
+	QLineEdit *lnEditLeftCameraAddress = new QLineEdit();
 
+	Layout->addWidget(lnEditLeftCameraAddress,1,1,2,2);
+	setupCameras->show();
+
+}
+
+// Show a window to introduce the remote cameras address
+void ARtools::ShowRemoteCamerasStart(){
+
+}
 void ARtools::AboutAct(){
 	// Show a message about the application 
 	
 		QMessageBox::about(this, tr("About ARtools"),
-		tr("This is a prototype of teleoperation tools based on augmented reality technology"));
+		tr("This is a prototype of robot teleoperation tools \n"
+			"based on Augmented Reality technology \n"
+			"2006-2013 by Henry Portilla \n"
+			"Institute of Control and Industrial Engineering"));
 	
 }
 void ARtools::createActions(){
 	// create the action for the menus
 	bool status = true;
+
 	// Help actions
 	aboutApp = new QAction(tr("About..."),this);
-	connect(aboutApp,SIGNAL(triggered()),
-			this,SLOT(AboutAct()));
+	connect(aboutApp,SIGNAL(triggered()),this,SLOT(AboutAct()));
+
 	// Video Processing actions
 	showleftCamera = new QAction(tr("Show Left Camera"),this);
 	connect(showleftCamera,SIGNAL(triggered()),
 			this,SLOT(ShowLeftVideo()));
+
+	// toolbar actions
+	configureRemoteCameras = new QAction(QIcon(":/images/setupCameras.png"),tr("Configure Remote Cameras"),this);
+	connect(configureRemoteCameras,SIGNAL(triggered()),
+		this,SLOT(SetupRemoteCameras()));
+
+	startRemoteCameras = new QAction(QIcon(":/images/play.gif"),tr("Start Remote Cameras Connection"),this);	
+	calibratePTZCameras = new QAction(QIcon(":/images/calibratePTZ.png"),tr("Calibrate PTZ cameras"),this);	
+	connectToHaptic = new QAction(QIcon(":/images/HapticConnection.png"),tr("Connect to Haptic"),this);
+	show3DPointer = new QAction(QIcon(":/images/3Dpointer.png"),tr("show a 3D pointer"),this);
+
 	
 }
 void ARtools::createMenus(){
@@ -1201,6 +1234,25 @@ void ARtools::createMenus(){
 	help_Menu = this->menuBar()->addMenu("&Help");
 	help_Menu->addAction(aboutApp);
 	
+}
+
+void ARtools::createToolBars(){
+	
+	// add main toolbar
+	mainToolbar = addToolBar(tr("mainToolBar"));
+
+	// add tool options
+	mainToolbar->addAction(configureRemoteCameras);
+	mainToolbar->addSeparator();
+	mainToolbar->addAction(startRemoteCameras);
+	mainToolbar->addSeparator();
+	mainToolbar->addAction(calibratePTZCameras);
+	mainToolbar->addSeparator();	
+	mainToolbar->addAction(connectToHaptic);
+	mainToolbar->addSeparator();
+	mainToolbar->addAction(show3DPointer);
+	mainToolbar->addSeparator();
+
 }
 
 #include "ARtools.moc"

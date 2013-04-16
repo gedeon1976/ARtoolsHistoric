@@ -1,0 +1,9 @@
+ <!DOCTYPE RCC><RCC version="1.0">
+ <qresource>
+	 <file>images/setupCameras.png</file>
+	 <file>images/calibratePTZ.png</file>
+     <file>images/play.gif</file>
+     <file>images/HapticConnection.png</file>
+	 <file>images/3Dpointer.png</file>      
+ </qresource>
+ </RCC>

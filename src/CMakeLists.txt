@@ -43,6 +43,10 @@ else (UNIX)
 
 endif (UNIX)
 
+# qt resource file
+set(ARtools_RCS ARtools.qrc)
+qt4_add_resources(ARtools_RCS_GEN ${ARtools_RCS})
+
 # generating UI's
 message("Cmake Src Dir: "${CMAKE_SOURCE_DIR})
 file(GLOB Forms_UIS  RELATIVE ${CMAKE_SOURCE_DIR}/src *.ui)
@@ -100,15 +104,15 @@ set(ARtools_SRCS ${CMAKE_SOURCE_DIR}/haptic/haptic.cpp ${CMAKE_SOURCE_DIR}/image
 ARtools.cpp client.cpp stereovideo.cpp hapticConnection.cpp LICFs.cpp  EDlines.cpp SoStereoTexture.cpp  
 mainWidget.cpp ARScene.cpp main.cpp ${SOURCES_MOC} ${Forms_UIS})
 qt4_automoc(${ARtools_SRCS})
-add_executable(ARtools ${ARtools_SRCS})
+add_executable(ARtools ${ARtools_SRCS} ${ARtools_RCS_GEN})
 
 
-if (UNIX) # ${LIBIOCCOMM_LIBRARIES}#${BOOST_LIBRARIES} 
+if (UNIX) 
   target_link_libraries(ARtools ${QUARTER_LIBRARIES} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} 
   ${QT_LIBRARIES} ${SOQT_LIBRARY_DEBUG} ${COIN3D_LIBRARIES} ${OPENGL_LIBRARIES} ${FFMPEG_LIBRARIES} 
-  ${LIVE555_LIBRARIES} ${OpenCV_LIBRARIES}  ${OPENHAPTICS_LIBRARIES})
+  ${LIVE555_LIBRARIES} ${OpenCV_LIBS}  ${OPENHAPTICS_LIBRARIES})
 endif (UNIX)
-if (WIN32)#${BOOST_LIBRARIES} 
+if (WIN32)
   target_link_libraries(ARtools ${PTHREADS_LIBRARIES} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} 
   ${QT_LIBRARIES} ${SOQT_LIBRARY_DEBUG} ${COIN3D_LIBRARIES} ${OPENGL_LIBRARIES} ${FFMPEG_LIBRARIES} 
   ${LIVE555_LIBRARIES} ${OpenCV_LIBRARIES}  ${OPENHAPTICS_LIBRARIES})

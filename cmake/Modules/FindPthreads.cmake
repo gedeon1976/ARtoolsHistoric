@@ -14,9 +14,9 @@ IF (WIN32)
   # you can download this library on http://sourceware.org/pthreads-win32/
   
   find_path(PTHREADS_INCLUDE_DIRS pthread.h
-      "/PthreadsWindows/Pre-built.2/include")
+      "/Pthreads/include")
   find_library(PTHREADS_LIBRARIES pthreadVCE2
-      "/PthreadsWindows/Pre-built.2/lib")
+      "/Pthreads/lib/${CMAKE_HOST_SYSTEM_PROCESSOR}")
 
 
 ENDIF (WIN32)

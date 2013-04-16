@@ -44,7 +44,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <glext.h>  
+#include <GL/glext.h>  
 												//      GL extensions
 												//      Binding extensions with pointers to opengl in linux
                                                 //      see opengl red book pag 715 in the 5th edition

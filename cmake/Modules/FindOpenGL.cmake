@@ -30,7 +30,7 @@
 
 IF (WIN32)
     FIND_PATH(OPENGL_INCLUDE_DIR GL/gl.h 
-   "Program Files/Microsoft SDKs/Windows/v6.0A/include")
+   "C:/Program Files/Microsoft SDKs/Windows/v6.0A/Include")
   IF (CYGWIN)
 
     FIND_PATH(OPENGL_INCLUDE_DIR GL/gl.h )

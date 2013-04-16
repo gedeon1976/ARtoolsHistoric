@@ -18,6 +18,8 @@ author: henry portilla
 #include <opencv/cv.h>
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/nonfree/nonfree.hpp"
 #include <stdio.h>
 
 // strings and c-strings

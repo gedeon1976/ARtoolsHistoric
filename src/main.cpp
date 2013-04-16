@@ -63,20 +63,11 @@
 
 int main(int argc, char** argv)
 {
-	
-	try{
-		QApplication app(argc, argv);
-		mainWidget mainGUI;
-		// don't show yet here
-		return app.exec();    
-	}
-	catch(cv::Exception){
-
-		int err = cvGetErrStatus();
-		const char* description = cvErrorStr(err);
-		int i=143;
-		cvGuiBoxReport(err,"ShowLeftVideo",description,"ARtools.cpp",i,"2");
-
-	}
-
+	// start application
+	Q_INIT_RESOURCE(ARtools);
+	QApplication app(argc, argv);
+	mainWidget mainGUI;
+	// don't show yet here
+	// because we use a Coin3D based widget
+	return app.exec(); 
 }
