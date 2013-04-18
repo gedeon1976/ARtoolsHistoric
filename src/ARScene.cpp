@@ -65,8 +65,8 @@ ARScene::ARScene(QWidget *parent):QWidget(parent)
     
 		//      add Stereo node    
 		SoStereoTexture *Stereo = new SoStereoTexture;
-		Stereo->width.setValue(1280);
-		Stereo->heigh.setValue(960);
+		Stereo->width.setValue(videoWidth);
+		Stereo->heigh.setValue(videoHeight);
 		Stereo->IOD.setValue(7.0);//IOD
 	  ////camera->viewAll(selection,viewer->getSoRenderManager()->getViewportRegion());
 		//root->addChild(Stereo);
@@ -75,7 +75,7 @@ ARScene::ARScene(QWidget *parent):QWidget(parent)
 		// get the rtsp addresses for left and rigth cameras
 	
 		
-		//	StereoVideo video("rtsp://147.83.37.135:8554/CamL","rtsp://147.83.37.135:8554/CamL",1280,960,Stereo);
+	//	StereoVideo video(leftRTSPCam,rightRTSPCam,videoWidth,videoHeight,Stereo);
 		//QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
 		// timer for update the image every 40 ms = 25fps	
 		//QTimer* timer = new QTimer;
@@ -161,3 +161,12 @@ ARScene::~ARScene(void)
 {
 }
 
+// get the current rtsp addresses
+void ARScene::GetCameraRTSPAddresses(rtspAddress address){
+
+	// save the current rtsp addresses
+	leftRTSPCam = address.leftCamRTSP;
+	rightRTSPCam = address.rightCamRTSP;
+}
+
+#include "ARScene.moc"

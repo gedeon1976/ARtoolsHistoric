@@ -26,8 +26,16 @@ mainWidget::mainWidget(void)
 	userGUI->show();
 	// add the SoQt viewer and set as central widget
 	ARScene *ARviewer = new ARScene(userGUI);
-	userGUI->setCentralWidget(ARviewer);}
+	userGUI->setCentralWidget(ARviewer);
+	
+	// connect signal and slots
+	connect(userGUI,SIGNAL(SetCameraRTSPaddress(rtspAddress)),
+		ARviewer,SLOT(GetCameraRTSPAddresses(rtspAddress)));
+
+}	
 
 mainWidget::~mainWidget(void)
 {
 }
+
+#include "mainWidget.moc"

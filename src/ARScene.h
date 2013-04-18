@@ -14,14 +14,26 @@
 
 ************************************************************************/
 #pragma once
+
 #include <QWidget>
 #include <Inventor/Qt/viewers/SoQtExaminerViewer.h>
+// include common types
+#include "common.h"
 
 class ARScene:public QWidget
 {
+Q_OBJECT
 public:
 	ARScene(QWidget* parent=0);
 	~ARScene(void);
+signals:
+public slots:
+	void GetCameraRTSPAddresses(rtspAddress address);
+
 private:
 	SoQtExaminerViewer *viewer;
+	const char* leftRTSPCam;
+	const char* rightRTSPCam;
+	int videoWidth;
+	int videoHeight;
 };

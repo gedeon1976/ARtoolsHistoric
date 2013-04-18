@@ -12,6 +12,11 @@
 typedef enum Visibility_Status{UNKNOWN,VISIBLE,INVISIBLE};
 typedef enum Points_Origin{LEFT_ORIGIN=1,RIGHT_ORIGIN=2};
 
+struct rtspAddress{
+	const char* leftCamRTSP;
+	const char* rightCamRTSP;
+};
+
 struct VisibilityColor{
 	// openGL visibility color
 	float r;

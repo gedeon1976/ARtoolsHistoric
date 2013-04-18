@@ -18,6 +18,7 @@
 
 class mainWidget:public QWidget
 {
+	Q_OBJECT
 public:
 	mainWidget(void);
 	~mainWidget(void);

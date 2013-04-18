@@ -21,6 +21,11 @@ ARtools::ARtools()
 		gettimeofday(&elapsedTimeFirst,&timeZone) ;
 	#endif
 	// initializes variables
+	
+	// GUI
+	isRTSPAddressesSavedFirstTime=false;
+
+
 	// haptic 
 	X_Haptic = 0;
 	Y_Haptic = 0;
@@ -1175,15 +1180,100 @@ void ARtools::GetLICF_EpipolarErrorConstraintValue(float ActualValue)
 }
 
 // setup the remote cameras
-void ARtools::SetupRemoteCameras(){
-	QDockWidget *setupCameras = new QDockWidget(tr("Remote Camera Setup"),this);
-	setupCameras->setAllowedAreas(Qt::LeftDockWidgetArea);
-	QGridLayout *Layout = new QGridLayout(setupCameras);
-	QLineEdit *lnEditLeftCameraAddress = new QLineEdit();
+void ARtools::SetupRemoteCameras(){	
+	
+	// ID
+	int ID = 0;
+	// disable corresponding action
+	configureRemoteCameras->setDisabled(true);	
+	
+	// default addresses
+	QString leftDefaultAddress("rtsp://sonar.upc.es:8554/CamL");
+	QString rightDefaultAddress("rtsp://sonar.upc.es:8554/CamR");
+	
+	// show an asking window 
+	QDialog *setupCameras = new QDialog(this);
+	setupCameras->setAttribute(Qt::WA_DeleteOnClose);
 
-	Layout->addWidget(lnEditLeftCameraAddress,1,1,2,2);
+	// make a layout
+	QGroupBox *grBoxLayout = new QGroupBox(tr("rtsp addresses"));
+	QGridLayout *Layout = new QGridLayout;
+	QLabel *lbLeftCamera = new QLabel(tr("Left "));
+	QLabel *lbRightCamera = new QLabel(tr("Right "));
+	QLineEdit *lnLeftCameraAddress = new QLineEdit();
+	QLineEdit *lnRightCameraAddress = new QLineEdit();
+	QPushButton *btSaveAddresses = new QPushButton(tr("Save And Close"));
+	
+	// set some properties	
+	int maxLength = 80;
+	lnLeftCameraAddress->setMaxLength(maxLength);
+	lnRightCameraAddress->setMaxLength(maxLength);
+	lnLeftCameraAddress->setText(leftDefaultAddress);
+	lnRightCameraAddress->setText(rightDefaultAddress);
+
+	Layout->addWidget(lbLeftCamera,0,0,1,1);
+	Layout->addWidget(lnLeftCameraAddress,0,1,1,4);
+	Layout->addWidget(lbRightCamera,1,0,1,1);
+	Layout->addWidget(lnRightCameraAddress,1,1,1,4);
+	Layout->addWidget(btSaveAddresses,1,5,1,1);	
+	grBoxLayout->setLayout(Layout);
+	grBoxLayout->setParent(setupCameras);
+
+	// show window	
+	setupCameras->setWindowTitle(tr("Remote Cameras Setup"));
 	setupCameras->show();
 
+	int height = grBoxLayout->geometry().height();
+	int width = grBoxLayout->geometry().width();
+	setupCameras->setMaximumSize(width,height);
+	setupCameras->setMinimumSize(width,height);	
+
+	// set signal mappings
+	// enable the value savings
+	signalSetupCameraSaveMapper = new QSignalMapper(this);
+	signalSetupCameraSaveMapper->setMapping(btSaveAddresses,setupCameras);
+	connect(btSaveAddresses,SIGNAL(clicked()),
+		signalSetupCameraSaveMapper,SLOT(map()));
+	connect(signalSetupCameraSaveMapper,SIGNAL(mapped(QWidget*)),
+		this,SLOT(SaveCameraRTSPaddresses(QWidget*)));
+
+	
+}
+
+// save rtsp camera addresses
+void ARtools::SaveCameraRTSPaddresses(QWidget* parameters){	
+	
+	// read written rtsp addresses
+	QList<QLineEdit*> rtspCurrentAddresses = parameters->findChildren<QLineEdit*>(); 
+
+	QString leftCam = rtspCurrentAddresses.at(0)->text();
+	QString rightCam = rtspCurrentAddresses.at(1)->text();
+
+	// save remote addresses
+	if (isRTSPAddressesSavedFirstTime==false){
+		cameraRTSPAddresses.push_back(leftCam);
+		cameraRTSPAddresses.push_back(rightCam);
+		isRTSPAddressesSavedFirstTime=true;
+	}else{
+		cameraRTSPAddresses.replace(0,leftCam);
+		cameraRTSPAddresses.replace(1,rightCam);
+	}
+
+	// close the window
+	parameters->close();
+	configureRemoteCameras->setEnabled(true);
+
+	// send signal to ARviewer
+	rtspAddress currentRTSPvalues;
+	
+	std::string leftCamName(cameraRTSPAddresses.at(0).toStdString());
+	std::string rightCamName(cameraRTSPAddresses.at(1).toStdString());
+
+	currentRTSPvalues.leftCamRTSP = leftCamName.c_str();
+	currentRTSPvalues.rightCamRTSP = rightCamName.c_str();
+
+	Q_EMIT(SetCameraRTSPaddress(currentRTSPvalues));
+	
 }
 
 // Show a window to introduce the remote cameras address

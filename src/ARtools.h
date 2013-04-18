@@ -55,9 +55,11 @@ public:
 signals:
   void SetWorkSpaceLimits(mt::Vector3 MinCubicLimits, mt::Vector3 MaxCubicLimits);
   void SetVisibility3Dpointer(Visibility_Status);
+  void SetCameraRTSPaddress(rtspAddress);
   
 private slots:
 	void SetupRemoteCameras();
+	void SaveCameraRTSPaddresses(QWidget* parameters);
 	void ShowRemoteCamerasStart();
 	void AboutAct();
 	void ShowStereoVideo();
@@ -82,6 +84,14 @@ private:
    QAction *show3DPointer;
    QAction *showLICFs;
    QToolBar *mainToolbar;
+
+   // mappers
+   QSignalMapper *signalSetupCameraSaveMapper;
+   QSignalMapper *signalSetupCameraCloseWindow;
+
+   // global variables
+   bool isRTSPAddressesSavedFirstTime;
+   QList<QString> cameraRTSPAddresses;
 
    // methods
    float getTimeDiff();
