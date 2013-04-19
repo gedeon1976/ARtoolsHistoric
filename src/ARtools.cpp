@@ -1187,22 +1187,32 @@ void ARtools::SetupRemoteCameras(){
 	// disable corresponding action
 	configureRemoteCameras->setDisabled(true);	
 	
-	// default addresses
+	// load rtsp addresses
 	QString leftDefaultAddress("rtsp://sonar.upc.es:8554/CamL");
 	QString rightDefaultAddress("rtsp://sonar.upc.es:8554/CamR");
+
+	if (isRTSPAddressesSavedFirstTime){
+		leftDefaultAddress = cameraRTSPAddresses.at(0);
+		rightDefaultAddress = cameraRTSPAddresses.at(1);
+	}else{
+		// default values
+		
+	}	
 	
 	// show an asking window 
-	QDialog *setupCameras = new QDialog(this);
+	// initialize setup 
+	QDialog *setupCameras = new QDialog(this,Qt::Tool);
 	setupCameras->setAttribute(Qt::WA_DeleteOnClose);
+	setupCameras->setWindowTitle(tr("Remote Cameras Setup"));
 
 	// make a layout
 	QGroupBox *grBoxLayout = new QGroupBox(tr("rtsp addresses"));
 	QGridLayout *Layout = new QGridLayout;
-	QLabel *lbLeftCamera = new QLabel(tr("Left "));
-	QLabel *lbRightCamera = new QLabel(tr("Right "));
+	QLabel *lbLeftCamera = new QLabel(tr("Left Camera"));
+	QLabel *lbRightCamera = new QLabel(tr("Right Camera"));
 	QLineEdit *lnLeftCameraAddress = new QLineEdit();
 	QLineEdit *lnRightCameraAddress = new QLineEdit();
-	QPushButton *btSaveAddresses = new QPushButton(tr("Save And Close"));
+	QPushButton *btSaveAddresses = new QPushButton(tr("Save"));
 	
 	// set some properties	
 	int maxLength = 80;
@@ -1219,8 +1229,7 @@ void ARtools::SetupRemoteCameras(){
 	grBoxLayout->setLayout(Layout);
 	grBoxLayout->setParent(setupCameras);
 
-	// show window	
-	setupCameras->setWindowTitle(tr("Remote Cameras Setup"));
+	// show window		
 	setupCameras->show();
 
 	int height = grBoxLayout->geometry().height();
@@ -1237,6 +1246,16 @@ void ARtools::SetupRemoteCameras(){
 	connect(signalSetupCameraSaveMapper,SIGNAL(mapped(QWidget*)),
 		this,SLOT(SaveCameraRTSPaddresses(QWidget*)));
 
+	// close the remote setup window
+	signalSetupCameraCloseWindow = new QSignalMapper(this);
+	signalSetupCameraCloseWindow->setMapping(setupCameras,setupCameras);
+	connect(setupCameras,SIGNAL(rejected()),
+		signalSetupCameraCloseWindow,SLOT(map()));
+	connect(signalSetupCameraCloseWindow,SIGNAL(mapped(QWidget*)),
+		this,SLOT(CloseCameraRTSPadresses(QWidget*)));
+
+
+	
 	
 }
 
@@ -1276,6 +1295,12 @@ void ARtools::SaveCameraRTSPaddresses(QWidget* parameters){
 	
 }
 
+// close the remote camera window
+void ARtools::CloseCameraRTSPadresses(QWidget* widget){
+
+	widget->close();
+	configureRemoteCameras->setEnabled(true);
+}
 // Show a window to introduce the remote cameras address
 void ARtools::ShowRemoteCamerasStart(){
 
@@ -1343,6 +1368,12 @@ void ARtools::createToolBars(){
 	mainToolbar->addAction(show3DPointer);
 	mainToolbar->addSeparator();
 
+}
+
+// create tool widgets
+void ARtools::createToolWidgets(){
+
+	
 }
 
 #include "ARtools.moc"

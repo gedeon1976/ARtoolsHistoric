@@ -24,6 +24,7 @@ mainWidget::mainWidget(void)
 	// built the main user GUI
 	ARtools *userGUI = new ARtools();
 	userGUI->show();
+
 	// add the SoQt viewer and set as central widget
 	ARScene *ARviewer = new ARScene(userGUI);
 	userGUI->setCentralWidget(ARviewer);

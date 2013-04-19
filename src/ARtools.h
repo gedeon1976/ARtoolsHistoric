@@ -60,6 +60,7 @@ signals:
 private slots:
 	void SetupRemoteCameras();
 	void SaveCameraRTSPaddresses(QWidget* parameters);
+	void CloseCameraRTSPadresses(QWidget* Widget);
 	void ShowRemoteCamerasStart();
 	void AboutAct();
 	void ShowStereoVideo();
@@ -98,6 +99,7 @@ private:
    void createActions();
    void createMenus();   
    void createToolBars();
+   void createToolWidgets();
 
 #ifdef UNIX
    timeval elapsedTimeFirst;	// timing structures
@@ -143,6 +145,9 @@ private:
    float Zmin,Zmax;
    bool matrixF_calculated;
    bool images_alignment;
+
+   // widgets tools
+   
    
 };
 

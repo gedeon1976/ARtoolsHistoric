@@ -75,7 +75,7 @@ ARScene::ARScene(QWidget *parent):QWidget(parent)
 		// get the rtsp addresses for left and rigth cameras
 	
 		
-	//	StereoVideo video(leftRTSPCam,rightRTSPCam,videoWidth,videoHeight,Stereo);
+		//	StereoVideo video(leftRTSPCam,rightRTSPCam,videoWidth,videoHeight,Stereo);
 		//QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
 		// timer for update the image every 40 ms = 25fps	
 		//QTimer* timer = new QTimer;
