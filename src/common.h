@@ -7,14 +7,15 @@
 //#include <opencv/cv.h>
 //#include <opencv/highgui.h>
 
-//using namespace cv;
+//using namespace std;
+#include <string>
 
 typedef enum Visibility_Status{UNKNOWN,VISIBLE,INVISIBLE};
 typedef enum Points_Origin{LEFT_ORIGIN=1,RIGHT_ORIGIN=2};
 
 struct rtspAddress{
-	const char* leftCamRTSP;
-	const char* rightCamRTSP;
+	std::string leftCamRTSP;
+	std::string rightCamRTSP;
 };
 
 struct VisibilityColor{

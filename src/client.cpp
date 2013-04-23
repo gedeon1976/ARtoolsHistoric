@@ -117,8 +117,8 @@ int STREAM::initCodecs(int width, int heigh)
 //      initialize the codecs
         av_register_all();
 
-//      Find codec for decode the video, here the MP4 codec
-        pCodec =avcodec_find_decoder(CODEC_ID_MPEG4);
+//      Find codec for decode the video, here the H.264 codec
+        pCodec =avcodec_find_decoder(CODEC_ID_H264);//CODEC_ID_MPEG4
         if(pCodec==NULL)
                 {
                 printf("%s\n","codec not found");
@@ -127,9 +127,21 @@ int STREAM::initCodecs(int width, int heigh)
 //      allocate memory for AVodecCtx
 
         pCodecCtx = avcodec_alloc_context3(pCodec);
-//      initialize width and height by now
+
+//      initialize some values
         pCodecCtx->width=width;
         pCodecCtx->height=heigh;
+		pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+		pCodecCtx->pix_fmt = PIX_FMT_YUV420P;
+		pCodecCtx->time_base.den = 25;
+		pCodecCtx->time_base.num = 1;
+
+		// add H.264 SPS, PPS NAL units
+		u_int8_t H264Headers[] = {0x67,0x4D,0x40,0x1E,0xDA,0x02,0xC0,0x49,0xA1,0x00,0x00,0x03,0x00,0x01,0x00,0x00,0x03,0x00,0x32,0x0F,0x16,0x2E,0xA0,0x68,0xCF,0x06,0xCB,0x20};    
+
+		pCodecCtx->extradata = H264Headers;
+		pCodecCtx->extradata_size= sizeof(pCodecCtx->extradata);
+
         pCodecCtx->bit_rate = 1000000;  //      bit rate?
 
         //MPEG4 global header used for decode the frames

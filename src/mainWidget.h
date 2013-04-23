@@ -15,6 +15,9 @@
 ************************************************************************/
 #pragma once
 #include <QtGui>
+#include "ARtools.h"
+#include "ARScene.h"
+
 
 class mainWidget:public QWidget
 {
@@ -22,5 +25,11 @@ class mainWidget:public QWidget
 public:
 	mainWidget(void);
 	~mainWidget(void);
+public slots:
+	void createCoinScene(bool status);
+private:
+	ARtools *userGUI;
+	ARScene *ARviewer;
+	
 };
 

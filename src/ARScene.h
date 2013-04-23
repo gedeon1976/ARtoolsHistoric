@@ -28,12 +28,13 @@ public:
 	~ARScene(void);
 signals:
 public slots:
+	void createVideoScene(int width, int height);
 	void GetCameraRTSPAddresses(rtspAddress address);
 
 private:
 	SoQtExaminerViewer *viewer;
-	const char* leftRTSPCam;
-	const char* rightRTSPCam;
+	std::string leftRTSPCam;
+	std::string rightRTSPCam;
 	int videoWidth;
 	int videoHeight;
 };

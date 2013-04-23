@@ -46,7 +46,16 @@
 
 ARScene::ARScene(QWidget *parent):QWidget(parent)
 {
-	try{
+	
+}
+
+ARScene::~ARScene(void)
+{
+}
+
+// create the viwer and the scene
+void ARScene::createVideoScene(int videoWidth, int videoHeight){
+try{
 		SoQt::init(this);
     	SoStereoTexture::initClass();   
         
@@ -73,9 +82,11 @@ ARScene::ARScene(QWidget *parent):QWidget(parent)
 		root->addChild(new SoCone);    
     
 		// get the rtsp addresses for left and rigth cameras
-	
-		
-		//	StereoVideo video(leftRTSPCam,rightRTSPCam,videoWidth,videoHeight,Stereo);
+		const char *leftCam = leftRTSPCam.c_str();
+		const char *rightCam = rightRTSPCam.c_str();
+
+		StereoVideo video(leftCam,rightCam,videoWidth,videoHeight,Stereo);
+
 		//QObject::connect(&video,SIGNAL(updatedone()),&mainGUI,SLOT(show_fps())); 
 		// timer for update the image every 40 ms = 25fps	
 		//QTimer* timer = new QTimer;
@@ -155,10 +166,8 @@ ARScene::ARScene(QWidget *parent):QWidget(parent)
 	}
 	catch(...){
 	}
-}
 
-ARScene::~ARScene(void)
-{
+
 }
 
 // get the current rtsp addresses

@@ -15,28 +15,46 @@
 
 ************************************************************************/
 #include "mainWidget.h"
-#include "ARScene.h"
-#include "ARtools.h"
 
 // constructor
 mainWidget::mainWidget(void)
 {
 	// built the main user GUI
-	ARtools *userGUI = new ARtools();
-	userGUI->show();
+	userGUI = new ARtools();	
 
 	// add the SoQt viewer and set as central widget
-	ARScene *ARviewer = new ARScene(userGUI);
-	userGUI->setCentralWidget(ARviewer);
-	
+	ARviewer = new ARScene(userGUI);	
+
 	// connect signal and slots
 	connect(userGUI,SIGNAL(SetCameraRTSPaddress(rtspAddress)),
-		ARviewer,SLOT(GetCameraRTSPAddresses(rtspAddress)));
+	ARviewer,SLOT(GetCameraRTSPAddresses(rtspAddress)));
 
+	// connect the PTZ cameras
+	connect(userGUI,SIGNAL(StartPTZCameras(bool)),
+		this,SLOT(createCoinScene(bool)));
+
+	userGUI->show();
 }	
 
 mainWidget::~mainWidget(void)
 {
+}
+
+// initialize the coinScene with video at background
+void mainWidget::createCoinScene(bool status){
+
+	// draw Coin scene		
+	int width = 704;
+	int height = 576;
+	if (status == true){
+		ARviewer->createVideoScene(width,height);
+		// set central widget
+		userGUI->setCentralWidget(ARviewer);
+	}else{
+	}
+
+	
+	
 }
 
 #include "mainWidget.moc"

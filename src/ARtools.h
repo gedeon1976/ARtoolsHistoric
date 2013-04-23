@@ -56,12 +56,17 @@ signals:
   void SetWorkSpaceLimits(mt::Vector3 MinCubicLimits, mt::Vector3 MaxCubicLimits);
   void SetVisibility3Dpointer(Visibility_Status);
   void SetCameraRTSPaddress(rtspAddress);
+  void StartPTZCameras(bool);
   
 private slots:
+	// setup cameras
 	void SetupRemoteCameras();
 	void SaveCameraRTSPaddresses(QWidget* parameters);
 	void CloseCameraRTSPadresses(QWidget* Widget);
-	void ShowRemoteCamerasStart();
+	// show cameras
+	void StartRemotePTZCameras(void);
+
+
 	void AboutAct();
 	void ShowStereoVideo();
 	void ShowLeftVideo();
@@ -80,7 +85,7 @@ private:
    QAction *showleftCamera;
    QAction *configureRemoteCameras;
    QAction *calibratePTZCameras;
-   QAction *startRemoteCameras;
+   QAction *startRemoteCamerasAction;
    QAction *connectToHaptic;
    QAction *show3DPointer;
    QAction *showLICFs;
@@ -147,7 +152,7 @@ private:
    bool images_alignment;
 
    // widgets tools
-   
+   bool PTZturnOnStatus;
    
 };
 

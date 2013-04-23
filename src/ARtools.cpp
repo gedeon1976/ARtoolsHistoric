@@ -24,7 +24,7 @@ ARtools::ARtools()
 	
 	// GUI
 	isRTSPAddressesSavedFirstTime=false;
-
+	PTZturnOnStatus = false;
 
 	// haptic 
 	X_Haptic = 0;
@@ -1288,8 +1288,8 @@ void ARtools::SaveCameraRTSPaddresses(QWidget* parameters){
 	std::string leftCamName(cameraRTSPAddresses.at(0).toStdString());
 	std::string rightCamName(cameraRTSPAddresses.at(1).toStdString());
 
-	currentRTSPvalues.leftCamRTSP = leftCamName.c_str();
-	currentRTSPvalues.rightCamRTSP = rightCamName.c_str();
+	currentRTSPvalues.leftCamRTSP = leftCamName;
+	currentRTSPvalues.rightCamRTSP = rightCamName;
 
 	Q_EMIT(SetCameraRTSPaddress(currentRTSPvalues));
 	
@@ -1302,7 +1302,16 @@ void ARtools::CloseCameraRTSPadresses(QWidget* widget){
 	configureRemoteCameras->setEnabled(true);
 }
 // Show a window to introduce the remote cameras address
-void ARtools::ShowRemoteCamerasStart(){
+void ARtools::StartRemotePTZCameras(void){
+
+	// emit corresponding signal
+	if (PTZturnOnStatus==true){
+		PTZturnOnStatus = false;
+	}else{
+		PTZturnOnStatus = true;
+	}
+	Q_EMIT(StartPTZCameras(PTZturnOnStatus));
+	//startRemoteCamerasAction->setDisabled(true);
 
 }
 void ARtools::AboutAct(){
@@ -1329,11 +1338,18 @@ void ARtools::createActions(){
 			this,SLOT(ShowLeftVideo()));
 
 	// toolbar actions
+
+	// setup cameras
 	configureRemoteCameras = new QAction(QIcon(":/images/setupCameras.png"),tr("Configure Remote Cameras"),this);
 	connect(configureRemoteCameras,SIGNAL(triggered()),
 		this,SLOT(SetupRemoteCameras()));
+	
+	// start the cameras connections
+	startRemoteCamerasAction = new QAction(QIcon(":/images/play.gif"),tr("Start Remote Cameras Connection"),this);	
+	connect(startRemoteCamerasAction,SIGNAL(triggered()),
+		this,SLOT(StartRemotePTZCameras()));
 
-	startRemoteCameras = new QAction(QIcon(":/images/play.gif"),tr("Start Remote Cameras Connection"),this);	
+
 	calibratePTZCameras = new QAction(QIcon(":/images/calibratePTZ.png"),tr("Calibrate PTZ cameras"),this);	
 	connectToHaptic = new QAction(QIcon(":/images/HapticConnection.png"),tr("Connect to Haptic"),this);
 	show3DPointer = new QAction(QIcon(":/images/3Dpointer.png"),tr("show a 3D pointer"),this);
@@ -1359,7 +1375,7 @@ void ARtools::createToolBars(){
 	// add tool options
 	mainToolbar->addAction(configureRemoteCameras);
 	mainToolbar->addSeparator();
-	mainToolbar->addAction(startRemoteCameras);
+	mainToolbar->addAction(startRemoteCamerasAction);
 	mainToolbar->addSeparator();
 	mainToolbar->addAction(calibratePTZCameras);
 	mainToolbar->addSeparator();	
