@@ -31,6 +31,9 @@
 // #include "SoStereoTexture.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //      initialization of static data members
+#define RTSP_CLIENT_VERBOSITY_LEVEL 1 // by default, print verbose output from each "RTSPClient"
+
+static unsigned rtspClientCount = 0; // Counts how many streams (i.e., "RTSPClient"s) are currently in use.
 
 //char STREAM::readOKFlag=0;
 //void *STREAM::temp=0;
@@ -737,6 +740,263 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
         return s;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//				RTSP RESPONSE HANDLERS
+//				description:
+//				these methods manage the response from a RTSP client
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void rtsp_AfterOPTIONS(RTSPClient *rtspClient, int resultCode, char *resultString){
+	do{
+		UsageEnvironment& env = rtspClient->envir();	// alias
+		
+		if (resultCode != 0) {
+			env << rtspClient << "Failed to get a OPTION response: " << resultString << "\n";
+			delete[] resultString;
+			break;
+		}
+		// get the response
+		char* const optionResponse = resultString;
+		env << "Got a OPTIONS response:\n" << optionResponse << "\n";    
+
+		return;
+	}while(0);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void rtsp_AfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString){
+	do{
+		UsageEnvironment& env = rtspClient->envir();	// alias
+		StreamClientState& scs = ((ourRTSPClient*)rtspClient)->scs; // alias
+
+		if (resultCode != 0) {
+			env << rtspClient << "Failed to get a DESCRIBE response: " << resultString << "\n";
+			delete[] resultString;
+			break;
+		}
+		// get the response
+		char* const sdpDescription = resultString;
+		env << "Got a DESCRIBE response:\n" << sdpDescription << "\n"; 
+
+		// Create a media session object from this SDP description:
+		scs.session = MediaSession::createNew(env, sdpDescription);
+		delete[] sdpDescription; // because we don't need it anymore
+		if (scs.session == NULL) {
+			env << "Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() << "\n";
+			break;
+		} else if (!scs.session->hasSubsessions()) {
+			env <<  "This session has no media subsessions (i.e., no \"m=\" lines)\n";
+		break;
+		}
+		// Then, create and set up our data source objects for the session.  We do this by iterating over the session's 'subsessions',
+		// calling "MediaSubsession::initiate()", and then sending a RTSP "SETUP" command, on each one.
+		// (Each 'subsession' will have its own data source.)
+		scs.iter = new MediaSubsessionIterator(*scs.session);
+		setupNextSubsession(rtspClient);
+
+		return;
+	}while(0);
+	// An unrecoverable error occurred with this stream.
+	shutdownStream(rtspClient);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+void setupNextSubsession(RTSPClient* rtspClient) {
+
+	UsageEnvironment& env = rtspClient->envir(); // alias
+	StreamClientState& scs = ((ourRTSPClient*)rtspClient)->scs; // alias
+  
+	scs.subsession = scs.iter->next();
+	if (scs.subsession != NULL) {
+		if (!scs.subsession->initiate()) {
+			env << rtspClient << "Failed to initiate the \"" << scs.subsession << "\" subsession: " << env.getResultMsg() << "\n";
+			setupNextSubsession(rtspClient); // give up on this subsession; go to the next one
+		} else {
+			env << rtspClient << "Initiated the \"" << scs.subsession
+			<< "\" subsession (client ports " << scs.subsession->clientPortNum() << "-" << scs.subsession->clientPortNum()+1 << ")\n";
+
+		// Continue setting up this subsession, by sending a RTSP "SETUP" command:
+		rtspClient->sendSetupCommand(*scs.subsession, rtsp_AfterSETUP);
+		}
+    return;
+	}
+
+	// We've finished setting up all of the subsessions.  Now, send a RTSP "PLAY" command to start the streaming:
+	if (scs.session->absStartTime() != NULL) {
+		// Special case: The stream is indexed by 'absolute' time, so send an appropriate "PLAY" command:
+		rtspClient->sendPlayCommand(*scs.session, rtsp_AfterPLAY, scs.session->absStartTime(), scs.session->absEndTime());
+	} else {
+		scs.duration = scs.session->playEndTime() - scs.session->playStartTime();
+		rtspClient->sendPlayCommand(*scs.session, rtsp_AfterPLAY);
+	}
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void rtsp_AfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString) {
+  do {
+	
+	UsageEnvironment& env = rtspClient->envir(); // alias
+	StreamClientState& scs = ((ourRTSPClient*)rtspClient)->scs; // alias
+
+    if (resultCode != 0) {
+      env << rtspClient << "Failed to set up the \"" << scs.subsession << "\" subsession: " << resultString << "\n";
+      break;
+    }
+
+    env << rtspClient << "Set up the \"" << scs.subsession
+	<< "\" subsession (client ports " << scs.subsession->clientPortNum() << "-" << scs.subsession->clientPortNum()+1 << ")\n";
+
+    // Having successfully setup the subsession, create a data sink for it, and call "startPlaying()" on it.
+    // (This will prepare the data sink to receive data; the actual flow of data from the client won't start happening until later,
+    // after we've sent a RTSP "PLAY" command.)
+
+    scs.subsession->sink = DummySink::createNew(env, *scs.subsession, rtspClient->url());
+      // perhaps use your own custom "MediaSink" subclass instead
+    if (scs.subsession->sink == NULL) {
+      env << rtspClient << "Failed to create a data sink for the \"" << scs.subsession
+	  << "\" subsession: " << env.getResultMsg() << "\n";
+      break;
+    }
+
+    env << rtspClient << "Created a data sink for the \"" << scs.subsession << "\" subsession\n";
+    scs.subsession->miscPtr = rtspClient; // a hack to let subsession handle functions get the "RTSPClient" from the subsession 
+    scs.subsession->sink->startPlaying(*(scs.subsession->readSource()),
+				       subsessionAfterPlaying, scs.subsession);
+    // Also set a handler to be called if a RTCP "BYE" arrives for this subsession:
+    if (scs.subsession->rtcpInstance() != NULL) {
+      scs.subsession->rtcpInstance()->setByeHandler(subsessionByeHandler, scs.subsession);
+    }
+  } while (0);
+  delete[] resultString;
+
+  // Set up the next subsession, if any:
+  setupNextSubsession(rtspClient);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void rtsp_AfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString) {
+  
+	bool success = false;
+	do {
+		UsageEnvironment& env = rtspClient->envir(); // alias
+		StreamClientState& scs = ((ourRTSPClient*)rtspClient)->scs; // alias
+
+		if (resultCode != 0) {
+			env << rtspClient << "Failed to start playing session: " << resultString << "\n";
+		break;
+		}
+
+		// Set a timer to be handled at the end of the stream's expected duration (if the stream does not already signal its end
+		// using a RTCP "BYE").  This is optional.  If, instead, you want to keep the stream active - e.g., so you can later
+		// 'seek' back within it and do another RTSP "PLAY" - then you can omit this code.
+		// (Alternatively, if you don't want to receive the entire stream, you could set this timer for some shorter value.)
+		if (scs.duration > 0) {
+			unsigned const delaySlop = 2; // number of seconds extra to delay, after the stream's expected duration.  (This is optional.)
+			scs.duration += delaySlop;
+			unsigned uSecsToDelay = (unsigned)(scs.duration*1000000);
+			scs.streamTimerTask = env.taskScheduler().scheduleDelayedTask(uSecsToDelay, (TaskFunc*)streamTimerHandler, rtspClient);
+		}
+
+		env << rtspClient << "Started playing session";
+		if (scs.duration > 0) {
+			env << " (for up to " << scs.duration << " seconds)";
+		}
+		env << "...\n";
+
+		success = true;
+	} while (0);
+	delete[] resultString;
+
+	if (!success) {
+	// An unrecoverable error occurred with this stream.
+    shutdownStream(rtspClient);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Implementation of the other event handlers:
+
+void subsessionAfterPlaying(void* clientData) {
+
+	MediaSubsession* subsession = (MediaSubsession*)clientData;
+	RTSPClient* rtspClient = (RTSPClient*)(subsession->miscPtr);
+
+	// Begin by closing this subsession's stream:
+	Medium::close(subsession->sink);
+	subsession->sink = NULL;
+
+	// Next, check whether *all* subsessions' streams have now been closed:
+	MediaSession& session = subsession->parentSession();
+	MediaSubsessionIterator iter(session);
+	while ((subsession = iter.next()) != NULL) {
+		if (subsession->sink != NULL) return; // this subsession is still active
+	}
+
+	// All subsessions' streams have now been closed, so shutdown the client:
+	shutdownStream(rtspClient);
+}
+
+void subsessionByeHandler(void* clientData) {
+
+	MediaSubsession* subsession = (MediaSubsession*)clientData;
+	RTSPClient* rtspClient = (RTSPClient*)subsession->miscPtr;
+	UsageEnvironment& env = rtspClient->envir(); // alias
+
+	env << rtspClient << "Received RTCP \"BYE\" on \"" << subsession << "\" subsession\n";
+
+	// Now act as if the subsession had closed:
+	subsessionAfterPlaying(subsession);
+}
+
+void streamTimerHandler(void* clientData) {
+
+	ourRTSPClient* rtspClient = (ourRTSPClient*)clientData;
+	StreamClientState& scs = rtspClient->scs; // alias
+
+	scs.streamTimerTask = NULL;
+
+	// Shut down the stream:
+	shutdownStream(rtspClient);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void shutdownStream(RTSPClient* rtspClient, int exitCode) {
+
+	UsageEnvironment& env = rtspClient->envir(); // alias
+	StreamClientState& scs = ((ourRTSPClient*)rtspClient)->scs; // alias
+
+	// First, check whether any subsessions have still to be closed:
+	if (scs.session != NULL) { 
+		Boolean someSubsessionsWereActive = false;
+		MediaSubsessionIterator iter(*scs.session);
+		MediaSubsession* subsession;
+
+		while ((subsession = iter.next()) != NULL) {
+			if (subsession->sink != NULL) {
+				Medium::close(subsession->sink);
+				subsession->sink = NULL;
+
+			if (subsession->rtcpInstance() != NULL) {
+				subsession->rtcpInstance()->setByeHandler(NULL, NULL); // in case the server sends a RTCP "BYE" while handling "TEARDOWN"
+			}
+
+			someSubsessionsWereActive = true;
+			}
+		}
+
+	if (someSubsessionsWereActive) {
+      // Send a RTSP "TEARDOWN" command, to tell the server to shutdown the stream.
+      // Don't bother handling the response to the "TEARDOWN".
+      rtspClient->sendTeardownCommand(*scs.session, NULL);
+    }
+	}
+
+	env << rtspClient << "Closing the stream.\n";
+	Medium::close(rtspClient);
+    // Note that this will also cause this stream's "StreamClientState" structure to get reclaimed.
+
+	if (--rtspClientCount == 0) {
+    // The final stream has ended, so exit the application now.
+    // (Of course, if you're embedding this code into your own application, you might want to comment this out,
+    // and replace it with "eventLoopWatchVariable = 1;", so that we leave the LIVE555 event loop, and continue running "main()".)
+    exit(exitCode);
+  }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
 //              this function start a connection with a RTSP source data
 //              description:
 //                      input:  URL as "rtsp://sonar:7070/cam1"
@@ -756,7 +1016,7 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
                 {printf("error %s\n"," environment was not created");
                 return -1;}
         //      create a RTSP client
-        client =  RTSPClient::createNew(*env,verbosityLevel,name,tunnelOverHTTPPortNum);        
+        client =  RTSPClient::createNew(*env,URL,verbosityLevel,name,tunnelOverHTTPPortNum);        
         
         if (client==NULL)
                 {printf("error %s\n"," rtsp client was not created");
@@ -765,102 +1025,100 @@ double STREAM::skew(dataFrame N, dataFrame N_1)
 ////////////////////////////////////////////////////////
         //      RTSP PROTOCOL
         
-        //      Send OPTIONS method
-
-        getOptions = client->sendOptionsCmd(URL,NULL,NULL,NULL);        //      connect to server
-        printf("OPTIONS are: %s\n",getOptions);                         //      print the response
+        //      Send OPTIONS command
+        client->sendOptionsCommand(rtsp_AfterOPTIONS);		//      connect to server
+															//      and print the response
                 
-        //      send DESCRIBE method 
-        
-        getDescription = client->describeURL(URL);              //      get the Session description
-        printf("DESCRIBE is: \n%s\n",getDescription);                   //      print this description
+        //      send DESCRIBE command         
+        client->sendDescribeCommand(rtsp_AfterDESCRIBE);	//      get the Session description
+															//      print this description
 
         //      setup live libraries for send SETUP metunsigned long timestamp;hod
         
-        Session = MediaSession::createNew(*env,getDescription);         //      create session
-        if (Session==NULL)
-                {
-                cout<<"error: Session was not created"<<endl;
-                cout<<"check your connection"<<endl;
-                
-                return -1;}
-        
-        //      create a subsession for the RTP receiver (only video for now)
-        
-        
-        
-        MediaSubsessionIterator iter(*Session);// iter;
-        //iter(*Session);
+     //   Session = MediaSession::createNew(*env,getDescription);         //      create session
+     //   if (Session==NULL)
+     //           {
+     //           cout<<"error: Session was not created"<<endl;
+     //           cout<<"check your connection"<<endl;
+     //           
+     //           return -1;}
+     //   
+     //   //      create a subsession for the RTP receiver (only video for now)
+     //   
+     //   
+     //   
+     //   MediaSubsessionIterator iter(*Session);// iter;
+     //   //iter(*Session);
 
-        if((Subsession= iter.next())!=NULL)             //       is there a valid subsession?
-        {
-        
-        //      look for video subsession
+     //   if((Subsession= iter.next())!=NULL)             //       is there a valid subsession?
+     //   {
+     //   
+     //   //      look for video subsession
 
-                if(strcmp(Subsession->mediumName(),"video")==0)         //      if video subsession
-                {
-                        //ReceptionBufferSize =2000000;                 //      set size of buffer reception
-                }//else{
-                //continue;}
-                
-                //      assign RTP port,  it must be even number    RFC3550?
-        
-                //Subsession->setClientPortNum(RTPport);
-        
-                //      initiate  subsession
-                if(!Subsession->initiate())
-                {
-                //       print error when subsession was not initiated
-                printf("Failed to initiate RTP subsession %s %s %s \n",Subsession->mediumName(),Subsession->codecName(),env->getResultMsg());
-                }else{
-                //      print info about RTP session type, codec,port number
-                printf("RTP %s/%s subsession  initiated on port %d\n",Subsession->mediumName(),Subsession->codecName(),Subsession->clientPortNum());
-                }
-                //      timestamp clock
-                timestampFreq = Subsession->rtpSource()->timestampFrequency();
-                printf("timestamp frequency %u\n",timestampFreq);
+     //           if(strcmp(Subsession->mediumName(),"video")==0)         //      if video subsession
+     //           {
+     //                   //ReceptionBufferSize =2000000;                 //      set size of buffer reception
+     //           }//else{
+     //           //continue;}
+     //           
+     //           //      assign RTP port,  it must be even number    RFC3550?
+     //   
+     //           //Subsession->setClientPortNum(RTPport);
+     //   
+     //           //      initiate  subsession
+     //           if(!Subsession->initiate())
+     //           {
+     //           //       print error when subsession was not initiated
+     //           printf("Failed to initiate RTP subsession %s %s %s \n",Subsession->mediumName(),Subsession->codecName(),env->getResultMsg());
+     //           }else{
+     //           //      print info about RTP session type, codec,port number
+     //           printf("RTP %s/%s subsession  initiated on port %d\n",Subsession->mediumName(),Subsession->codecName(),Subsession->clientPortNum());
+     //           }
+     //           //      timestamp clock
+     //           timestampFreq = Subsession->rtpSource()->timestampFrequency();
+     //           printf("timestamp frequency %u\n",timestampFreq);
 
-                //      config line, VOL header or  VOP header for MPEG4?
-                MP4Header = Subsession->fmtp_config();
-                MP4Hsize = strlen(MP4Header);
-                //      convert to unsigned char
-                MP4H = reinterpret_cast<unsigned char*>(const_cast<char*>(MP4Header));
-                printf("MPEG4 header: %s\n",MP4H);                      //      print MPEG4 header
-                
-                //      send SETUP command
+     //           //      config line, VOL header or  VOP header for MPEG4?
+     //           MP4Header = Subsession->fmtp_config();
+     //           MP4Hsize = strlen(MP4Header);
+     //           //      convert to unsigned char
+     //           MP4H = reinterpret_cast<unsigned char*>(const_cast<char*>(MP4Header));
+     //           printf("MPEG4 header: %s\n",MP4H);                      //      print MPEG4 header
+     //           
+     //           //      send SETUP command
 
-                if(client!=NULL)
-                {
-                SetupResponse = client->setupMediaSubsession(*Subsession,False,False,False);
-                if(SetupResponse==False)
-                        {
-                                printf("%s \n","SETUP was not sent");
-                                return -1;
-                        }
-                //      review status code
-                printf("Subsession  ID: %s\n",Subsession->sessionId);
-                //printf("URL %u\n",Subsession->rtpInfo.trackId);
-                //printf("URL %u\n",Subsession->rtpChannelId);
-                //printf("SSRC ID: %u\n",Subsession->rtpSource()->lastReceivedSSRC());
-                }       
+     //           if(client!=NULL)
+     //           {
+     //           SetupResponse = client->setupCommand(*Subsession,False,False,False);
+     //           if(SetupResponse==False)
+     //                   {
+     //                           printf("%s \n","SETUP was not sent");
+     //                           return -1;
+     //                   }
+     //           //      review status code
+     //           printf("Subsession  ID: %s\n",Subsession->sessionId);
+     //           //printf("URL %u\n",Subsession->rtpInfo.trackId);
+     //           //printf("URL %u\n",Subsession->rtpChannelId);
+     //           //printf("SSRC ID: %u\n",Subsession->rtpSource()->lastReceivedSSRC());
+     //           }       
 
-                //      now send PLAY method
-                if(client!=NULL)
-                {
-        
-                        if(client->playMediaSession(*Session)==0)
-                        {
-                                printf("%s\n","PLAY command was not sent");
-                                return -1;
-                        }else{
-                                printf("%s", "PLAY command sent\n");
-                                
-                        }
-                }else{
-                        printf("%s", "CLIENT PROBLEMS");
-                        }
-        }
-        //iter.reset();
+     //           //      now send PLAY method
+     //           if(client!=NULL)
+     //           {
+     //   
+					//if(client->sendPlayCommand(*Session)==0)
+     //                   {
+     //                           printf("%s\n","PLAY command was not sent");
+     //                           return -1;
+     //                   }else{
+     //                           printf("%s", "PLAY command sent\n");
+     //                           
+     //                   }
+     //           }else{
+     //                   printf("%s", "CLIENT PROBLEMS");
+     //                   }
+     //   }
+     //   //iter.reset();
         return 0;
 }
 
@@ -872,7 +1130,7 @@ int STREAM::rtsp_Close()
         if(client !=NULL)
         {
         //      send TEARDOWN command
-                client->teardownMediaSession(*Session);
+			//client->sendTeardownCommand(*Session);
                 
         }
         return 0;

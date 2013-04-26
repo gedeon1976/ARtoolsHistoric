@@ -43,8 +43,13 @@ extern "C" {
 #include "liveMedia.hh"
 #include "RTSPClient.hh"				//      RTSP client class
 #include "MediaSession.hh"
-#include "DelayQueue.hh"                              	//      time management
-#include "RTPSink.hh"                                 	//      to convert to timestanp
+#include "DelayQueue.hh"                //      time management
+#include "RTPSink.hh"                   //      to convert to timestamp
+
+// live555 rtsp helper classes
+#include "StreamClientState.h"
+#include "ourRTSPClient.h"
+#include "DummySink.h"
 //********************************************************************************
 //      include coin libraries
 #include <Inventor/Qt/SoQt.h>
@@ -333,7 +338,24 @@ void operator()(void* clientData)
 }
 
 };
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//		RTSP response handlers (new live555 version march.7.13)
+void rtsp_AfterOPTIONS(RTSPClient* rtspClient, int resultCode, char* resultString);
+void rtsp_AfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
+void rtsp_AfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
+void rtsp_AfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
 
+// Other event handler functions:
+void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
+void subsessionByeHandler(void* clientData); // called when a RTCP "BYE" is received for a subsession
+void streamTimerHandler(void* clientData);
+  // called at the end of a stream's expected duration (if the stream has not already signaled its end using a RTCP "BYE")
+
+// Used to iterate through each stream's 'subsessions', setting up each one:
+void setupNextSubsession(RTSPClient* rtspClient);
+
+// Used to shut down and close a stream (including its "RTSPClient" object):
+void shutdownStream(RTSPClient* rtspClient, int exitCode = 1);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //************** THIS IS THE MAIN CLASS FOR ACCESS THE STREAM FROM AN URL ADDRESS ******************
@@ -447,6 +469,8 @@ deque<Frame>InputBuffer;                //      input FIFO queue, here used as t
 //                                      METHODS
 
 int initCodecs(int width, int heigh);   //      Init libavcodec library used to decode the stream of data
+
+
 int rtsp_Init();                        //      Init the connection with a RTSP server, besides these sends the different RTSP commands
                                         //      to configure the transmision
 int rtsp_Close();                       //      Close the current RTSP connection 
